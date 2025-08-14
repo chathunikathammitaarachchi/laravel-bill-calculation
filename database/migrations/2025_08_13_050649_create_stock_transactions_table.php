@@ -15,12 +15,12 @@ return new class extends Migration
         $table->id();
         $table->unsignedBigInteger('item_code');
         $table->string('item_name');
-        $table->string('transaction_type'); // 'IN' or 'OUT'
+        $table->string('transaction_type'); 
         $table->integer('quantity');
         $table->decimal('rate', 10, 2);
         $table->decimal('price', 10, 2);
-        $table->string('reference_no'); // bill_no or grn_no
-        $table->string('source'); // 'Supplier GRN' or 'Customer GRN'
+        $table->string('reference_no'); 
+        $table->string('source'); 
         $table->date('transaction_date');
         $table->timestamps();
     });

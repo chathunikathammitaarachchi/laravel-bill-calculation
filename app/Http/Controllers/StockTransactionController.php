@@ -7,6 +7,7 @@ use App\Models\StockTransaction;
 use ConsoleTVs\Charts\Classes\Chartjs\Chart;
 use Illuminate\Support\Facades\DB;
 use PDF;
+use App\Models\Transaction;
 
 class StockTransactionController extends Controller
 {
@@ -33,7 +34,10 @@ class StockTransactionController extends Controller
         ->groupBy('transaction_type')
         ->pluck('total_quantity', 'transaction_type');
 
-    return view('stock_transactions.index', compact('transactions', 'summary', 'startDate', 'endDate', 'type'));
+
+
+
+    return view('stock_transactions.index', compact('transactions', 'summary',  'startDate', 'endDate', 'type'));
 }
 
 public function showPieChart(Request $request)
@@ -104,4 +108,47 @@ public function downloadPdf(Request $request)
     return $pdf->download('stock-in-out-report.pdf');
 }
     
+  
+
+
+public function transaction(Request $request)
+{
+   {
+        $type = $request->query('type');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $transactions = StockTransaction::when($type, fn($q) => $q->where('transaction_type', $type))
+            ->when($startDate && $endDate, fn($q) => $q->whereBetween('transaction_date', [$startDate, $endDate]))
+            ->orderBy('transaction_date', 'desc')
+            ->get();
+
+        // Summary total IN/OUT
+        $summary = StockTransaction::select('transaction_type', DB::raw('SUM(quantity) as total_quantity'))
+            ->when($startDate && $endDate, fn($q) => $q->whereBetween('transaction_date', [$startDate, $endDate]))
+            ->groupBy('transaction_type')
+            ->pluck('total_quantity', 'transaction_type');
+
+        // Daily summary data for table
+        $dailySummary = StockTransaction::select(
+                'transaction_date',
+                DB::raw("SUM(CASE WHEN transaction_type='IN' THEN quantity ELSE 0 END) as stock_in"),
+                DB::raw("SUM(CASE WHEN transaction_type='OUT' THEN quantity ELSE 0 END) as stock_out")
+            )
+            ->when($startDate && $endDate, fn($q) => $q->whereBetween('transaction_date', [$startDate, $endDate]))
+            ->groupBy('transaction_date')
+            ->orderBy('transaction_date', 'desc')
+            ->get();
+
+        return view('stock_transactions.transaction', compact(
+            'transactions',
+            'summary',
+            'dailySummary',
+            'startDate',
+            'endDate',
+            'type'
+        ));
+    }
+}
+
 }

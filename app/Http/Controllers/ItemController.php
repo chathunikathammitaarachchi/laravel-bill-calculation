@@ -65,7 +65,7 @@ public function stock(Request $request)
 {
     $query = Item::query();
 
-    // Apply date filter if provided
+    
     if ($request->has('date') && $request->date) {
         $query->whereDate('created_at', $request->date);
     }

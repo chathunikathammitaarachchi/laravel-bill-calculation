@@ -7,6 +7,8 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\GRNMaster;
 use App\Models\GRNDetails;
+use App\Models\ItemSummary;
+
 use Illuminate\Support\Facades\DB;
 use PDF; 
 use App\Models\StockTransaction;
@@ -37,7 +39,7 @@ class GRNController extends Controller
 }
 
 
-    public function store(Request $request)
+  public function store(Request $request)
 {
     $request->validate([
         'bill_no' => 'required|unique:bill_master,bill_no',
@@ -80,42 +82,50 @@ class GRNController extends Controller
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
             ]);
+
+
+            $grnDate = \App\Models\GRNMaster::where('bill_no', $request->bill_no)->value('grn_date');
+
+            // Save into summary table
+            ItemSummary::create([
+                'item_code' => $item['item_code'],
+                'item_name' => $item['item_name'],
+                'quantity' => $item['quantity'],
+                'rate' => $item['rate'],
+                'total_price' => $item['price'],
+                'bill_no' => $grn->bill_no,
+                'grn_date' => $request->grn_date,
+            ]);
         }
 
-
-
         foreach ($request->items as $billItem) {
-    $item = Item::where('item_code', $billItem['item_code'])->first();
+            $item = Item::where('item_code', $billItem['item_code'])->first();
 
-    if ($item && $item->stock >= $billItem['quantity']) {
-        $item->stock -= $billItem['quantity'];
-        $item->save();
+            if ($item && $item->stock >= $billItem['quantity']) {
+                $item->stock -= $billItem['quantity'];
+                $item->save();
 
-        StockTransaction::create([
-            'item_code' => $billItem['item_code'],
-            'item_name' => $billItem['item_name'],
-            'transaction_type' => 'OUT',
-            'quantity' => $billItem['quantity'],
-            'rate' => $billItem['rate'],
-            'price' => $billItem['price'],
-            'reference_no' => $request->bill_no,
-            'source' => 'Customer Bill',
-            'transaction_date' => $request->grn_date,
-        ]);
-    } else {
-        return back()->with('error', 'Not enough stock for item: ' . $item->item_name);
-    }
-}
-
+                StockTransaction::create([
+                    'item_code' => $billItem['item_code'],
+                    'item_name' => $billItem['item_name'],
+                    'transaction_type' => 'OUT',
+                    'quantity' => $billItem['quantity'],
+                    'rate' => $billItem['rate'],
+                    'price' => $billItem['price'],
+                    'reference_no' => $request->bill_no,
+                    'source' => 'Customer Bill',
+                    'transaction_date' => $request->grn_date,
+                ]);
+            } else {
+                return back()->with('error', 'Not enough stock for item: ' . $item->item_name);
+            }
+        }
 
         return $grn;
     });
 
-   
     return redirect()->route('grn.show', $grn->bill_no)->with('success', 'GRN Created Successfully.');
 }
-
-
 
 
 
