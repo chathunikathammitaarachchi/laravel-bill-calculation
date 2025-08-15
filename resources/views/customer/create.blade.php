@@ -15,10 +15,10 @@
             </div>
             <div class="mb-3">
                 <label for="phone">Phone Number</label>
-               
                <input type="number" name="phone" id="phone" class="form-control" autocomplete="tel" required oninput="limitInput(this, 10)">
-
             </div>
+
+            
             <button type="submit" class="btn btn-success">Add Customer</button>
         </form>
     </div>

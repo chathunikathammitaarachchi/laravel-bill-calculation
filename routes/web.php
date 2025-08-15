@@ -10,9 +10,20 @@ use App\Http\Controllers\StockTransactionController;
 use App\Http\Controllers\ItemSummaryController;
 use App\Http\Controllers\DailySummaryController;
 
+use App\Http\Controllers\DuePaymentController;
+
+Route::post('/due-payments/pay', [DuePaymentController::class, 'payDue'])->name('due_payments.pay');
+Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
+Route::get('/due-payments/{id}/pay', [DuePaymentController::class, 'showPaymentForm'])->name('due_payments.form');
+Route::get('/grn/dues/export-pdf', [GRNController::class, 'customerexportDuesPDF'])->name('grn.dues.export');
+
+
+Route::get('/grn/summary', [GRNController::class, 'summaryReport'])->name('grn.summary');
+Route::get('/grn/summary/pdf', [GRNController::class, 'summaryReportPDF'])->name('grn.summary.pdf');
 
 
 
+Route::get('/grn/dues', [GRNController::class, 'showDues'])->name('grn.dues');
 Route::get('/daily-summary', [DailySummaryController::class, 'index'])->name('daily.summary');
 Route::get('/daily-summary/pdf', [DailySummaryController::class, 'dailydownloadPDF'])->name('daily.summary.pdf');
 
@@ -63,7 +74,6 @@ Route::get('/grn/{bill_no}/edit', [GRNController::class, 'edit'])->name('grn.edi
 Route::put('/grn/{bill_no}', [GRNController::class, 'update'])->name('grn.update');
 Route::delete('/grn/{bill_no}', [GRNController::class, 'destroy'])->name('grn.destroy');
 Route::get('/grn/{bill_no}', [GRNController::class, 'show'])->name('grn.show');
-
 
 
 Route::get('/supplier-grn', [SupplierGRNController::class, 'create'])->name('bill.create');

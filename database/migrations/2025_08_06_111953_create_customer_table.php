@@ -4,25 +4,19 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('customer', function (Blueprint $table) {
-            $table->id();
-            $table->integer('customer_id')->unique();
+            $table->id(); // Laravel-generated auto-increment PK
+
+            $table->unsignedBigInteger('customer_id')->unique(); // big int for manual ID
             $table->string('customer_name')->unique();
             $table->string('phone');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('customer');

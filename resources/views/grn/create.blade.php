@@ -41,15 +41,22 @@
                 <label for="grn_date" class="form-label">Bill Date</label>
               <input type="date" name="grn_date" id="grn_date" class="form-control" required>
             </div>
-            <div class="col-md-4">
-                <label for="customer_name" class="form-label">Customer</label>
-                <select name="customer_name" id="customer_name" class="form-select" required>
-                    <option value="" disabled selected>Select Customer</option>
-                    @foreach($customers as $customer)
-                        <option value="{{ $customer->customer_name }}">{{ $customer->customer_name }}</option>
-                    @endforeach
-                </select>
-            </div>
+           <div class="col-md-4">
+    <label for="customer_name" class="form-label">Customer</label>
+    <div class="input-group">
+        <select name="customer_name" id="customer_name" class="form-select" required>
+            <option value="" disabled selected>Select Customer</option>
+            <option value="Cash">Cash</option>
+            @foreach($customers as $customer)
+                <option value="{{ $customer->customer_name }}">{{ $customer->customer_name }}</option>
+            @endforeach
+        </select>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+            +
+        </button>
+    </div>
+</div>
+
         </div>
 
         <h4 class="mb-3 text-secondary">Bill Details</h4>
@@ -168,6 +175,44 @@
 
     </form>
 </div>
+
+
+
+
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel">
+  <div class="modal-dialog">
+    <form id="addCustomerForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="new_customer_name" class="form-label">Customer Name</label>
+            <input type="text" id="new_customer_name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="new_customer_phone" class="form-label">Phone</label>
+               <input type="number" name="phone" id="phone" class="form-control" autocomplete="tel" required oninput="limitInput(this, 10)">
+          </div>
+          <div class="mb-3">
+            <label for="customer_id" class="form-label">Customer ID</label>
+            <input type="number" id="customer_id" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Add Customer</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -330,7 +375,6 @@ searchConfigs.forEach(config => {
                 const firstRow = document.querySelectorAll('.item').length === 1 && !document.querySelector('.item-code').value;
 
                 if (firstRow) {
-                    // Populate first row without cloning
                     const row = document.querySelector('.item');
 
                     row.querySelector('.item-code').value = code;
@@ -346,7 +390,6 @@ searchConfigs.forEach(config => {
                         qtyInput.select();
                     }
                 } else {
-                    // Add new row
                     addItem(code, name, rate);
                 }
             }
@@ -356,6 +399,93 @@ searchConfigs.forEach(config => {
         }
     });
 });
+
+function limitInput(el, maxLength) {
+    if (el.value.length > maxLength) {
+        el.value = el.value.slice(0, maxLength);
+    }
+}
+
+
+document.getElementById('addCustomerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('new_customer_name').value.trim();
+const phone = document.getElementById('phone').value.trim(); // Correct ID
+    const customerId = parseInt(document.getElementById('customer_id').value, 10);
+
+
+
+
+    try {
+        const resp = await fetch('{{ route('customer.store') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                customer_id: customerId,
+                customer_name: name,
+                phone: phone,
+            }),
+        });
+
+        const contentType = resp.headers.get("content-type");
+
+        if (!resp.ok) {
+            const errorText = await resp.text();
+            console.error("Raw error response:", errorText);
+            throw new Error("Failed to submit");
+        }
+
+        if (!contentType || !contentType.includes("application/json")) {
+            const raw = await resp.text();
+            console.error("Expected JSON, got HTML:", raw);
+            throw new Error("Server returned HTML instead of JSON.");
+        }
+
+        const data = await resp.json();
+        console.log("Success:", data);
+
+        const modalEl = document.getElementById('addCustomerModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) {
+         document.activeElement.blur(); 
+            modalInstance.hide();
+        }
+
+        this.reset();
+
+        const customerSelect = document.getElementById('customer_name');
+        const newOption = document.createElement('option');
+        newOption.value = data.customer_name;
+        newOption.textContent = data.customer_name;
+        customerSelect.appendChild(newOption);
+        customerSelect.value = data.customer_name;
+
+    } catch (err) {
+        console.error('Add Customer Error:', err);
+        alert("Failed to add customer. Check console/logs.");
+    }
+
+
+    const modalEl = document.getElementById('addCustomerModal');
+
+modalEl.addEventListener('show.bs.modal', () => {
+    document.body.setAttribute('inert', '');
+});
+
+modalEl.addEventListener('hidden.bs.modal', () => {
+    document.body.removeAttribute('inert');
+});
+
+});
+
+
+
+
 </script>
 
 

@@ -1,0 +1,29 @@
+<?php
+
+// database/migrations/xxxx_xx_xx_create_due_payments_table.php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateDuePaymentsTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('due_payments', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('customer_due_id');
+            $table->string('payment_method');
+            $table->decimal('amount', 10, 2);
+            $table->timestamps();
+
+            $table->foreign('customer_due_id')->references('id')->on('customer_dues')->onDelete('cascade');
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('due_payments');
+    }
+}
+

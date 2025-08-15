@@ -118,6 +118,24 @@
                         </a>
                     </li>
 
+
+<li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('grn.dues') ? 'active' : '' }}" href="{{ route('grn.dues') }}">
+                            Customer Dues
+                        </a>
+                    </li>
+
+
+
+
+<li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('grn.summary') ? 'active' : '' }}" href="{{ route('grn.summary') }}">
+                            Bill summary
+                        </a>
+                    </li>
+
+
+
                 </ul>
             </div>
         </div>

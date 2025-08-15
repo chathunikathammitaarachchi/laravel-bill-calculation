@@ -17,19 +17,29 @@ class CustomerController extends Controller
     {
         return view('customer.create');
     }
-
-    public function store(Request $request)
+  public function store(Request $request)
     {
-     $request->validate([
-    'customer_id' => 'required|integer|unique:customer,customer_id',
-    'customer_name' => 'required|string',
-    'phone' => 'required|string',
+        $request->validate([
+            'customer_id'   => 'required|integer|unique:customer,customer_id',
+            'customer_name' => 'required|string',
+            'phone'         => 'required|string',
+        ]);
 
-]);
+        $customer = Customer::create([
+            'customer_id'   => $request->customer_id,
+            'customer_name' => $request->customer_name,
+            'phone'         => $request->phone,
+        ]);
 
-        Customer::create($request->all());
+        if ($request->expectsJson()) {
+            return response()->json([
+                'customer_id'   => $customer->customer_id,
+                'customer_name' => $customer->customer_name,
+            ]);
+        }
 
-        return redirect()->route('customer.index')->with('success', 'Customer added successfully.');
+        return redirect()->route('customer.index')
+                         ->with('success', 'Customer added successfully.');
     }
 
     public function edit(Customer $customer)

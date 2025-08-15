@@ -8,6 +8,8 @@ use App\Models\Item;
 use App\Models\GRNMaster;
 use App\Models\GRNDetails;
 use App\Models\ItemSummary;
+use App\Models\CustomerDue;
+use App\Models\DuePayment;
 
 use Illuminate\Support\Facades\DB;
 use PDF; 
@@ -17,24 +19,12 @@ class GRNController extends Controller
 {
    public function create()
 {
-
-
-
     $lastGrn = GRNMaster::orderBy('id', 'desc')->first(); 
     $nextBillNo = $lastGrn ? intval($lastGrn->bill_no) + 1 : 1; 
-
-
 
     $customers = Customer::all();
     $items = Item::all();
 
-
-
-
-    
-
-
-    
     return view('grn.create', compact('customers', 'items', 'nextBillNo'));
 }
 
@@ -44,7 +34,7 @@ class GRNController extends Controller
     $request->validate([
         'bill_no' => 'required|unique:bill_master,bill_no',
         'grn_date' => 'required|date',
-        'customer_name' => 'required|string',
+'customer_name' => 'nullable|string',
         'total_price' => 'required|numeric',
         'tobe_price' => 'required|numeric',
         'total_discount' => 'required|numeric',
@@ -59,11 +49,30 @@ class GRNController extends Controller
         'items.*.price' => 'required|numeric',
     ]);
 
-    $grn = DB::transaction(function () use ($request) {
+    $customerName = $request->customer_name;
+
+// If customer_name is empty, assign "Cash" as default
+if (empty($customerName)) {
+    $customerName = 'Cash';
+    
+    // Check if "Cash" customer already exists
+    $cashCustomer = Customer::where('customer_name', 'Cash')->first();
+
+    // If not, create it
+    if (!$cashCustomer) {
+        Customer::create([
+            'customer_name' => 'Cash',
+        ]);
+    }
+}
+
+
+    $grn = DB::transaction(function () use ($request, $customerName) {
+
         $grn = GRNMaster::create([
             'bill_no' => $request->bill_no,
             'grn_date' => $request->grn_date,
-            'customer_name' => $request->customer_name,
+             'customer_name' => $customerName,
             'total_price' => $request->total_price,
             'tobe_price' => $request->tobe_price,
             'total_discount' => $request->total_discount,
@@ -86,7 +95,6 @@ class GRNController extends Controller
 
             $grnDate = \App\Models\GRNMaster::where('bill_no', $request->bill_no)->value('grn_date');
 
-            // Save into summary table
             ItemSummary::create([
                 'item_code' => $item['item_code'],
                 'item_name' => $item['item_name'],
@@ -97,6 +105,23 @@ class GRNController extends Controller
                 'grn_date' => $request->grn_date,
             ]);
         }
+
+
+
+// Inside GRNController@store inside the transaction:
+
+if ($request->customer_pay < $request->tobe_price) {
+    CustomerDue::create([
+        'customer_name' => $customerName,
+        'bill_no' => $request->bill_no,
+        'grn_date' => $request->grn_date,
+        'tobe_price' => $request->tobe_price,
+        'customer_pay' => $request->customer_pay,
+        'balance' => $request->tobe_price - $request->customer_pay, // safer way
+    ]);
+}
+
+
 
         foreach ($request->items as $billItem) {
             $item = Item::where('item_code', $billItem['item_code'])->first();
@@ -127,6 +152,48 @@ class GRNController extends Controller
     return redirect()->route('grn.show', $grn->bill_no)->with('success', 'GRN Created Successfully.');
 }
 
+public function showDues(Request $request)
+{
+    $query = CustomerDue::query();
+
+    if ($request->filled('from_date')) {
+        $query->whereDate('grn_date', '>=', $request->from_date);
+    }
+
+    if ($request->filled('to_date')) {
+        $query->whereDate('grn_date', '<=', $request->to_date);
+    }
+
+    if ($request->filled('customer_name')) {
+        $query->where('customer_name', 'like', $request->customer_name . '%');
+    }
+
+    $dues = $query->orderBy('grn_date', 'desc')->get();
+
+    return view('grn.dues', compact('dues'));
+}
+
+public function customerexportDuesPDF(Request $request)
+{
+    $query = CustomerDue::query();
+
+    if ($request->filled('from_date')) {
+        $query->whereDate('grn_date', '>=', $request->from_date);
+    }
+
+    if ($request->filled('to_date')) {
+        $query->whereDate('grn_date', '<=', $request->to_date);
+    }
+
+    if ($request->filled('customer_name')) {
+        $query->where('customer_name', 'like', $request->customer_name . '%');
+    }
+
+    $dues = $query->orderBy('grn_date', 'desc')->get();
+
+    $pdf = Pdf::loadView('grn.dues_pdf', compact('dues'));
+    return $pdf->download('customer_dues.pdf');
+}
 
 
 
@@ -194,7 +261,7 @@ public function itemCodeSearch(Request $request)
  public function update(Request $request, $bill_no)
 {
 
-    $bill = Bill::where('grn_no', $grn_no)->with('details')->firstOrFail();
+    $bill = GRNMaster::where('bill_no', $bill_no)->with('details')->firstOrFail();
 
     
 
@@ -345,6 +412,99 @@ public function exportPdf(Request $request)
     return $pdf->download('grn-report.pdf');
 }
 
+public function summaryReport(Request $request)
+{
+    $fromDate = $request->input('from_date');
+    $toDate = $request->input('to_date');
+    $customerName = $request->input('customer_name');
 
+    $query = GRNMaster::query();
+
+    // Date Range Filtering
+    if ($fromDate && $toDate) {
+        $query->whereBetween('grn_date', [$fromDate, $toDate]);
+    } elseif ($fromDate) {
+        $query->whereDate('grn_date', '>=', $fromDate);
+    } elseif ($toDate) {
+        $query->whereDate('grn_date', '<=', $toDate);
+    }
+
+    if ($customerName) {
+        $query->where('customer_name', 'like', "%{$customerName}%");
+    }
+
+    $grns = $query->orderBy('grn_date', 'asc')->get();
+
+   // 🔸 Opening Balance Calculation
+$openingBalance = 0;
+if ($fromDate && $customerName) {
+    $openingBalance = GRNMaster::where('customer_name', 'like', "%{$customerName}%")
+                        ->whereDate('grn_date', '<', $fromDate)
+                        ->sum('tobe_price');
+}
+
+
+$totalTotal = $grns->sum('total_price');
+$totalDiscount = $grns->sum('total_discount');
+$totalToBePaid = $grns->sum('tobe_price');
+$totalPaid = $grns->sum('customer_pay');
+$totalBalance = $grns->sum('balance');
+
+
+return view('grn.summary', compact(
+    'grns', 'fromDate', 'toDate', 'customerName', 'openingBalance',
+    'totalTotal', 'totalDiscount', 'totalToBePaid', 'totalPaid', 'totalBalance'
+));
+}
+
+
+
+public function summaryReportPDF(Request $request)
+{
+    $fromDate = $request->input('from_date');
+    $toDate = $request->input('to_date');
+    $customerName = $request->input('customer_name');
+
+    $query = GRNMaster::query();
+
+    // Date Range Filtering
+    if ($fromDate && $toDate) {
+        $query->whereBetween('grn_date', [$fromDate, $toDate]);
+    } elseif ($fromDate) {
+        $query->whereDate('grn_date', '>=', $fromDate);
+    } elseif ($toDate) {
+        $query->whereDate('grn_date', '<=', $toDate);
+    }
+
+    if ($customerName) {
+        $query->where('customer_name', 'like', "%{$customerName}%");
+    }
+
+    $grns = $query->orderBy('grn_date', 'asc')->get();
+
+    // Opening Balance Calculation
+    $openingBalance = 0;
+    if ($fromDate && $customerName) {
+        $openingBalance = GRNMaster::where('customer_name', 'like', "%{$customerName}%")
+            ->whereDate('grn_date', '<', $fromDate)
+            ->sum('tobe_price');
+    }
+
+    $totalTotal = $grns->sum('total_price');
+    $totalDiscount = $grns->sum('total_discount');
+    $totalToBePaid = $grns->sum('tobe_price');
+    $totalPaid = $grns->sum('customer_pay');
+    $totalBalance = $grns->sum('balance');
+
+    // Group by date for better display in PDF
+    $groupedGrns = $grns->groupBy(function($item) {
+        return \Carbon\Carbon::parse($item->grn_date)->format('Y-m-d');
+    });
+
+    return Pdf::loadView('grn.summary_pdf', compact(
+        'groupedGrns', 'fromDate', 'toDate', 'customerName', 'openingBalance',
+        'totalTotal', 'totalDiscount', 'totalToBePaid', 'totalPaid', 'totalBalance'
+    ))->setPaper('a4')->download('bill-report.pdf');
+}
 
 }
