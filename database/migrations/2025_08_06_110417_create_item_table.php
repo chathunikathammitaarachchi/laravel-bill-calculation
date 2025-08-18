@@ -16,6 +16,8 @@ return new class extends Migration
             $table->integer('item_code');
             $table->string('item_name');
             $table->integer('rate');
+            $table->integer('cost_price');
+            $table->integer('sale_price');
             $table->integer('stock');
 
             $table->timestamps();

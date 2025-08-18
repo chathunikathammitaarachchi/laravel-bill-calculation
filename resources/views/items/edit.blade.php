@@ -18,6 +18,14 @@
                 <label>Rate</label>
                 <input type="number" name="rate" class="form-control" value="{{ $item->rate }}" required>
             </div>
+             <div class="mb-3">
+                <label>Cost Price</label>
+                <input type="number" name="cost_price" class="form-control" value="{{ $item->cost_price }}" required>
+            </div>
+                  <div class="mb-3">
+                <label>Sale Price</label>
+                <input type="number" name="sale_price" class="form-control" value="{{ $item->sale_price }}" required>
+            </div>
                  <div class="mb-3">
                 <label>Stock</label>
                 <input type="number" name="stock" class="form-control" value="{{ $item->stock }}" required>

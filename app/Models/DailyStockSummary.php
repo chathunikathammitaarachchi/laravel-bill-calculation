@@ -16,6 +16,8 @@ class DailyStockSummary extends Model
         'source',
         'stock_in',
         'stock_out',
+        'item_code',
+    'item_name',
     ];
 
     public $timestamps = true;

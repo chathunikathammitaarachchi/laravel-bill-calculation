@@ -90,13 +90,7 @@ foreach ($request->items as $grnItem) {
         ]);
     }
 }
-
-
         });
-
-
-
-
         return redirect()->route('bill.show', $request->grn_no)
                          ->with('success', 'GRN Created Successfully.');
     }

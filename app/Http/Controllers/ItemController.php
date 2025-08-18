@@ -4,6 +4,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+
+use App\Models\StockTransaction;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 
 class ItemController extends Controller
@@ -19,20 +22,44 @@ class ItemController extends Controller
         return view('items.create');
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'item_code' => 'required|integer|unique:item,item_code',
-            'item_name' => 'required|string',
-            'rate' => 'required|integer',
-            'stock' => 'required|integer',
 
+public function store(Request $request)
+{
+    $request->validate([
+        'item_code'   => 'required|integer|unique:item,item_code',
+        'item_name'   => 'required|string',
+        'rate'        => 'required|integer',
+        'cost_price'  => 'required|integer',
+        'sale_price'  => 'required|integer',
+        'stock'       => 'required|integer',
+    ]);
+
+    $item = Item::create($request->only([
+        'item_code',
+        'item_name',
+        'rate',
+        'cost_price',
+        'sale_price',
+        'stock'
+    ]));
+
+    if ($item->stock > 0) {
+        StockTransaction::create([
+            'item_code'        => $item->item_code,
+            'item_name'        => $item->item_name,
+            'transaction_type' => 'IN',
+            'quantity'         => $item->stock,
+            'rate'             => $item->rate,
+            'price'            => $item->stock * $item->rate,
+            'reference_no'     => 'INIT-STOCK-' . now()->format('YmdHis'),
+            'source'           => 'Item Stock',
+            'transaction_date' => Carbon::now()->toDateString(),
         ]);
-
-        Item::create($request->all());
-
-        return redirect()->route('items.index')->with('success', 'Item added successfully.');
     }
+
+    return redirect()->route('items.index')->with('success', 'Item added and stock recorded.');
+}
+
 
     public function edit(Item $item)
     {
@@ -45,9 +72,27 @@ class ItemController extends Controller
             'item_code' => 'required|integer|unique:item,item_code,' . $item->id,
             'item_name' => 'required|string',
             'rate' => 'required|integer',
+                'cost_price' => 'required|integer',
+            'sale_price' => 'required|integer',
             'stock' => 'required|integer',
 
         ]);
+
+
+
+        if ($item->stock > 0) {
+        StockTransaction::create([
+            'item_code'        => $item->item_code,
+            'item_name'        => $item->item_name,
+            'transaction_type' => 'IN',
+            'quantity'         => $item->stock,
+            'rate'             => $item->rate,
+            'price'            => $item->stock * $item->rate,
+            'reference_no'     => 'INIT-STOCK-' . now()->format('YmdHis'),
+            'source'           => 'Item Stock',
+            'transaction_date' => Carbon::now()->toDateString(),
+        ]);
+    }
 
         $item->update($request->all());
 

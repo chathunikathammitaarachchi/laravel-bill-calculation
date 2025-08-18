@@ -9,14 +9,24 @@ use App\Http\Controllers\SupplierGRNController;
 use App\Http\Controllers\StockTransactionController;
 use App\Http\Controllers\ItemSummaryController;
 use App\Http\Controllers\DailySummaryController;
-
 use App\Http\Controllers\DuePaymentController;
+use App\Http\Controllers\StockInHandController;
+use App\Http\Controllers\StockHistoryController;
+
+Route::get('/stock-ledger', [StockHistoryController::class, 'index'])->name('stock.history');
+
+Route::get('/stock-in-hand', [StockInHandController::class, 'index'])->name('stock_in_hand.index');
+
+Route::get('/home', function () {
+    return view('home');
+})->name('home');
 
 Route::post('/due-payments/pay', [DuePaymentController::class, 'payDue'])->name('due_payments.pay');
 Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
 Route::get('/due-payments/{id}/pay', [DuePaymentController::class, 'showPaymentForm'])->name('due_payments.form');
 Route::get('/grn/dues/export-pdf', [GRNController::class, 'customerexportDuesPDF'])->name('grn.dues.export');
 
+Route::get('/stock-in-hand', [ItemController::class, 'updateStockInHand'])->name('stock.in.hand');
 
 Route::get('/grn/summary', [GRNController::class, 'summaryReport'])->name('grn.summary');
 Route::get('/grn/summary/pdf', [GRNController::class, 'summaryReportPDF'])->name('grn.summary.pdf');

@@ -16,6 +16,8 @@
                     <th>Item Code</th>
                     <th>Item Name</th>
                     <th>Rate</th>
+                    <th>Cost Price</th>
+                    <th>Sale Price</th>
                     <th> Stock </th>
                     <th>Actions</th>
                 </tr>
@@ -27,6 +29,8 @@
                         <td>{{ $item->item_code }}</td>
                         <td>{{ $item->item_name }}</td>
                         <td>Rs: {{ $item->rate }} </td>
+                        <td>Rs: {{ $item->cost_price }} </td>
+                        <td>Rs: {{ $item->sale_price }} </td>
                         <td>{{ $item->stock }}</td>
 
                         

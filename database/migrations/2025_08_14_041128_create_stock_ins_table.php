@@ -11,15 +11,20 @@ return new class extends Migration
      */
    public function up(): void
 {
-    Schema::create('daily_stock_summaries', function (Blueprint $table) {
-        $table->id();
-        $table->date('transaction_date');
-        $table->string('source');
-        $table->integer('stock_in')->default(0);
-        $table->integer('stock_out')->default(0);
-        $table->integer('net_stock')->storedAs('stock_in - stock_out'); // only works on MySQL 5.7+ or equivalent
-        $table->timestamps();
-    });
+Schema::create('daily_stock_summaries', function (Blueprint $table) {
+    $table->id();
+    $table->date('transaction_date');
+    $table->string('item_code');
+    $table->string('item_name');
+    $table->string('source')->nullable(); // <-- Add this line
+    $table->integer('stock_in')->default(0);
+    $table->integer('stock_out')->default(0);
+    $table->integer('net_stock')->storedAs('stock_in - stock_out');
+    $table->timestamps();
+
+    $table->unique(['transaction_date', 'item_code']);
+});
+
 }
 
     /**

@@ -45,12 +45,12 @@
     <label for="customer_name" class="form-label">Customer</label>
     <div class="input-group">
         <select name="customer_name" id="customer_name" class="form-select" required>
-            <option value="" disabled selected>Select Customer</option>
-            <option value="Cash">Cash</option>
-            @foreach($customers as $customer)
-                <option value="{{ $customer->customer_name }}">{{ $customer->customer_name }}</option>
-            @endforeach
-        </select>
+    <option value="Cash" selected>Cash</option>
+    @foreach($customers as $customer)
+        <option value="{{ $customer->customer_name }}">{{ $customer->customer_name }}</option>
+    @endforeach
+</select>
+
         <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
             +
         </button>
@@ -171,7 +171,11 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-success" style="margin-left: 1145px; font-size: 16px;">Save GRN</button>
+<!-- Buttons -->
+<div class="d-flex justify-content-end gap-2" style="margin-top: 30px; margin-right: 30px;">
+    <button type="submit" class="btn btn-success px-4">Save Bill</button>
+    <button type="button" class="btn btn-secondary px-4" onclick="refreshPage()">Refresh</button>
+</div>
 
     </form>
 </div>
@@ -311,6 +315,16 @@ document.addEventListener('change', function (e) {
         calculateTotals();
     }
 });
+
+
+
+
+
+
+function refreshPage() {
+    location.reload();
+}
+
 
 document.addEventListener('input', function (e) {
     if (e.target.classList.contains('quantity') || e.target.classList.contains('rate')) {

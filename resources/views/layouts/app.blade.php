@@ -10,138 +10,151 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        .navbar {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #fff;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            padding-top: 1rem;
         }
 
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
+        .sidebar .nav-link {
+            color: #333;
+            padding: 10px 20px;
+            display: block;
+            font-weight: 500;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #e7f1ff;
             color: #0d6efd !important;
+            font-weight: bold;
         }
 
-        .container {
-            background: #ffffff;
+        .sidebar .nav-link:hover {
+            background-color: #f1f1f1;
+            color: #0a58ca;
+        }
+
+        .content {
+            margin-left: 260px;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
-            margin-top: 30px;
-        }
-
-        .nav-link.active {
-            font-weight: bold;
-            color: #0d6efd !important;
-        }
-
-        .nav-link {
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: #0a58ca !important;
-            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">Bill System</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('customer.index') ? 'active' : '' }}" href="{{ route('customer.index') }}">
-                            Customer
-                        </a>
-                    </li>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h4 class="text-center mb-4">
+            <a href="{{ route('home') }}" class="text-decoration-none text-primary fw-bold">Bill System</a>
+        </h4>
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">
-                            Items
-                        </a>
-                    </li>
+        <ul class="nav flex-column">
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('grn.report') ? 'active' : '' }}" href="{{ route('grn.report') }}">
-                            Bill Reports
-                        </a>
-                    </li>
+            {{-- Supplier Section --}}
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('supplier.index') ? 'active' : '' }}" href="{{ route('supplier.index') }}">
+                    Supplier
+                </a>
+            </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('supplier.index') ? 'active' : '' }}" href="{{ route('supplier.index') }}">
-                            Supplier
-                        </a>
-                    </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('bill.create') ? 'active' : '' }}" href="{{ route('bill.create') }}">
+                    Supplier GRN Order
+                </a>
+            </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('bill.create') ? 'active' : '' }}" href="{{ route('bill.create') }}">
-                            Supplier GRN Order
-                        </a>
-                    </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('bill.report') ? 'active' : '' }}" href="{{ route('bill.report') }}">
+                    Supplier Report
+                </a>
+            </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('stock.index') ? 'active' : '' }}" href="{{ route('stock.index') }}">
-                            Item Stock Management
-                        </a>
-                    </li>
+            {{-- Item Section --}}
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">
+                    Items
+                </a>
+            </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('bill.report') ? 'active' : '' }}" href="{{ route('bill.report') }}">
-                            Supplier Report
-                        </a>
-                    </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('stock.index') ? 'active' : '' }}" href="{{ route('stock.index') }}">
+                    Item Stock Management
+                </a>
+            </li>
 
-                   
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('item_summaries.index') ? 'active' : '' }}" href="{{ route('item_summaries.index') }}">
+                    Item Summary
+                </a>
+            </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('stock.transactions') ? 'active' : '' }}" href="{{ route('stock.transactions') }}">
-                             All Transactions
-                        </a>
-                    </li>
+               
+            {{-- Customer Section --}}
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('customer.index') ? 'active' : '' }}" href="{{ route('customer.index') }}">
+                    Customer
+                </a>
+            </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('item_summaries.index') ? 'active' : '' }}" href="{{ route('item_summaries.index') }}">
-                            Item Summary
-                        </a>
-                    </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('daily.summary') ? 'active' : '' }}" href="{{ route('daily.summary') }}">
-                            Daily Summary
-                        </a>
-                    </li>
+             <li class="nav-item">
+            <a class="nav-link" href="/">Customer Bill</a>
+            </li>
 
+
+
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('grn.dues') ? 'active' : '' }}" href="{{ route('grn.dues') }}">
+                    Customer Dues
+                </a>
+            </li>
+
+
+
+
+            {{-- Reports --}}
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('grn.report') ? 'active' : '' }}" href="{{ route('grn.report') }}">
+                    Bill Reports
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('grn.summary') ? 'active' : '' }}" href="{{ route('grn.summary') }}">
+                    Bill Summary
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('daily.summary') ? 'active' : '' }}" href="{{ route('daily.summary') }}">
+                    Stock In Hand
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('stock.transactions') ? 'active' : '' }}" href="{{ route('stock.transactions') }}">
+                    All  Stock Transactions
+                </a>
+            </li>
 
 <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('grn.dues') ? 'active' : '' }}" href="{{ route('grn.dues') }}">
-                            Customer Dues
-                        </a>
-                    </li>
+    <a class="nav-link" href="{{ route('stock.history') }}">Stock Ledger</a>
+</li>
 
 
 
 
-<li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('grn.summary') ? 'active' : '' }}" href="{{ route('grn.summary') }}">
-                            Bill summary
-                        </a>
-                    </li>
+        </ul>
+    </div>
 
-
-
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
+    <!-- Main Content -->
+    <div class="content">
         @yield('content')
     </div>
 

@@ -14,6 +14,8 @@ class Item extends Model
         'item_code',
         'item_name',
         'rate',
+        'cost_price',
+        'sale_price',
         'stock',
     ];
 
