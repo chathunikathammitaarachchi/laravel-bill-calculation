@@ -1,6 +1,185 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+/* Container & Fonts */
+.container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #2c3e50;
+    background: #f9fafb;
+    padding-bottom: 3rem;
+}
+
+/* Heading */
+h2 {
+    font-weight: 800;
+    color: #34495e;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.05em;
+    text-shadow: 1px 1px 1px #ecf0f1;
+}
+
+/* Form Styles */
+form label {
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 0.4rem;
+}
+
+form input.form-control {
+    border: 1.5px solid #bdc3c7;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+form input.form-control:focus {
+    border-color: #2980b9;
+    box-shadow: 0 0 6px rgba(41, 128, 185, 0.5);
+    outline: none;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(45deg, #2980b9, #3498db);
+    border: none;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    box-shadow: 0 5px 15px rgba(41, 128, 185, 0.4);
+    transition: background 0.4s ease;
+}
+.btn-primary:hover, .btn-primary:focus {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    box-shadow: 0 7px 20px rgba(41, 128, 185, 0.7);
+}
+
+.btn-secondary {
+    background: #7f8c8d;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: background 0.3s ease;
+    color: white;
+}
+.btn-secondary:hover, .btn-secondary:focus {
+    background: #95a5a6;
+    color: white;
+}
+
+/* Table Container */
+.table-responsive {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    background: white;
+}
+
+/* Table Styles */
+table.table-bordered {
+    border-collapse: separate;
+    border-spacing: 0 1rem;
+    font-size: 0.95rem;
+}
+
+table.table-bordered thead th {
+    background: #34495e;
+    color: #ecf0f1;
+    font-weight: 700;
+    border: none !important;
+    letter-spacing: 0.04em;
+    padding: 1rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 11;
+}
+
+table.table-bordered tbody tr {
+    background: #fdfdfd;
+    box-shadow: 0 2px 12px rgba(52, 73, 94, 0.08);
+    border-radius: 1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+table.table-bordered tbody tr:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 20px rgba(41, 128, 185, 0.3);
+    cursor: pointer;
+}
+
+table.table-bordered tbody td {
+    vertical-align: middle;
+    padding: 1rem 1rem;
+    border: none !important;
+}
+
+/* Text Align */
+.text-end {
+    text-align: right !important;
+}
+
+/* Highlight Bill No and Totals */
+.fw-bold.text-primary {
+    color: #2980b9 !important;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.fw-semibold.text-success {
+    color: #27ae60 !important;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Empty message style */
+td.text-center.text-muted.py-4 {
+    font-style: italic;
+    color: #95a5a6;
+    font-size: 1.1rem;
+}
+
+/* Pagination */
+.mt-4 {
+    margin-top: 2rem !important;
+}
+
+/* Item-wise summary table */
+.table-sm.table-bordered {
+    margin-top: 1.5rem;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(41, 128, 185, 0.15);
+}
+
+.table-sm.table-bordered thead th {
+    background: #ecf0f1;
+    color: #34495e;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 0.75rem 1rem;
+}
+
+/* Chart Titles */
+h5.text-center {
+    font-weight: 700;
+    color: #2980b9;
+    margin-bottom: 1rem;
+    letter-spacing: 0.04em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    table.table-bordered thead th, table.table-bordered tbody td {
+        padding: 0.75rem 0.8rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+}
+</style>
+
 <div class="container py-4">
     <h2>🧾 Stock Hand Table</h2>
 

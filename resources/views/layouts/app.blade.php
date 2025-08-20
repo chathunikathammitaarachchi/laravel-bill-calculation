@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <title>Bill System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #f1f3f5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
@@ -16,32 +18,54 @@
             position: fixed;
             top: 0;
             left: 0;
-            background-color: #fff;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
             padding-top: 1rem;
+            color: #fff;
         }
 
-        .sidebar .nav-link {
-            color: #333;
-            padding: 10px 20px;
+        .sidebar a {
+            color: #ffffffcc;
+            padding: 12px 20px;
             display: block;
             font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
         }
 
-        .sidebar .nav-link.active {
-            background-color: #e7f1ff;
-            color: #0d6efd !important;
-            font-weight: bold;
-        }
-
+        .sidebar .nav-link.active,
         .sidebar .nav-link:hover {
-            background-color: #f1f1f1;
-            color: #0a58ca;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff !important;
+            font-weight: bold;
+            border-left: 4px solid #fff;
+        }
+
+        .sidebar h4 a {
+            color: #fff;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
         .content {
             margin-left: 260px;
             padding: 2rem;
+        }
+
+        .nav-item i {
+            margin-right: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .content {
+                margin-left: 0;
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -51,104 +75,104 @@
     <!-- Sidebar Navigation -->
     <div class="sidebar">
         <h4 class="text-center mb-4">
-            <a href="{{ route('home') }}" class="text-decoration-none text-primary fw-bold">Bill System</a>
+            <a href="{{ route('home') }}">Bill System</a>
         </h4>
 
         <ul class="nav flex-column">
 
-            {{-- Supplier Section --}}
+            {{-- Supplier --}}
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('supplier.index') ? 'active' : '' }}" href="{{ route('supplier.index') }}">
-                    Supplier
+                    <i class="bi bi-person-badge"></i> Supplier
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('bill.create') ? 'active' : '' }}" href="{{ route('bill.create') }}">
-                    Supplier GRN Order
+                    <i class="bi bi-file-earmark-plus"></i> Supplier GRN Order
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('bill.report') ? 'active' : '' }}" href="{{ route('bill.report') }}">
-                    Supplier Report
+                    <i class="bi bi-file-earmark-text"></i> Supplier Report
                 </a>
             </li>
 
-            {{-- Item Section --}}
+            {{-- Item --}}
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">
-                    Items
+                    <i class="bi bi-box-seam"></i> Items
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('stock.index') ? 'active' : '' }}" href="{{ route('stock.index') }}">
-                    Item Stock Management
+                    <i class="bi bi-gear-wide-connected"></i> Item Stock Management
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('item_summaries.index') ? 'active' : '' }}" href="{{ route('item_summaries.index') }}">
-                    Item Summary
+                    <i class="bi bi-file-earmark-bar-graph"></i> Item Summary
                 </a>
             </li>
 
-               
-            {{-- Customer Section --}}
+            {{-- Customer --}}
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('customer.index') ? 'active' : '' }}" href="{{ route('customer.index') }}">
-                    Customer
+                    <i class="bi bi-people"></i> Customer
                 </a>
             </li>
 
-
-             <li class="nav-item">
-            <a class="nav-link" href="/">Customer Bill</a>
+            <li class="nav-item">
+                <a class="nav-link" href="/">
+                    <i class="bi bi-receipt"></i> Customer Bill
+                </a>
             </li>
-
-
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('grn.dues') ? 'active' : '' }}" href="{{ route('grn.dues') }}">
-                    Customer Dues
+                    <i class="bi bi-cash-coin"></i> Customer Dues
                 </a>
             </li>
-
-
-
 
             {{-- Reports --}}
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('grn.report') ? 'active' : '' }}" href="{{ route('grn.report') }}">
-                    Bill Reports
+                    <i class="bi bi-bar-chart-steps"></i> Bill Reports
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('grn.summary') ? 'active' : '' }}" href="{{ route('grn.summary') }}">
-                    Bill Summary
+                    <i class="bi bi-clipboard-data"></i> Bill Summary
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('daily.summary') ? 'active' : '' }}" href="{{ route('daily.summary') }}">
-                    Stock In Hand
+                    <i class="bi bi-journal-bookmark-fill"></i> Stock IN Hand
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('stock.transactions') ? 'active' : '' }}" href="{{ route('stock.transactions') }}">
-                    All  Stock Transactions
+                    <i class="bi bi-arrow-left-right"></i> All Stock Transactions
                 </a>
             </li>
 
-<li class="nav-item">
-    <a class="nav-link" href="{{ route('stock.history') }}">Stock Ledger</a>
-</li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('stock.history') }}">
+                    <i class="bi bi-clock-history"></i> Stock Ledger
+                </a>
+            </li>
 
-
-
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('daily.item.summary') }}">
+                    <i class="bi bi-calendar-week"></i> Daily Item Stock
+                </a>
+            </li>
 
         </ul>
     </div>

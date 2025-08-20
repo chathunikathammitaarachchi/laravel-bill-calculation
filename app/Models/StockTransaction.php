@@ -6,15 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class StockTransaction extends Model
 {
+
+
+    protected $table = 'stockinhand';
+
     protected $fillable = [
     'item_code',
     'item_name',
-    'transaction_type', // IN / OUT
+    'transaction_type', 
     'quantity',
     'rate',
     'price',
     'reference_no',
-    'source',           // e.g., "Initial Stock", "GRN", "Bill"
+    'source',           
     'transaction_date',
 ];
 

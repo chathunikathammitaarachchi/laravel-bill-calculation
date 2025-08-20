@@ -1,24 +1,19 @@
-
- <!--Create GRN  -->
 @extends('layouts.app')
 
 @section('content')
 
-<div>
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <h2 class="mb-0">Create GRN</h2>
+<div class="container" style="max-width: 1200px; margin: auto; padding: 70px; background: linear-gradient(135deg, #e0f7f1 0%, #dbe8f5 100%); border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="mb-0">Create GRN</h2>
 
-    <form action="{{ route('bill.search') }}" method="GET" style="max-width: 350px;">
-        @csrf
-        <div class="input-group shadow-sm rounded">
-            <input type="text" name="grn_no" class="form-control" placeholder="Enter GRN No to Search" required>
-            <button type="submit" class="btn btn-primary">Search</button>
-        </div>
-    </form>
-</div>
-
-
-
+        <form action="{{ route('bill.search') }}" method="GET" style="max-width: 350px;">
+            @csrf
+            <div class="input-group shadow-sm rounded">
+                <input type="text" name="grn_no" class="form-control" placeholder="Enter GRN No to Search" required>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+    </div>
 
     <hr/>
 
@@ -38,7 +33,7 @@
             </div>
             <div class="col-md-4">
                 <label for="g_date" class="form-label">GRN Date</label>
-              <input type="date" name="g_date" id="g_date" class="form-control" required>
+                <input type="date" name="g_date" id="g_date" class="form-control" required>
             </div>
             <div class="col-md-4">
                 <label for="supplier_name" class="form-label">Supplier</label>
@@ -53,34 +48,27 @@
 
         <h4 class="mb-3 text-secondary">GRN Details</h4>
 
-<div class="row mb-4">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label for="search_code" class="form-label">Search Item Code</label>
+                <input type="text" id="search_code" class="form-control" placeholder="Search by code">
+                <div id="results_code" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
 
-    
-    <div class="col-md-4">
-        <label for="search_code" class="form-label">Search Item Code</label>
-        <input type="text" id="search_code" class="form-control" placeholder="Search by code">
-        <div id="results_code" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
-    </div>
+            <div class="col-md-4">
+                <label for="search_name" class="form-label">Search Item Name</label>
+                <input type="text" id="search_name" class="form-control" placeholder="Search by name">
+                <div id="results_name" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
 
-    <!-- Search by Name -->
-    <div class="col-md-4">
-        <label for="search_name" class="form-label">Search Item Name</label>
-        <input type="text" id="search_name" class="form-control" placeholder="Search by name">
-        <div id="results_name" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
-    </div>
+            <div class="col-md-4">
+                <label for="search_rate" class="form-label">Search Item Rate</label>
+                <input type="text" id="search_rate" class="form-control" placeholder="Search by rate">
+                <div id="results_rate" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+        </div>
 
-    <!-- Search by Rate -->
-    <div class="col-md-4">
-        <label for="search_rate" class="form-label">Search Item Rate</label>
-        <input type="text" id="search_rate" class="form-control" placeholder="Search by rate">
-        <div id="results_rate" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
-    </div>
-
-</div>
-
-
-<hr/>
-
+        <hr/>
 
         <div id="items">
             <div class="item row align-items-end mb-3">
@@ -116,16 +104,15 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Price</label>
-                    <input type="number" name="items[0][price]" class="form-control price"  readonly  style="text-align: right;">
+                    <input type="number" name="items[0][price]" class="form-control price" readonly style="text-align: right;">
                 </div>
             </div>
         </div>
 
         <button type="button" class="btn btn-outline-primary mb-4" onclick="addItem()">+ Add Item</button>
 
-
-<hr/>
-        <div style="max-width: 450px; margin: 20px auto; margin-left:800px; padding: 20px; font-family: Arial, sans-serif;">
+        <hr/>
+        <div style="max-width: 450px; margin: 20px auto; padding: 20px; font-family: Arial, sans-serif;margin-left:700px;">
             <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
                 <label for="total_price" style="width: 40%; font-weight: 600; margin-right: 10px;">Total Price</label>
                 <input type="number" name="total_price" id="total_price" readonly
@@ -153,12 +140,28 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-success" style="margin-left: 1145px; font-size: 16px;">Save GRN</button>
+<button type="submit" class="btn btn-success btn-lg shadow-sm" 
+        style="width: 20%; font-size: 18px; font-weight: 600; border-radius: 12px; 
+               transition: background-color 0.3s ease, transform 0.2s ease; float: right;">
+  Save GRN
+</button>
+
+<style>
+  button.btn-success:hover {
+    background-color: #28a745cc !important;
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(40,167,69,0.35);
+  }
+
+  button.btn-success:active {
+    transform: scale(0.97);
+    box-shadow: none;
+  }
+</style>
+
 
     </form>
 </div>
-
-
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -171,13 +174,12 @@ function addItem(code = '', name = '', rate = '') {
     const itemsDiv = document.getElementById('items');
     const newItem = document.querySelector('.item').cloneNode(true);
 
-
     newItem.querySelectorAll('label').forEach(label => label.remove());
 
     newItem.querySelectorAll('select, input').forEach(el => {
         const nameAttr = el.getAttribute('name');
         if (nameAttr) {
-            el.setAttribute('name', nameAttr.replace(/\[\d+\]/, `[${itemIndex}]`));
+            el.setAttribute('name', nameAttr.replace(/\$\d+\$/, `[${itemIndex}]`));
         }
 
         if (el.classList.contains('item-code')) {
@@ -188,8 +190,6 @@ function addItem(code = '', name = '', rate = '') {
             el.value = rate;
         } else if (el.classList.contains('quantity')) {
             el.value = 1;
-        } else if (el.classList.contains('price')) {
-            el.value = '';
         } else {
             el.value = '';
         }
@@ -310,7 +310,6 @@ searchConfigs.forEach(config => {
             const existingItem = Array.from(document.querySelectorAll('.item-code')).find(select => select.value === code);
 
             if (existingItem) {
-                
                 const row = existingItem.closest('.item');
                 const qtyInput = row.querySelector('.quantity');
                 if (qtyInput) {
@@ -321,7 +320,6 @@ searchConfigs.forEach(config => {
                 const firstRow = document.querySelectorAll('.item').length === 1 && !document.querySelector('.item-code').value;
 
                 if (firstRow) {
-                    
                     const row = document.querySelector('.item');
 
                     row.querySelector('.item-code').value = code;
@@ -337,7 +335,6 @@ searchConfigs.forEach(config => {
                         qtyInput.select();
                     }
                 } else {
-                    
                     addItem(code, name, rate);
                 }
             }

@@ -1,34 +1,73 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <h2>Add New Customer</h2>
-        <form action="{{ route('customer.store') }}" method="POST">
-            @csrf
-            <div class="mb-3">
-                <label for="customer_id">Customer ID</label>
-                <input type="number" name="customer_id" id="customer_id" class="form-control" autocomplete="off" required>
-            </div>
-            <div class="mb-3">
-                <label for="customer_name">Customer Name</label>
-                <input type="text" name="customer_name" id="customer_name" class="form-control" autocomplete="name" required>
-            </div>
-            <div class="mb-3">
-                <label for="phone">Phone Number</label>
-               <input type="number" name="phone" id="phone" class="form-control" autocomplete="tel" required oninput="limitInput(this, 10)">
-            </div>
-
-            
-            <button type="submit" class="btn btn-success">Add Customer</button>
-        </form>
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+  <div class="card shadow-lg rounded-5 p-4" style="max-width: 420px; width: 100%;">
+    <div class="text-center mb-4">
+      <h2 class="fw-bold text-primary">Add New Customer</h2>
+      <p class="text-muted">Fill the details below to add a new customer</p>
     </div>
+    <form action="{{ route('customer.store') }}" method="POST" novalidate>
+      @csrf
 
+      <div class="form-floating mb-4">
+        <input type="number" class="form-control form-control-lg" id="customer_id" name="customer_id" placeholder="Customer ID" autocomplete="off" required>
+        <label for="customer_id" class="text-muted">Customer ID</label>
+      </div>
 
-    <script>
-function limitInput(elem, maxLength) {
+      <div class="form-floating mb-4">
+        <input type="text" class="form-control form-control-lg" id="customer_name" name="customer_name" placeholder="Customer Name" autocomplete="name" required>
+        <label for="customer_name" class="text-muted">Customer Name</label>
+      </div>
+
+      <div class="form-floating mb-4">
+        <input type="number" class="form-control form-control-lg" id="phone" name="phone" placeholder="Phone Number" autocomplete="tel" required oninput="limitInput(this,10)">
+        <label for="phone" class="text-muted">Phone Number</label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold shadow-sm">
+        Add Customer
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  function limitInput(elem, maxLength) {
     if (elem.value.length > maxLength) {
-        elem.value = elem.value.slice(0, maxLength);
+      elem.value = elem.value.slice(0, maxLength);
     }
-}
+  }
 </script>
+
+<style>
+  body {
+    background: linear-gradient(135deg, #6a11cb 0%, #ec98d0ff 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  .card {
+    background: #fff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(33, 136, 56, 0.3);
+  }
+  .form-control:focus {
+    border-color: #2575fc;
+    box-shadow: 0 0 10px #2575fc;
+  }
+  label {
+    user-select: none;
+  }
+  button.btn-primary {
+    background: #2575fc;
+    border: none;
+    transition: background 0.3s ease;
+  }
+  button.btn-primary:hover {
+    background: #1a59d9;
+    box-shadow: 0 8px 20px rgba(37, 117, 252, 0.6);
+  }
+</style>
 @endsection

@@ -12,8 +12,14 @@ use App\Http\Controllers\DailySummaryController;
 use App\Http\Controllers\DuePaymentController;
 use App\Http\Controllers\StockInHandController;
 use App\Http\Controllers\StockHistoryController;
+use App\Http\Controllers\DailyItemSummaryController;
+
+Route::get('/itemsummary', [DailyItemSummaryController::class, 'index'])->name('itemsummary');
+Route::get('/itemsummary/pdf', [DailyItemSummaryController::class, 'itemsummarydownloadPdf'])->name('itemsummary.pdf');
 
 Route::get('/stock-ledger', [StockHistoryController::class, 'index'])->name('stock.history');
+Route::get('/stock-history/pdf', [StockHistoryController::class, 'stokindownloadPdf'])->name('stock.history.pdf');
+Route::get('/daily-item-summary', [DailyItemSummaryController::class, 'index'])->name('daily.item.summary');
 
 Route::get('/stock-in-hand', [StockInHandController::class, 'index'])->name('stock_in_hand.index');
 
@@ -35,7 +41,7 @@ Route::get('/grn/summary/pdf', [GRNController::class, 'summaryReportPDF'])->name
 
 Route::get('/grn/dues', [GRNController::class, 'showDues'])->name('grn.dues');
 Route::get('/daily-summary', [DailySummaryController::class, 'index'])->name('daily.summary');
-Route::get('/daily-summary/pdf', [DailySummaryController::class, 'dailydownloadPDF'])->name('daily.summary.pdf');
+Route::match(['get', 'post'], '/daily-summary/pdf', [DailySummaryController::class, 'dailydownloadPdf'])->name('daily.summary.pdf');
 
 
 

@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ItemSummary extends Model
 {
+
+        protected $table = 'item_summaries';
+
     protected $fillable = [
         'item_code',
         'item_name',

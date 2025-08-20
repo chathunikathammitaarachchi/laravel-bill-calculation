@@ -5,21 +5,18 @@
 
 @section('content')
 
-<div>
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <h2 class="mb-0">Create Bill</h2>
+<div class="container" style="max-width: 1200px; margin: auto; padding: 20px;  background: linear-gradient(135deg, #e0e0f8ff 0%, #dbe8f5 100%); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="mb-0">Create Bill</h2>
 
-    <form action="{{ route('grn.search') }}" method="GET" style="max-width: 350px;">
-        @csrf
-        <div class="input-group shadow-sm rounded">
-            <input type="text" name="bill_no" class="form-control" placeholder="Enter Bill No to Search" required>
-            <button type="submit" class="btn btn-primary">Search</button>
-        </div>
-    </form>
-</div>
-
-
-
+        <form action="{{ route('grn.search') }}" method="GET" style="max-width: 350px;">
+            @csrf
+            <div class="input-group shadow-sm rounded">
+                <input type="text" name="bill_no" class="form-control" placeholder="Enter Bill No to Search" required>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+    </div>
 
     <hr/>
 
@@ -39,56 +36,47 @@
             </div>
             <div class="col-md-4">
                 <label for="grn_date" class="form-label">Bill Date</label>
-              <input type="date" name="grn_date" id="grn_date" class="form-control" required>
+                <input type="date" name="grn_date" id="grn_date" class="form-control" required>
             </div>
-           <div class="col-md-4">
-    <label for="customer_name" class="form-label">Customer</label>
-    <div class="input-group">
-        <select name="customer_name" id="customer_name" class="form-select" required>
-    <option value="Cash" selected>Cash</option>
-    @foreach($customers as $customer)
-        <option value="{{ $customer->customer_name }}">{{ $customer->customer_name }}</option>
-    @endforeach
-</select>
-
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
-            +
-        </button>
-    </div>
-</div>
-
+            <div class="col-md-4">
+                <label for="customer_name" class="form-label">Customer</label>
+                <div class="input-group">
+                    <select name="customer_name" id="customer_name" class="form-select" required>
+                        <option value="Cash" selected>Cash</option>
+                        @foreach($customers as $customer)
+                            <option value="{{ $customer->customer_name }}">{{ $customer->customer_name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                        +
+                    </button>
+                </div>
+            </div>
         </div>
 
         <h4 class="mb-3 text-secondary">Bill Details</h4>
 
-<div class="row mb-4">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label for="search_code" class="form-label">Search Item Code</label>
+                <input type="text" id="search_code" class="form-control" placeholder="Search by code">
+                <div id="results_code" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
 
-    
-    <div class="col-md-4">
-        <label for="search_code" class="form-label">Search Item Code</label>
-        <input type="text" id="search_code" class="form-control" placeholder="Search by code">
-        <div id="results_code" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
-    </div>
+            <div class="col-md-4">
+                <label for="search_name" class="form-label">Search Item Name</label>
+                <input type="text" id="search_name" class="form-control" placeholder="Search by name">
+                <div id="results_name" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
 
-    <!-- Search by Name -->
-    <div class="col-md-4">
-        <label for="search_name" class="form-label">Search Item Name</label>
-        <input type="text" id="search_name" class="form-control" placeholder="Search by name">
-        <div id="results_name" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
-    </div>
+            <div class="col-md-4">
+                <label for="search_rate" class="form-label">Search Item Rate</label>
+                <input type="text" id="search_rate" class="form-control" placeholder="Search by rate">
+                <div id="results_rate" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+        </div>
 
-    <!-- Search by Rate -->
-    <div class="col-md-4">
-        <label for="search_rate" class="form-label">Search Item Rate</label>
-        <input type="text" id="search_rate" class="form-control" placeholder="Search by rate">
-        <div id="results_rate" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
-    </div>
-
-</div>
-
-
-<hr/>
-
+        <hr/>
 
         <div id="items">
             <div class="item row align-items-end mb-3">
@@ -124,16 +112,15 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Price</label>
-                    <input type="number" name="items[0][price]" class="form-control price"  readonly  style="text-align: right;">
+                    <input type="number" name="items[0][price]" class="form-control price" readonly style="text-align: right;">
                 </div>
             </div>
         </div>
 
         <button type="button" class="btn btn-outline-primary mb-4" onclick="addItem()">+ Add Item</button>
 
-
-<hr/>
-        <div style="max-width: 450px; margin: 20px auto; margin-left:800px; padding: 20px; font-family: Arial, sans-serif;">
+        <hr/>
+        <div style="max-width: 450px; margin: 20px auto; padding: 20px; font-family: Arial, sans-serif;margin-left:700px;">
             <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
                 <label for="total_price" style="width: 40%; font-weight: 600; margin-right: 10px;">Total Price</label>
                 <input type="number" name="total_price" id="total_price" readonly
@@ -171,52 +158,60 @@
             </div>
         </div>
 
-<!-- Buttons -->
-<div class="d-flex justify-content-end gap-2" style="margin-top: 30px; margin-right: 30px;">
-    <button type="submit" class="btn btn-success px-4">Save Bill</button>
-    <button type="button" class="btn btn-secondary px-4" onclick="refreshPage()">Refresh</button>
-</div>
-
+        <!-- Buttons -->
+        <div class="d-flex justify-content-end gap-2" style="margin-top: 30px;">
+            <button type="submit" class="btn btn-success px-4">Save Bill</button>
+            <button type="button" class="btn btn-secondary px-4" onclick="refreshPage()">Refresh</button>
+        </div>
     </form>
 </div>
-
-
-
 
 <!-- Add Customer Modal -->
 <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel">
-  <div class="modal-dialog">
-    <form id="addCustomerForm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="new_customer_name" class="form-label">Customer Name</label>
-            <input type="text" id="new_customer_name" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label for="new_customer_phone" class="form-label">Phone</label>
-               <input type="number" name="phone" id="phone" class="form-control" autocomplete="tel" required oninput="limitInput(this, 10)">
-          </div>
-          <div class="mb-3">
-            <label for="customer_id" class="form-label">Customer ID</label>
-            <input type="number" id="customer_id" class="form-control" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Add Customer</button>
-        </div>
-      </div>
-    </form>
-  </div>
+    <div class="modal-dialog">
+        <form id="addCustomerForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="new_customer_name" class="form-label">Customer Name</label>
+                        <input type="text" id="new_customer_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_customer_phone" class="form-label">Phone</label>
+                        <input type="number" name="phone" id="phone" class="form-control" autocomplete="tel" required oninput="limitInput(this, 10)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="customer_id" class="form-label">Customer ID</label>
+                        <input type="number" id="customer_id" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+<button type="submit" class="btn btn-success btn-lg shadow-sm" 
+        style="width: 20%; font-size: 18px; font-weight: 600; border-radius: 12px; 
+               transition: background-color 0.3s ease, transform 0.2s ease; float: right;">
+  Save GRN
+</button>
+
+<style>
+  button.btn-success:hover {
+    background-color: #28a745cc !important;
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(40,167,69,0.35);
+  }
+
+  button.btn-success:active {
+    transform: scale(0.97);
+    box-shadow: none;
+  }
+</style>                </div>
+            </div>
+        </form>
+    </div>
 </div>
-
-
-
-
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
