@@ -1,9 +1,13 @@
-@extends('layouts.app') {{-- assuming your layout file is layouts/app.blade.php --}}
+@extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <h1 class="mb-4">Welcome to the Bill System</h1>
-        <p>This is the main Dashboard .</p>
+
+
+    <div class="dashboard-background">
+      <div class="container py-4" style="color: white;">
+    <h1 class="mb-4">Welcome to the Bill System</h1>
+    <p>This is the main Dashboard.</p>
+
 
         
     {{-- Supplier Section --}}
@@ -132,15 +136,7 @@
             </div>
         </div>
         
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Daily Summary</h5>
-                    <p class="card-text">Check daily income/transactions summary.</p>
-                    <a href="{{ route('daily.summary') }}" class="btn btn-primary">Daily Summary</a>
-                </div>
-            </div>
-        </div>
+        
     </div>
 
     {{-- Transaction Section --}}
@@ -148,12 +144,33 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title">All Transactions</h5>
+                    <h5 class="card-title">All Stock Transaction</h5>
                     <p class="card-text">View all stock in/out transactions.</p>
                     <a href="{{ route('stock.transactions') }}" class="btn btn-primary">View Transactions</a>
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">stock ledger</h5>
+                    <p class="card-text">Check stock ledger.</p>
+                    <a href="{{ route('stock.ledger') }}" class="btn btn-primary">stock ledger</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Daily Item Stock</h5>
+                    <p class="card-text">Check Daily Item Stock summary.</p>
+                    <a href="{{ route('daily.item.summary') }}" class="btn btn-primary">Daily Item Stock</a>
+                </div>
+            </div>
+        </div>
+       
     </div>
-    </div>
+
+
+    
 @endsection

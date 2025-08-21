@@ -58,7 +58,7 @@ return view('item_summaries.index', compact('summaries', 'itemTotals', 'allItems
     {
         $query = ItemSummary::query();
 
-        // Apply same filters
+        // Apply  filters
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('grn_date', [
                 $request->start_date . ' 00:00:00',

@@ -25,7 +25,6 @@
                     <th>Item Name</th>
                     <th>Rate</th>
                     <th>Cost Price</th>
-                    <th>Sale Price</th>
                     <th>Stock</th>
                     <th class="text-center">Actions</th>
                 </tr>
@@ -38,7 +37,6 @@
                         <td>{{ $item->item_name }}</td>
                         <td>Rs: {{ number_format($item->rate, 2) }}</td>
                         <td>Rs: {{ number_format($item->cost_price, 2) }}</td>
-                        <td>Rs: {{ number_format($item->sale_price, 2) }}</td>
                         <td>{{ $item->stock }}</td>
                         <td class="text-center">
                             <a href="{{ route('items.edit', $item) }}" class="btn btn-warning btn-sm me-2" title="Edit">

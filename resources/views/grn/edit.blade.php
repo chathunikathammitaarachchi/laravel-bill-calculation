@@ -49,8 +49,34 @@
                     <tbody>
                         @foreach($grn->details as $index => $detail)
                             <tr class="item-row align-middle">
-                                <td><input type="text" name="details[{{ $index }}][item_code]" value="{{ $detail->item_code }}" class="form-control" readonly></td>
-                                <td><input type="text" name="details[{{ $index }}][item_name]" value="{{ $detail->item_name }}" class="form-control" readonly></td>
+                                <td>
+  <select name="details[{{ $index }}][item_code]" class="form-select item-code" required>
+    <option value="" disabled>Select</option>
+    @foreach($items as $item)
+        <option value="{{ $item->item_code }}"
+            data-name="{{ $item->item_name }}"
+            data-rate="{{ $item->rate }}"
+            {{ $item->item_code == $detail->item_code ? 'selected' : '' }}>
+            {{ $item->item_code }}
+        </option>
+    @endforeach
+</select>
+</td>
+
+<td>
+    <select name="details[{{ $index }}][item_name]" class="form-select item-name" required>
+    <option value="" disabled>Select</option>
+    @foreach($items as $item)
+        <option value="{{ $item->item_name }}"
+            data-code="{{ $item->item_code }}"
+            data-rate="{{ $item->rate }}"
+            {{ $item->item_name == $detail->item_name ? 'selected' : '' }}>
+            {{ $item->item_name }}
+        </option>
+    @endforeach
+</select>
+</td>
+
                                 <td><input type="number" name="details[{{ $index }}][rate]" value="{{ $detail->rate }}" class="form-control rate text-end" readonly></td>
                                 <td><input type="number" name="details[{{ $index }}][quantity]" value="{{ $detail->quantity }}" class="form-control quantity text-end" min="1" required></td>
                                 <td><input type="number" name="details[{{ $index }}][price]" value="{{ $detail->price }}" class="form-control price text-end" readonly></td>
@@ -120,59 +146,117 @@
         const table = document.getElementById('itemsTable').querySelector('tbody');
         const lastRow = table.querySelector('tr:last-child');
         const newRow = lastRow.cloneNode(true);
-
         const newIndex = table.querySelectorAll('tr').length;
 
-        newRow.querySelectorAll('input').forEach(input => {
-            let name = input.getAttribute('name');
+        // Update names and clear values
+        newRow.querySelectorAll('input, select').forEach(el => {
+            let name = el.getAttribute('name');
             if (name) {
                 name = name.replace(/\[\d+\]/, `[${newIndex}]`);
-                input.setAttribute('name', name);
+                el.setAttribute('name', name);
             }
 
-            if (input.classList.contains('quantity')) {
-                input.value = 1;
-            } else if (!input.readOnly) {
-                input.value = '';
+            if (el.classList.contains('quantity')) {
+                el.value = 1;
+            } else if (el.classList.contains('rate') || el.classList.contains('price')) {
+                el.value = '0.00';
+            } else if (!el.readOnly) {
+                el.value = '';
             }
 
-            if (input.classList.contains('price')) {
-                input.value = '0.00';
+            if (el.tagName === 'SELECT') {
+                el.selectedIndex = 0;
             }
         });
 
         table.appendChild(newRow);
+        syncItemDropdowns(newRow);
         calculateTotals();
+    }
+
+    function syncItemDropdowns(row) {
+        const itemCodeSelect = row.querySelector('.item-code');
+        const itemNameSelect = row.querySelector('.item-name');
+        const rateInput = row.querySelector('.rate');
+
+        if (!itemCodeSelect || !itemNameSelect || !rateInput) return;
+
+        // Prevent duplicate listeners
+        const newItemCodeSelect = itemCodeSelect.cloneNode(true);
+        const newItemNameSelect = itemNameSelect.cloneNode(true);
+
+        itemCodeSelect.parentNode.replaceChild(newItemCodeSelect, itemCodeSelect);
+        itemNameSelect.parentNode.replaceChild(newItemNameSelect, itemNameSelect);
+
+        // Item Code Change
+        newItemCodeSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const itemName = selectedOption.getAttribute('data-name');
+            const itemRate = selectedOption.getAttribute('data-rate');
+
+            // Set corresponding name
+            [...newItemNameSelect.options].forEach(option => {
+                option.selected = option.value === itemName;
+            });
+
+            rateInput.value = itemRate;
+            calculateTotals();
+        });
+
+        // Item Name Change
+        newItemNameSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const itemCode = selectedOption.getAttribute('data-code');
+            const itemRate = selectedOption.getAttribute('data-rate');
+
+            // Set corresponding code
+            [...newItemCodeSelect.options].forEach(option => {
+                option.selected = option.value === itemCode;
+            });
+
+            rateInput.value = itemRate;
+            calculateTotals();
+        });
     }
 
     function calculateTotals() {
         let total = 0;
 
         document.querySelectorAll('.item-row').forEach(row => {
-            const rate = parseFloat(row.querySelector('.rate').value) || 0;
-            const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+            const rate = parseFloat(row.querySelector('.rate')?.value || 0);
+            const qty = parseFloat(row.querySelector('.quantity')?.value || 0);
             const price = rate * qty;
+
             row.querySelector('.price').value = price.toFixed(2);
             total += price;
         });
 
-        document.getElementById('total_price').value = total.toFixed(2);
-
-        const discount = parseFloat(document.getElementById('total_discount').value) || 0;
+        const discount = parseFloat(document.getElementById('total_discount')?.value || 0);
         const tobe = total - discount;
-        document.getElementById('tobe_price').value = tobe.toFixed(2);
-
-        const customerPay = parseFloat(document.getElementById('customer_pay').value) || 0;
+        const customerPay = parseFloat(document.getElementById('customer_pay')?.value || 0);
         const balance = customerPay - tobe;
+
+        document.getElementById('total_price').value = total.toFixed(2);
+        document.getElementById('tobe_price').value = tobe.toFixed(2);
         document.getElementById('balance').value = balance.toFixed(2);
     }
 
+    // Initial bindings
+    window.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.item-row').forEach(row => {
+            syncItemDropdowns(row);
+        });
+        calculateTotals();
+    });
+
+    // Dynamic recalculations
     document.addEventListener('input', function (e) {
-        if (e.target.classList.contains('quantity') || e.target.id === 'total_discount' || e.target.id === 'customer_pay') {
+        if (e.target.classList.contains('quantity') || 
+            e.target.id === 'total_discount' || 
+            e.target.id === 'customer_pay') {
             calculateTotals();
         }
     });
-
-    window.addEventListener('load', calculateTotals);
 </script>
+
 @endsection

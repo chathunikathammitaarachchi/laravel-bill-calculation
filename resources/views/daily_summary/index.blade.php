@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
 
-    <h2 class="mb-4">Stock In Hand</h2>
+    <h2 class="mb-4">Stock Bin Card</h2>
 
     {{-- Filter Form --}}
     <form method="GET" action="{{ route('daily.summary') }}" class="mb-4">
@@ -45,7 +45,7 @@
 
     {{-- Combined Table --}}
 @if((request('start_date') && count($openingBalances)) || count($dailySummary))
-        <h4>Stock Summary (Opening + Transactions)</h4>
+        <h4 style="color:white">Stock Summary (Opening + Transactions)</h4>
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -97,7 +97,7 @@
                         <td>{{ $code }}</td>
                         <td>{{ $name }}</td>
                         <td class="text-success">+{{ $in }}</td>
-                        <td class="text-danger">-{{ $out }}</td>
+                        <td class="text-danger">{{ $out }}</td>
                         <td>{{ $net }}</td>
                     </tr>
                 @endforeach
@@ -106,7 +106,7 @@
                 <tr style="font-weight: bold; background-color: #f8f9fa;">
                     <td colspan="3" class="text-end">Total (Opening + Transactions)</td>
                     <td class="text-success">+{{ $openingIn + $totalIn }}</td>
-                    <td class="text-danger">-{{ $openingOut + $totalOut }}</td>
+                    <td class="text-danger">{{ $openingOut + $totalOut }}</td>
                     <td>{{ ($openingIn + $totalIn) - ($openingOut + $totalOut) }}</td>
                 </tr>
             </tbody>

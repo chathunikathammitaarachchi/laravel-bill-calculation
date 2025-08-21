@@ -9,29 +9,26 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up()
-{
-    Schema::create('stockinhand', function (Blueprint $table) {
+    public function up(): void
+    {
+        Schema::create('stocktransaction', function (Blueprint $table) {
         $table->id();
         $table->unsignedBigInteger('item_code');
         $table->string('item_name');
-        $table->string('transaction_type'); 
+        $table->enum('transaction_type', ['IN', 'OUT']);
         $table->integer('quantity');
-        $table->decimal('rate', 10, 2);
-        $table->decimal('price', 10, 2);
         $table->string('reference_no'); 
         $table->string('source'); 
         $table->date('transaction_date');
         $table->timestamps();
     });
-}
-
+    }
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('stockinhand');
+        Schema::dropIfExists('stocktransaction');
     }
 };

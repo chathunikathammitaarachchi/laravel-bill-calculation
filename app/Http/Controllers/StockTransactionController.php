@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\StockTransaction;
-use App\Models\StockInHand;
+use App\Models\StockInHands; 
 use Illuminate\Support\Facades\DB;
 use PDF;
+use Illuminate\Support\Carbon;
 
 class StockTransactionController extends Controller
 {
@@ -77,7 +78,7 @@ class StockTransactionController extends Controller
     public function downloadPdf(Request $request)
     {
         $labels = ['IN', 'OUT'];
-        $values = [120, 75]; // Dummy values
+        $values = [120, 75]; 
         $startDate = $request->start_date ?? '2025-01-01';
         $endDate = $request->end_date ?? '2025-08-01';
 
@@ -117,50 +118,140 @@ class StockTransactionController extends Controller
             'transactions', 'summary', 'dailySummary', 'startDate', 'endDate', 'type'
         ));
     }
+public function store(Request $request)
+{
+    $request->validate([
+        'item_code' => 'required|numeric',
+        'item_name' => 'required|string',
+        'transaction_type' => 'required|in:IN,OUT',
+        'quantity' => 'required|numeric|min:1',
+        'reference_no' => 'required|string',
+        'source' => 'required|string',
+        'transaction_date' => 'required|date',
+    ]);
 
-    // ✅ NEW METHOD to handle stock transaction and update StockInHand
-    public function store(Request $request)
-    {
-        $request->validate([
-            'item_code' => 'required|string',
-            'item_name' => 'required|string',
-            'transaction_type' => 'required|in:IN,OUT',
-            'quantity' => 'required|numeric|min:1',
-            'transaction_date' => 'required|date',
+    $quantity = abs($request->quantity); // positive quantity
+    $type = $request->transaction_type;
+    $itemCode = $request->item_code;
+
+    // Pass positive quantity, model will handle sign
+    StockTransaction::create([
+        'item_code' => $itemCode,
+        'item_name' => $request->item_name,
+        'transaction_type' => $type,
+        'quantity' => $quantity,
+        'reference_no' => $request->reference_no,
+        'source' => $request->source,
+        'transaction_date' => $request->transaction_date,
+    ]);
+
+    // Now calculate sums carefully: use absolute value for stock_in and stock_out
+    $stockIn = StockTransaction::where('item_code', $itemCode)
+        ->where('transaction_type', 'IN')
+        ->sum(DB::raw('ABS(quantity)'));
+    $stockOut = StockTransaction::where('item_code', $itemCode)
+        ->where('transaction_type', 'OUT')
+        ->sum(DB::raw('ABS(quantity)'));
+
+    $balance = $stockIn - $stockOut;
+
+    $existing = StockInHands::where('item_code', $itemCode)->first();
+
+    if ($existing) {
+        $existing->update([
+            'stock_in' => $stockIn,
+            'stock_out' => $stockOut,
+            'stock_balance' => $balance,
         ]);
-
-        // Create stock transaction
-        $transaction = StockTransaction::create([
-            'item_code' => $request->item_code,
+    } else {
+        StockInHands::create([
+            'item_code' => $itemCode,
             'item_name' => $request->item_name,
-            'transaction_type' => $request->transaction_type,
-            'quantity' => $request->quantity,
-            'transaction_date' => $request->transaction_date,
+            'stock_in' => $stockIn,
+            'stock_out' => $stockOut,
+            'stock_balance' => $balance,
         ]);
+    }
 
-        // 🔄 Update StockInHand summary
-        $stockIn = StockTransaction::where('item_code', $request->item_code)->where('transaction_type', 'IN')->sum('quantity');
-        $stockOut = StockTransaction::where('item_code', $request->item_code)->where('transaction_type', 'OUT')->sum('quantity');
-        $balance = $stockIn - $stockOut;
+    return redirect()->back()->with('success', 'Stock transaction added and stock in hand updated successfully.');
+}
 
-        $existing = StockInHand::where('item_code', $request->item_code)->first();
 
-        if ($existing) {
-            $existing->update([
+
+
+
+public function stockInHandIndex()
+{
+    $itemCodes = StockTransaction::distinct()->pluck('item_code');
+
+    foreach ($itemCodes as $itemCode) {
+        $stockIn = StockTransaction::where('item_code', $itemCode)
+            ->where('transaction_type', 'IN')
+            ->sum(DB::raw('ABS(quantity)'));
+
+        $stockOut = -1 * StockTransaction::where('item_code', $itemCode)
+            ->where('transaction_type', 'OUT')
+            ->sum(DB::raw('ABS(quantity)'));
+
+        $balance = $stockIn + $stockOut; // stockOut is already negative
+
+        $itemName = StockTransaction::where('item_code', $itemCode)->value('item_name');
+
+        StockInHands::updateOrCreate(
+            ['item_code' => $itemCode],
+            [
+                'item_name' => $itemName,
                 'stock_in' => $stockIn,
-                'stock_out' => $stockOut,
+                'stock_out' => $stockOut, 
                 'stock_balance' => $balance,
-            ]);
-        } else {
-            StockInHand::create([
-                'item_code' => $request->item_code,
-                'item_name' => $request->item_name,
-                'stock_in' => $stockIn,
-                'stock_out' => $stockOut,
-                'stock_balance' => $balance,
-            ]);
+            ]
+        );
+    }
+
+    $stockInHands = StockInHands::all();
+
+    return view('stock_in_hand.index', compact('stockInHands'));
+}
+
+public function showBinCard(Request $request)
+{
+    $itemCode = $request->query('item_code');
+
+    if (!$itemCode) {
+        return redirect()->back()->with('error', 'Item code is required.');
+    }
+
+    $transactions = StockTransaction::where('item_code', $itemCode)
+        ->orderBy('transaction_date')
+        ->get();
+
+    $itemName = optional($transactions->first())->item_name ?? 'Unknown';
+
+    $runningBalance = 0;
+    $binCard = [];
+
+    foreach ($transactions as $transaction) {
+        $inQty = $transaction->transaction_type === 'IN' ? $transaction->quantity : null;
+        $outQty = $transaction->transaction_type === 'OUT' ? $transaction->quantity : null;
+
+        if ($transaction->transaction_type === 'IN') {
+            $runningBalance += $transaction->quantity;
+        } elseif ($transaction->transaction_type === 'OUT') {
+            $runningBalance -= $transaction->quantity;
         }
 
-        return redirect()->back()->with('success', 'Stock transaction added and stock in hand updated successfully.');
+        $binCard[] = [
+            'date' => Carbon::parse($transaction->transaction_date)->format('Y-m-d'),
+            'reference_no' => $transaction->reference_no,
+            'source' => $transaction->source,
+            'in' => $inQty,
+            'out' => $outQty,
+            'balance' => $runningBalance,
+        ];
     }
+
+    return view('stock_transactions.bin_card', compact('binCard', 'itemCode', 'itemName'));
+}
+
+
 }

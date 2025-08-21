@@ -34,7 +34,7 @@
 
         .sidebar .nav-link.active,
         .sidebar .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 247, 247, 0.1);
             color: #fff !important;
             font-weight: bold;
             border-left: 4px solid #fff;
@@ -150,20 +150,16 @@
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('daily.summary') ? 'active' : '' }}" href="{{ route('daily.summary') }}">
-                    <i class="bi bi-journal-bookmark-fill"></i> Stock IN Hand
-                </a>
-            </li>
+          
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('stock.transactions') ? 'active' : '' }}" href="{{ route('stock.transactions') }}">
-                    <i class="bi bi-arrow-left-right"></i> All Stock Transactions
+                    <i class="bi bi-repeat"></i> All Stock Transaction
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('stock.history') }}">
+                <a class="nav-link" href="{{ route('stock.ledger') }}">
                     <i class="bi bi-clock-history"></i> Stock Ledger
                 </a>
             </li>
@@ -174,6 +170,18 @@
                 </a>
             </li>
 
+
+<a href="{{ route('stock.in.hand.index') }}" class="btn btn-primary">Stock In Hand</a>
+
+       <li class="nav-item">
+    <a class="nav-link" href="{{ route('stock.bin_card', ['item_code' => '12345']) }}">
+        Stock Bin Card
+    </a>
+</li>
+
+
+
+
         </ul>
     </div>
 
@@ -183,5 +191,25 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+    body {
+        background: url('https://img.freepik.com/premium-photo/modern-payment-terminal-counter-dark-cafe-environment_1353959-18917.jpg?semt=ais_hybrid&w=740&q=80') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+  
+    .background-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.05); 
+        z-index: -1; 
+    }
+</style>
+
 </body>
+
+
 </html>

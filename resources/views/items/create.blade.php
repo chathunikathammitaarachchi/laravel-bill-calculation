@@ -31,10 +31,6 @@
         <label for="cost_price" class="text-muted">Cost Price (Rs.)</label>
       </div>
 
-      <div class="form-floating mb-4">
-        <input type="number" step="0.01" name="sale_price" id="sale_price" class="form-control form-control-lg" placeholder="Sale Price" required>
-        <label for="sale_price" class="text-muted">Sale Price (Rs.)</label>
-      </div>
 
       <div class="form-floating mb-4">
         <input type="number" name="stock" id="stock" class="form-control form-control-lg" placeholder="Stock" required>

@@ -14,25 +14,31 @@ use App\Http\Controllers\StockInHandController;
 use App\Http\Controllers\StockHistoryController;
 use App\Http\Controllers\DailyItemSummaryController;
 
+Route::get('/stock-in-hand', [StockTransactionController::class, 'stockInHandIndex'])
+     ->name('stock.in.hand.index');
 Route::get('/itemsummary', [DailyItemSummaryController::class, 'index'])->name('itemsummary');
 Route::get('/itemsummary/pdf', [DailyItemSummaryController::class, 'itemsummarydownloadPdf'])->name('itemsummary.pdf');
+Route::get('/stock/bin-card', [StockTransactionController::class, 'showBinCard'])->name('stock.bin_card');
 
-Route::get('/stock-ledger', [StockHistoryController::class, 'index'])->name('stock.history');
-Route::get('/stock-history/pdf', [StockHistoryController::class, 'stokindownloadPdf'])->name('stock.history.pdf');
+Route::get('/stock-ledger', [StockHistoryController::class, 'index'])->name('stock.ledger');
+Route::get('/stock/pdf', [StockHistoryController::class, 'stokindownloadPdf'])->name('stock.ledger.pdf');
 Route::get('/daily-item-summary', [DailyItemSummaryController::class, 'index'])->name('daily.item.summary');
+Route::get('/stock-on-hand/pdf', [DailySummaryController::class, 'stockOnHandPdf'])->name('stock.onhand.pdf');
 
-Route::get('/stock-in-hand', [StockInHandController::class, 'index'])->name('stock_in_hand.index');
+
 
 Route::get('/home', function () {
     return view('home');
 })->name('home');
+
+
+Route::get('/api/items/autocomplete', [StockHistoryController::class, 'autocomplete'])->name('items.autocomplete');
 
 Route::post('/due-payments/pay', [DuePaymentController::class, 'payDue'])->name('due_payments.pay');
 Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
 Route::get('/due-payments/{id}/pay', [DuePaymentController::class, 'showPaymentForm'])->name('due_payments.form');
 Route::get('/grn/dues/export-pdf', [GRNController::class, 'customerexportDuesPDF'])->name('grn.dues.export');
 
-Route::get('/stock-in-hand', [ItemController::class, 'updateStockInHand'])->name('stock.in.hand');
 
 Route::get('/grn/summary', [GRNController::class, 'summaryReport'])->name('grn.summary');
 Route::get('/grn/summary/pdf', [GRNController::class, 'summaryReportPDF'])->name('grn.summary.pdf');

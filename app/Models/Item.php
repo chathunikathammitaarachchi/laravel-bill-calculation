@@ -15,23 +15,11 @@ class Item extends Model
         'item_name',
         'rate',
         'cost_price',
-        'sale_price',
         'stock',
     ];
 
 
-    public function up()
-{
-    Schema::table('item', function (Blueprint $table) {
-        $table->integer('stock')->default(0);
-    });
-}
 
-
-public function stockTransactions()
-{
-    return $this->hasMany(StockTransaction::class);
-}
 
 
 

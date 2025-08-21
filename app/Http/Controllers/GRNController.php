@@ -108,7 +108,7 @@ if (empty($customerName)) {
 
 
 
-// Inside GRNController@store inside the transaction:
+// customer due  transaction:
 
 if ($request->customer_pay < $request->tobe_price) {
     CustomerDue::create([
@@ -117,7 +117,7 @@ if ($request->customer_pay < $request->tobe_price) {
         'grn_date' => $request->grn_date,
         'tobe_price' => $request->tobe_price,
         'customer_pay' => $request->customer_pay,
-        'balance' => $request->tobe_price - $request->customer_pay, // safer way
+        'balance' => $request->tobe_price - $request->customer_pay, 
     ]);
 }
 
@@ -127,7 +127,6 @@ if ($request->customer_pay < $request->tobe_price) {
             $item = Item::where('item_code', $billItem['item_code'])->first();
 
             if ($item && $item->stock >= $billItem['quantity']) {
-                $item->stock -= $billItem['quantity'];
                 $item->save();
 
                 StockTransaction::create([
@@ -255,19 +254,16 @@ public function itemCodeSearch(Request $request)
     {
         $grn = GRNMaster::with('details')->where('bill_no', $bill_no)->firstOrFail();
         $customers = Customer::all();  
-        return view('grn.edit', compact('grn', 'customers'));
+            $items = Item::all(); 
+
+        return view('grn.edit', compact('grn', 'customers','items'));
     }
 
- public function update(Request $request, $bill_no)
+public function update(Request $request, $bill_no)
 {
-
     $bill = GRNMaster::where('bill_no', $bill_no)->with('details')->firstOrFail();
 
-    
-
-    
     $validated = $request->validate([
-        'bill_no' => 'required|unique:bill_master,bill_no,' . $bill_no . ',bill_no',
         'grn_date' => 'required|date',
         'customer_name' => 'required|string',
         'total_price' => 'required|numeric',
@@ -277,34 +273,65 @@ public function itemCodeSearch(Request $request)
         'balance' => 'required|numeric',
         'received_by' => 'required|string',
         'issued_by' => 'required|string',
-        'details.*.item_code' => 'required|integer',
+        'details.*.item_code' => 'required', 
         'details.*.item_name' => 'required|string',
         'details.*.rate' => 'required|numeric',
-        'details.*.quantity' => 'required|integer',
+        'details.*.quantity' => 'required|integer|min:1',
         'details.*.price' => 'required|numeric',
     ]);
 
+ 
     DB::beginTransaction();
 
     try {
-        $grnMaster = GRNMaster::where('bill_no', $bill_no)->firstOrFail();
+        // Restore old stock
+        foreach ($bill->details as $detail) {
+            $item = Item::where('item_code', $detail->item_code)->first();
+            if ($item) {
+                $item->stock += $detail->quantity;
+                $item->save();
+            }
+        }
 
-        $grnMaster->update([
+        // Delete old details & stock transactions
+        GRNDetails::where('bill_no', $bill_no)->delete();
+        StockTransaction::where('reference_no', $bill_no)
+            ->where('transaction_type', 'OUT')
+            ->where('source', 'Customer Bill')
+            ->delete();
+
+        // **Delete old ItemSummary entries related to this GRN**
+        ItemSummary::where('bill_no', $bill_no)->delete();
+
+        // Update master
+        $bill->update([
             'grn_date' => $validated['grn_date'],
             'customer_name' => $validated['customer_name'],
             'total_price' => $validated['total_price'],
-            'total_discount' => $validated['total_discount'] ?? 0,
-            'received_by' => $validated['received_by'],
-            'issued_by' => $validated['issued_by'],
             'tobe_price' => $validated['tobe_price'],
+            'total_discount' => $validated['total_discount'],
             'customer_pay' => $validated['customer_pay'],
             'balance' => $validated['balance'],
+            'received_by' => $validated['received_by'],
+            'issued_by' => $validated['issued_by'],
         ]);
 
-        
-        GRNDetails::where('bill_no', $bill_no)->delete();
-
+        // Loop new details
         foreach ($validated['details'] as $detail) {
+            $item = Item::where('item_code', $detail['item_code'])->first();
+            if (!$item) {
+                DB::rollBack();
+                return back()->with('error', 'Item not found: ' . $detail['item_name']);
+            }
+
+            if ($item->stock < $detail['quantity']) {
+                DB::rollBack();
+                return back()->with('error', 'Insufficient stock for item: ' . $detail['item_name']);
+            }
+
+            
+
+            // Create GRN detail
             GRNDetails::create([
                 'bill_no' => $bill_no,
                 'item_code' => $detail['item_code'],
@@ -313,17 +340,54 @@ public function itemCodeSearch(Request $request)
                 'quantity' => $detail['quantity'],
                 'price' => $detail['price'],
             ]);
+$adjustedQty = abs($billItem['quantity']); // OUT transaction is negative
+
+            // Stock transaction
+            StockTransaction::create([
+                'item_code' => $detail['item_code'],
+                'item_name' => $detail['item_name'],
+                'transaction_type' => 'OUT',
+                'quantity' => $detail['quantity'],
+                'rate' => $detail['rate'],
+                'price' => $detail['price'],
+                'reference_no' => $bill_no,
+                'source' => 'Customer Bill',
+                'transaction_date' => $validated['grn_date'],
+            ]);
+
+            // **Create or update ItemSummary for each item**
+            ItemSummary::create([
+                'item_code' => $detail['item_code'],
+                'item_name' => $detail['item_name'],
+                'quantity' => $detail['quantity'],
+                'rate' => $detail['rate'],
+                'total_price' => $detail['price'],
+                'bill_no' => $bill_no,
+                'grn_date' => $validated['grn_date'],
+            ]);
         }
+
+        // Create/Update Customer Due
+        CustomerDue::updateOrCreate(
+            ['bill_no' => $bill_no],
+            [
+                'customer_name' => $validated['customer_name'],
+                'grn_date' => $validated['grn_date'],
+                'tobe_price' => $validated['tobe_price'],
+                'customer_pay' => $validated['customer_pay'],
+                'balance' => $validated['tobe_price'] - $validated['customer_pay'],
+            ]
+        );
 
         DB::commit();
 
         return redirect()->route('grn.show', $bill_no)->with('success', 'Bill updated successfully!');
     } catch (\Exception $e) {
         DB::rollBack();
-
         return back()->withErrors(['error' => 'Failed to update bill: ' . $e->getMessage()])->withInput();
     }
 }
+
 
     public function index()
     {
@@ -333,12 +397,7 @@ public function itemCodeSearch(Request $request)
 
 
 
-
-
-
-
-
-
+    //reports
 
 public function report(Request $request)
 {

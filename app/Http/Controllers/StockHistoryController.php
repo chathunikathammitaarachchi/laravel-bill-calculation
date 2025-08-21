@@ -22,7 +22,6 @@ class StockHistoryController extends Controller
         $openingInBalance = [];
         $openingOutBalance = [];
 
-        // Get opening balance before start date, filter by item_code or item_name if given
         if ($start) {
             $openingTransactions = StockTransaction::where('transaction_date', '<', $start);
 
@@ -67,45 +66,49 @@ class StockHistoryController extends Controller
             ->orderBy('id')
             ->get();
 
-        foreach ($transactions as $tx) {
-            $code = $tx->item_code;
+       $flatHistory = [];    
+foreach ($transactions as $tx) {
+    $code = $tx->item_code;
 
-            $balance[$code] = $balance[$code] ?? (
-                ($openingInBalance[$code] ?? 0) - ($openingOutBalance[$code] ?? 0)
-            );
-            $inTotal[$code] = $inTotal[$code] ?? 0;
-            $outTotal[$code] = $outTotal[$code] ?? 0;
+    $balance[$code] = $balance[$code] ?? (
+        ($openingInBalance[$code] ?? 0) - ($openingOutBalance[$code] ?? 0)
+    );
+    $inTotal[$code] = $inTotal[$code] ?? 0;
+    $outTotal[$code] = $outTotal[$code] ?? 0;
 
-            if ($tx->transaction_type === 'IN') {
-                $qty = $tx->quantity;
-                $inTotal[$code] += $qty;
-            } else {
-                $qty = -$tx->quantity;
-                $outTotal[$code] += abs($qty);
-            }
+    if ($tx->transaction_type === 'IN') {
+        $qty = $tx->quantity;
+        $inTotal[$code] += $qty;
+    } else {
+        $qty = -$tx->quantity;
+        $outTotal[$code] += abs($qty);
+    }
 
-            $balance[$code] += $qty;
+    $balance[$code] += $qty;
 
-            $grouped[$code][] = [
-                'date'    => $tx->transaction_date,
-                'name'    => $tx->item_name,
-                'type'    => $tx->transaction_type,
-                'qty'     => $qty,
-                'balance' => $balance[$code],
-            ];
-        }
+    $flatHistory[] = [
+        'date' => $tx->transaction_date,
+        'code' => $tx->item_code,
+        'name' => $tx->item_name,
+        'type' => $tx->transaction_type,
+        'qty' => $qty,
+        'balance' => $balance[$code],
+    ];
+}
 
-        return view('stock_history.ledger', [
-            'groupedHistory' => $grouped,
-            'start' => $start,
-            'end' => $end,
-            'inTotal' => $inTotal,
-            'outTotal' => $outTotal,
-            'openingInBalance' => $openingInBalance,
-            'openingOutBalance' => $openingOutBalance,
-            'itemCode' => $itemCode,
-            'itemName' => $itemName,
-        ]);
+
+       return view('stock.ledger', [
+    'flatHistory' => $flatHistory,
+    'start' => $start,
+    'end' => $end,
+    'inTotal' => $inTotal,
+    'outTotal' => $outTotal,
+    'openingInBalance' => $openingInBalance,
+    'openingOutBalance' => $openingOutBalance,
+    'itemCode' => $itemCode,
+    'itemName' => $itemName,
+]);
+
     }
 
     public function stokindownloadPdf(Request $request)
@@ -194,7 +197,7 @@ class StockHistoryController extends Controller
             ];
         }
 
-        $pdf = Pdf::loadView('stock_history.pdf', [
+        $pdf = Pdf::loadView('stock.pdf', [
             'groupedHistory' => $grouped,
             'start' => $start,
             'end' => $end,
@@ -206,6 +209,29 @@ class StockHistoryController extends Controller
             'itemName' => $itemName,
         ]);
 
-        return $pdf->download('stock_ledger.pdf');
+        return $pdf->download('stock.pdf');
     }
+
+    public function autocomplete(Request $request)
+{
+    $term = $request->get('term');
+
+    $items = \App\Models\Item::query()
+        ->where('item_code', 'LIKE', "%{$term}%")
+        ->orWhere('item_name', 'LIKE', "%{$term}%")
+        ->select('item_code', 'item_name')
+        ->limit(10)
+        ->get();
+
+    
+    $formatted = $items->map(function ($item) {
+        return [
+            'label' => $item->item_code . ' - ' . $item->item_name,
+            'value' => $item->item_code,
+            'name'  => $item->item_name, 
+        ];
+    });
+
+    return response()->json($formatted);
+}
 }

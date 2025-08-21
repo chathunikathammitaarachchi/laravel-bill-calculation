@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\StockTransaction;
+use App\Models\StockBinCard;
+
 use App\Models\DailyStockSummary;
-use Illuminate\Support\Facades\DB;
 use PDF; 
+use Illuminate\Support\Facades\DB;
 
 class DailySummaryController extends Controller
 {
+
+    //stock bin card 
 public function index(Request $request)
 {
     $startDate = $request->input('start_date');
@@ -49,10 +53,7 @@ public function index(Request $request)
 }
 
 
-
-
-
-
+//---<
 public function dailydownloadPdf(Request $request)
 {
     $startDate = $request->input('start_date');
@@ -106,7 +107,57 @@ public function dailydownloadPdf(Request $request)
 
 
 
+//stock in hand 
+public function stockOnHand(Request $request)
+{
+    $asOfDate = $request->input('date');
 
+    $query = \App\Models\StockTransaction::select(
+        'item_code',
+        'item_name',
+        DB::raw("SUM(CASE WHEN transaction_type = 'IN' THEN quantity ELSE 0 END) as total_in"),
+        DB::raw("SUM(CASE WHEN transaction_type = 'OUT' THEN quantity ELSE 0 END) as total_out"),
+        DB::raw("SUM(CASE WHEN transaction_type = 'IN' THEN quantity ELSE 0 END) - 
+                 SUM(CASE WHEN transaction_type = 'OUT' THEN quantity ELSE 0 END) as stock_on_hand")
+    );
+
+    if ($asOfDate) {
+        $query->where('transaction_date', '<=', $asOfDate);
+    }
+
+    $stockData = $query->groupBy('item_code', 'item_name')
+        ->orderBy('item_code')
+        ->get();
+
+    return view('stock_on_hand.index', compact('stockData', 'asOfDate'));
+}
+
+
+public function stockOnHandPdf(Request $request)
+{
+    $asOfDate = $request->input('date');
+
+    $query = \App\Models\StockTransaction::select(
+        'item_code',
+        'item_name',
+        DB::raw("SUM(CASE WHEN transaction_type = 'IN' THEN quantity ELSE 0 END) as total_in"),
+        DB::raw("SUM(CASE WHEN transaction_type = 'OUT' THEN quantity ELSE 0 END) as total_out"),
+        DB::raw("SUM(CASE WHEN transaction_type = 'IN' THEN quantity ELSE 0 END) - 
+                 SUM(CASE WHEN transaction_type = 'OUT' THEN quantity ELSE 0 END) as stock_on_hand")
+    );
+
+    if ($asOfDate) {
+        $query->where('transaction_date', '<=', $asOfDate);
+    }
+
+    $stockData = $query->groupBy('item_code', 'item_name')
+        ->orderBy('item_code')
+        ->get();
+
+    $pdf = Pdf::loadView('stock_on_hand.pdf', compact('stockData', 'asOfDate'));
+
+    return $pdf->download('stock_on_hand_report.pdf');
+}
 
 
 

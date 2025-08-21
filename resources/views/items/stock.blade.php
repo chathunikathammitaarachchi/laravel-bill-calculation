@@ -3,7 +3,7 @@
 @section('content')
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">
+        <h2 class="fw-bold mb-0" style="color:white>
             <i class="bi bi-box-seam me-2"></i>Stock Management
         </h2>
         <a href="{{ route('items.index') }}" class="btn btn-outline-primary">
