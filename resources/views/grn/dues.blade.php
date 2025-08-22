@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container" style="max-width: 1550px; margin-top: 40px;">
-    <h2 class="mb-4" style="font-weight: 700; color: #2c3e50; border-bottom: 2px solid #3490dc; padding-bottom: 10px;">
+    <h2 class="mb-4" style="font-weight: 700; color: #ffffffff; border-bottom: 2px solid #3490dc; padding-bottom: 10px;">
         Customer Dues
     </h2>
 

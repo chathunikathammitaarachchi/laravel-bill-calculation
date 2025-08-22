@@ -56,18 +56,7 @@
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Stock Management</h5>
-                    <p class="card-text">Monitor and update stock levels.</p>
-                    <a href="{{ route('stock.index') }}" class="btn btn-primary">Manage Stock</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
+ <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Item Summary</h5>
@@ -76,10 +65,8 @@
                 </div>
             </div>
         </div>
-    </div>
 
-
-     <div class="row mb-4">
+        
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -90,6 +77,21 @@
             </div>
         </div>
         
+       
+        
+       
+    </div>
+
+
+     <div class="row mb-4">
+        
+        
+        
+
+
+        
+
+
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -109,13 +111,9 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    
 
 
-    {{-- Reports Section --}}
-    <div class="row mb-4">
+
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -125,6 +123,14 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    
+
+
+    {{-- Reports Section --}}
+    <div class="row mb-4">
+        
 
         <div class="col-md-4">
             <div class="card shadow-sm">
@@ -136,12 +142,8 @@
             </div>
         </div>
         
-        
-    </div>
 
-    {{-- Transaction Section --}}
-    <div class="row mb-5">
-        <div class="col-md-4">
+         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">All Stock Transaction</h5>
@@ -150,16 +152,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">stock ledger</h5>
-                    <p class="card-text">Check stock ledger.</p>
-                    <a href="{{ route('stock.ledger') }}" class="btn btn-primary">stock ledger</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
+
+
+         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Daily Item Stock</h5>
@@ -168,9 +163,58 @@
                 </div>
             </div>
         </div>
+        
+    </div>
+
+    {{-- Transaction Section --}}
+    <div class="row mb-5">
+       
+         <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Stock In Hand</h5>
+                    <p class="card-text">Check Daily Item Stock summary.</p>
+                    <a href="{{ route('stock_in_hand.index') }}" class="btn btn-primary">Daily Item Stock</a>
+                </div>
+            </div>
+        </div>
+
+
+          <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Stock Bin Card</h5>
+                    <p class="card-text">Check Daily Item Stock summary.</p>
+                    <a href="{{ route('stock.bin_card') }}" class="btn btn-primary">Daily Item Stock</a>
+                </div>
+            </div>
+        </div>
+       
        
     </div>
 
 
     
 @endsection
+ {{-- <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Stock Management</h5>
+                    <p class="card-text">Monitor and update stock levels.</p>
+                    <a href="{{ route('stock.index') }}" class="btn btn-primary">Manage Stock</a>
+                </div>
+            </div>
+        </div> --}}
+
+
+
+
+         {{-- <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">stock ledger</h5>
+                    <p class="card-text">Check stock ledger.</p>
+                    <a href="{{ route('stock.ledger') }}" class="btn btn-primary">stock ledger</a>
+                </div>
+            </div>
+        </div> --}}

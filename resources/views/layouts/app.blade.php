@@ -78,111 +78,93 @@
             <a href="{{ route('home') }}">Bill System</a>
         </h4>
 
-        <ul class="nav flex-column">
+       <!-- Sidebar Navigation -->
+<ul class="nav flex-column">
 
-            {{-- Supplier --}}
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('supplier.index') ? 'active' : '' }}" href="{{ route('supplier.index') }}">
-                    <i class="bi bi-person-badge"></i> Supplier
-                </a>
-            </li>
+    {{-- Supplier --}}
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('supplier.index') ? 'active' : '' }}" href="{{ route('supplier.index') }}">
+            <i class="bi bi-person-badge"></i> Supplier
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('bill.create') ? 'active' : '' }}" href="{{ route('bill.create') }}">
+            <i class="bi bi-file-earmark-plus"></i> Supplier GRN Order
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('bill.report') ? 'active' : '' }}" href="{{ route('bill.report') }}">
+            <i class="bi bi-file-earmark-text"></i> Supplier Report
+        </a>
+    </li>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('bill.create') ? 'active' : '' }}" href="{{ route('bill.create') }}">
-                    <i class="bi bi-file-earmark-plus"></i> Supplier GRN Order
-                </a>
-            </li>
+    {{-- Item --}}
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">
+            <i class="bi bi-box-seam"></i> Items
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('item_summaries.index') ? 'active' : '' }}" href="{{ route('item_summaries.index') }}">
+            <i class="bi bi-file-earmark-bar-graph"></i> Item Summary
+        </a>
+    </li>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('bill.report') ? 'active' : '' }}" href="{{ route('bill.report') }}">
-                    <i class="bi bi-file-earmark-text"></i> Supplier Report
-                </a>
-            </li>
+    {{-- Customer --}}
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('customer.index') ? 'active' : '' }}" href="{{ route('customer.index') }}">
+            <i class="bi bi-people"></i> Customer
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/">
+            <i class="bi bi-receipt"></i> Customer Bill
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('grn.dues') ? 'active' : '' }}" href="{{ route('grn.dues') }}">
+            <i class="bi bi-cash-coin"></i> Customer Dues
+        </a>
+    </li>
 
-            {{-- Item --}}
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">
-                    <i class="bi bi-box-seam"></i> Items
-                </a>
-            </li>
+    {{-- Reports --}}
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('grn.report') ? 'active' : '' }}" href="{{ route('grn.report') }}">
+            <i class="bi bi-bar-chart-steps"></i> Bill Reports
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('grn.summary') ? 'active' : '' }}" href="{{ route('grn.summary') }}">
+            <i class="bi bi-clipboard-data"></i> Bill Summary
+        </a>
+    </li>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('stock.index') ? 'active' : '' }}" href="{{ route('stock.index') }}">
-                    <i class="bi bi-gear-wide-connected"></i> Item Stock Management
-                </a>
-            </li>
+    {{-- Stock --}}
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('stock.transactions') ? 'active' : '' }}" href="{{ route('stock.transactions') }}">
+            <i class="bi bi-repeat"></i> All Stock Transaction
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('daily.item.summary') }}">
+            <i class="bi bi-calendar-week"></i> Daily Item Stock
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('stock_in_hand.index') }}">
+            <i class="bi bi-box"></i> Stock In Hand
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('stock.bin_card') }}">
+            <i class="bi bi-box"></i> Stock Bin Card
+        </a>
+    </li>
+</ul>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('item_summaries.index') ? 'active' : '' }}" href="{{ route('item_summaries.index') }}">
-                    <i class="bi bi-file-earmark-bar-graph"></i> Item Summary
-                </a>
-            </li>
-
-            {{-- Customer --}}
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('customer.index') ? 'active' : '' }}" href="{{ route('customer.index') }}">
-                    <i class="bi bi-people"></i> Customer
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="/">
-                    <i class="bi bi-receipt"></i> Customer Bill
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('grn.dues') ? 'active' : '' }}" href="{{ route('grn.dues') }}">
-                    <i class="bi bi-cash-coin"></i> Customer Dues
-                </a>
-            </li>
-
-            {{-- Reports --}}
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('grn.report') ? 'active' : '' }}" href="{{ route('grn.report') }}">
-                    <i class="bi bi-bar-chart-steps"></i> Bill Reports
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('grn.summary') ? 'active' : '' }}" href="{{ route('grn.summary') }}">
-                    <i class="bi bi-clipboard-data"></i> Bill Summary
-                </a>
-            </li>
-
-          
-
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('stock.transactions') ? 'active' : '' }}" href="{{ route('stock.transactions') }}">
-                    <i class="bi bi-repeat"></i> All Stock Transaction
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('stock.ledger') }}">
-                    <i class="bi bi-clock-history"></i> Stock Ledger
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('daily.item.summary') }}">
-                    <i class="bi bi-calendar-week"></i> Daily Item Stock
-                </a>
-            </li>
+<!-- Main Section Cards -->
 
 
-<a href="{{ route('stock.in.hand.index') }}" class="btn btn-primary">Stock In Hand</a>
-
-       <li class="nav-item">
-    <a class="nav-link" href="{{ route('stock.bin_card', ['item_code' => '12345']) }}">
-        Stock Bin Card
-    </a>
-</li>
-
-
-
-
-        </ul>
     </div>
 
     <!-- Main Content -->

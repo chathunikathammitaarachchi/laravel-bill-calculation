@@ -1,6 +1,101 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    h2, h4 {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .container {
+        background: #ffffff;
+        padding: 70px;
+        border-radius: 8px;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+    }
+
+    table th {
+        background-color: #f8f9fa;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    table td input {
+        border: 1px solid #ced4da;
+        padding: 6px 8px;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #555;
+    }
+
+    .form-control:read-only {
+        background-color: #e9ecef;
+    }
+
+    .btn-danger.btn-sm {
+        padding: 4px 8px;
+        font-size: 0.875rem;
+    }
+
+    .btn-secondary {
+        margin-top: 10px;
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #545b62;
+    }
+
+    .btn-primary {
+        padding: 8px 20px;
+        font-weight: 500;
+        font-size: 1rem;
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .btn-primary:hover {
+        background-color: #0069d9;
+        border-color: #0062cc;
+    }
+
+    #itemsTable input {
+        text-align: center;
+    }
+
+    .d-flex label {
+        font-weight: 500;
+    }
+
+    .form-control {
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    }
+
+    .float-end {
+        margin-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 20px;
+        }
+
+        table th, table td {
+            font-size: 0.875rem;
+        }
+    }
+</style>
+
+
 <div class="container mt-4">
 
     <h2>Edit GRN - GRN No: {{ $bill->GRN_no }}</h2>

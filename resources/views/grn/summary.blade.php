@@ -3,19 +3,19 @@
 @section('content')
 
 <div class="container">
-    <h3 class="mb-4">🧾 Bill Reports</h3>
+    <h3  style="color: white;">🧾 Bill Reports</h3>
 
     <form action="{{ route('grn.summary') }}" method="GET" class="row g-3 mb-4">
         <div class="col-md-3">
-            <label>From Date</label>
+            <label  style="color: white;">From Date</label>
             <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
         </div>
         <div class="col-md-3">
-            <label>To Date</label>
+            <label  style="color: white;">To Date</label>
             <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
         </div>
         <div class="col-md-3">
-            <label>Customer Name</label>
+            <label  style="color: white;">Customer Name</label>
             <input type="text" name="customer_name" class="form-control" value="{{ request('customer_name') }}" placeholder="Enter customer name">
         </div>
         <div class="col-md-3 d-flex align-items-end gap-2">

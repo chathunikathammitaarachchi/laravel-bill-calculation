@@ -71,11 +71,7 @@ class SupplierGRNController extends Controller
 
 
 foreach ($request->items as $grnItem) {
-    $item = Item::where('item_code', $grnItem['item_code'])->first();
-
-    if ($item) {
-        $item->stock += $grnItem['quantity'];
-        $item->save();
+  
 
         StockTransaction::create([
             'item_code' => $grnItem['item_code'],
@@ -88,7 +84,7 @@ foreach ($request->items as $grnItem) {
             'source' => 'Supplier GRN',
             'transaction_date' => $request->g_date,
         ]);
-    }
+    
 }
         });
         return redirect()->route('bill.show', $request->grn_no)

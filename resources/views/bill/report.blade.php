@@ -3,17 +3,18 @@
 @section('content')
 
 <div class="container">
-    <h3 class="mb-4">GRN Reports</h3>
+    <h3 style="font-weight: 700; color: #ffffffff;">GRN Reports</h3>
 
 <form action="{{ route('bill.report') }}" method="GET" class="row g-3 mb-4">
 
+ 
 
     <div class="col-md-3">
-        <label>From Date</label>
+        <label  style="color: white;">From Date</label>
         <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
     </div>
     <div class="col-md-3">
-        <label>To Date</label>
+        <label  style="color: white;">To Date</label>
         <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
     </div>
 

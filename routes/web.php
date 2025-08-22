@@ -15,12 +15,12 @@ use App\Http\Controllers\StockHistoryController;
 use App\Http\Controllers\DailyItemSummaryController;
 
 Route::get('/stock-in-hand', [StockTransactionController::class, 'stockInHandIndex'])
-     ->name('stock.in.hand.index');
+     ->name('stock_in_hand.index');
 Route::get('/itemsummary', [DailyItemSummaryController::class, 'index'])->name('itemsummary');
 Route::get('/itemsummary/pdf', [DailyItemSummaryController::class, 'itemsummarydownloadPdf'])->name('itemsummary.pdf');
-Route::get('/stock/bin-card', [StockTransactionController::class, 'showBinCard'])->name('stock.bin_card');
+Route::get('/stock/bin-card', [StockTransactionController::class, 'binCard'])->name('stock.bin_card');
+Route::get('/stock-ledger', [StockTransactionController::class, 'stockLedgerCard'])->name('stock.ledger');
 
-Route::get('/stock-ledger', [StockHistoryController::class, 'index'])->name('stock.ledger');
 Route::get('/stock/pdf', [StockHistoryController::class, 'stokindownloadPdf'])->name('stock.ledger.pdf');
 Route::get('/daily-item-summary', [DailyItemSummaryController::class, 'index'])->name('daily.item.summary');
 Route::get('/stock-on-hand/pdf', [DailySummaryController::class, 'stockOnHandPdf'])->name('stock.onhand.pdf');

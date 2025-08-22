@@ -44,14 +44,14 @@
     @if(isset($maxItem))
         <div class="summary-box">
             <span class="highlight">Highest OUT:</span>
-            {{ $maxItem['item_code'] }} - {{ $maxItem['item_name'] }} ({{ $maxItem['quantity_total'] }})
+            {{ $minItem['item_code'] }} - {{ $minItem['item_name'] }} ({{ $minItem['quantity_total'] }})
         </div>
     @endif
 
     @if(isset($minItem))
         <div class="summary-box">
             <span class="highlight">Lowest OUT:</span>
-            {{ $minItem['item_code'] }} - {{ $minItem['item_name'] }} ({{ $minItem['quantity_total'] }})
+            {{ $maxItem['item_code'] }} - {{ $maxItem['item_name'] }} ({{ $maxItem['quantity_total'] }})
         </div>
     @endif
 

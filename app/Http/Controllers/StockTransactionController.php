@@ -6,9 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\StockTransaction;
 use App\Models\StockInHands; 
 use Illuminate\Support\Facades\DB;
-use PDF;
-use Illuminate\Support\Carbon;
-
+use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 class StockTransactionController extends Controller
 {
     public function index(Request $request)
@@ -179,79 +178,211 @@ public function store(Request $request)
 
 
 
+//stock in hand
 
-public function stockInHandIndex()
+public function stockInHandIndex(Request $request)
 {
+    $date = $request->input('date');
+
+    // If no datetime provided, use current datetime
+    $selectedDate = $date ? Carbon::parse($date) : Carbon::now();
+
     $itemCodes = StockTransaction::distinct()->pluck('item_code');
+
+    // Clear old stock_in_hand data (optional)
+    StockInHands::truncate();
 
     foreach ($itemCodes as $itemCode) {
         $stockIn = StockTransaction::where('item_code', $itemCode)
             ->where('transaction_type', 'IN')
+            ->where('created_at', '<=', $selectedDate)
             ->sum(DB::raw('ABS(quantity)'));
 
         $stockOut = -1 * StockTransaction::where('item_code', $itemCode)
             ->where('transaction_type', 'OUT')
+            ->where('created_at', '<=', $selectedDate)
             ->sum(DB::raw('ABS(quantity)'));
 
-        $balance = $stockIn + $stockOut; // stockOut is already negative
+        $balance = $stockIn + $stockOut;
 
         $itemName = StockTransaction::where('item_code', $itemCode)->value('item_name');
 
-        StockInHands::updateOrCreate(
-            ['item_code' => $itemCode],
-            [
-                'item_name' => $itemName,
-                'stock_in' => $stockIn,
-                'stock_out' => $stockOut, 
-                'stock_balance' => $balance,
-            ]
-        );
+        // Save to StockInHands
+        if ($stockIn > 0 || $stockOut < 0) {
+            StockInHands::updateOrCreate(
+                ['item_code' => $itemCode],
+                [
+                    'item_name' => $itemName,
+                    'stock_in' => $stockIn,
+                    'stock_out' => $stockOut,
+                    'stock_balance' => $balance,
+                ]
+            );
+        }
     }
 
     $stockInHands = StockInHands::all();
 
-    return view('stock_in_hand.index', compact('stockInHands'));
+    return view('stock_in_hand.index', compact('stockInHands', 'date'));
 }
 
-public function showBinCard(Request $request)
+
+public function binCard(Request $request)
+{
+    $validated = $request->validate([
+        'search' => 'nullable|string',
+        'start_date' => 'nullable|date',
+        'end_date' => 'nullable|date',
+    ]);
+
+    $search = $validated['search'] ?? null;
+    $startDate = $validated['start_date'] ?? null;
+    $endDate = $validated['end_date'] ?? null;
+
+    // Calculate Opening Balance BEFORE the start date
+    $openingBalance = 0;
+    if ($startDate) {
+        $previousTransactions = StockTransaction::query()
+            ->when($search, fn($q) => $q->where('item_code', $search))
+            ->where('transaction_date', '<', $startDate)
+            ->orderBy('transaction_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        foreach ($previousTransactions as $transaction) {
+            $qty = abs($transaction->quantity);
+            $in = $transaction->transaction_type === 'IN' ? $qty : 0;
+            $out = $transaction->transaction_type === 'OUT' ? $qty : 0;
+            $openingBalance += ($in - $out);
+        }
+    }
+
+    // Get transactions within the selected date range
+    $transactions = StockTransaction::query()
+        ->when($search, fn($q) => $q->where('item_code', $search))
+        ->when($startDate && $endDate, fn($q) => $q->whereBetween('transaction_date', [$startDate, $endDate]))
+        ->orderBy('transaction_date', 'asc')
+        ->orderBy('id', 'asc')
+        ->get();
+
+    // If no transactions AND no opening balance, show empty view
+    if ($transactions->isEmpty() && $openingBalance === 0) {
+        return view('stock_transactions.bin_card', [
+            'binCard' => [],
+            'itemCode' => $search,
+            'itemName' => '',
+            'search' => $search,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'totalIn' => 0,
+            'totalOut' => 0,
+            'finalBalance' => 0,
+        ]);
+    }
+
+    $itemName = $transactions->first()->item_name ?? '';
+    $itemCode = $transactions->first()->item_code ?? $search;
+
+    $runningBalance = $openingBalance;
+    $binCard = [];
+
+    // Add opening balance row
+    if ($startDate) {
+        $binCard[] = [
+            'date' => $startDate,
+            'source' => 'Opening Balance',
+            'quantity_in' => 0,
+            'quantity_out' => 0,
+            'balance' => $runningBalance,
+            'item_name' => $itemName,
+        ];
+    }
+
+    // Loop over transactions & calculate running balance
+    foreach ($transactions as $transaction) {
+        $qty = abs($transaction->quantity);
+        $in = $transaction->transaction_type === 'IN' ? $qty : 0;
+        $out = $transaction->transaction_type === 'OUT' ? $qty : 0;
+
+        $runningBalance += ($in - $out);
+
+        $binCard[] = [
+            'date' => $transaction->transaction_date,
+            'source' => $transaction->source,
+            'quantity_in' => $in,
+            'quantity_out' => $out,
+            'balance' => $runningBalance,
+            'item_name' => $transaction->item_name,
+        ];
+    }
+
+    $totalIn = collect($binCard)->sum('quantity_in');
+    $totalOut = collect($binCard)->sum('quantity_out');
+    $finalBalance = !empty($binCard) ? collect($binCard)->last()['balance'] : $openingBalance;
+
+    return view('stock_transactions.bin_card', compact(
+        'binCard', 'itemCode', 'itemName', 'search', 'startDate', 'endDate', 'totalIn', 'totalOut', 'finalBalance'
+    ));
+}
+
+
+
+
+//stock ledger card
+public function stockLedgerCard(Request $request)
 {
     $itemCode = $request->query('item_code');
 
     if (!$itemCode) {
-        return redirect()->back()->with('error', 'Item code is required.');
+        return view('stock_transactions.ledger_card', [
+            'ledger' => [],
+            'itemCode' => '',
+            'itemName' => '',
+            'search' => '',
+        ]);
     }
 
     $transactions = StockTransaction::where('item_code', $itemCode)
-        ->orderBy('transaction_date')
+        ->orderBy('transaction_date', 'asc')
+        ->orderBy('id', 'asc')
         ->get();
 
-    $itemName = optional($transactions->first())->item_name ?? 'Unknown';
+    if ($transactions->isEmpty()) {
+        return view('stock_transactions.ledger_card', [
+            'ledger' => [],
+            'itemCode' => $itemCode,
+            'itemName' => '',
+            'search' => $itemCode,
+        ]);
+    }
 
+    $itemName = $transactions->first()->item_name;
     $runningBalance = 0;
-    $binCard = [];
+    $ledger = [];
 
-    foreach ($transactions as $transaction) {
-        $inQty = $transaction->transaction_type === 'IN' ? $transaction->quantity : null;
-        $outQty = $transaction->transaction_type === 'OUT' ? $transaction->quantity : null;
+    foreach ($transactions as $tx) {
+        $qtyIn = $tx->transaction_type === 'IN' ? abs($tx->quantity) : 0;
+        $qtyOut = $tx->transaction_type === 'OUT' ? abs($tx->quantity) : 0;
 
-        if ($transaction->transaction_type === 'IN') {
-            $runningBalance += $transaction->quantity;
-        } elseif ($transaction->transaction_type === 'OUT') {
-            $runningBalance -= $transaction->quantity;
-        }
+        $runningBalance += ($qtyIn - $qtyOut);
 
-        $binCard[] = [
-            'date' => Carbon::parse($transaction->transaction_date)->format('Y-m-d'),
-            'reference_no' => $transaction->reference_no,
-            'source' => $transaction->source,
-            'in' => $inQty,
-            'out' => $outQty,
+        $ledger[] = [
+            'date' => $tx->transaction_date,
+            'type' => $tx->transaction_type,
+            'qty_in' => $qtyIn,
+            'qty_out' => $qtyOut,
             'balance' => $runningBalance,
+            'source' => $tx->source,
+            'reference_no' => $tx->reference_no,
         ];
     }
 
-    return view('stock_transactions.bin_card', compact('binCard', 'itemCode', 'itemName'));
+    return view('stock_transactions.ledger_card', [
+        'ledger' => $ledger,
+        'itemCode' => $itemCode,
+        'itemName' => $itemName,
+        'search' => $itemCode
+    ]);
 }
-
 
 }

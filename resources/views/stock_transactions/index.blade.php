@@ -2,21 +2,28 @@
 
 @section('content')
 <div class="container">
-    <h2 class="mb-4">Stock In Hand</h2>
+    <h2  style="color: white;">Stock Transaction</h2>
 
-    <!-- Filter Form -->
-    <form method="GET" action="{{ route('stock.transactions') }}" class="row g-3 mb-3">
-        <div class="col-auto">
-            <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" placeholder="Start Date">
-        </div>
-        <div class="col-auto">
-            <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}" placeholder="End Date">
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-secondary">Filter by Date Range</button>
-            <a href="{{ route('stock.transactions') }}" class="btn btn-secondary">Reset</a>
-        </div>
-    </form>
+   <!-- Filter Form -->
+<form method="GET" action="{{ route('stock.transactions') }}" class="row g-3 mb-3">
+    <div class="col-auto">
+        <label for="start_date" style="color: white;">From Date</label>
+        <input type="date" id="start_date" name="start_date" class="form-control" 
+               value="{{ request('start_date') }}" placeholder="Start Date">
+    </div>
+
+    <div class="col-auto">
+        <label for="end_date" style="color: white;">To Date</label>
+        <input type="date" id="end_date" name="end_date" class="form-control" 
+               value="{{ request('end_date') }}" placeholder="End Date">
+    </div>
+
+    <div class="col-auto d-flex align-items-end">
+        <button type="submit" class="btn btn-secondary me-2">Filter by Date Range</button>
+        <a href="{{ route('stock.transactions') }}" class="btn btn-secondary">Reset</a>
+    </div>
+</form>
+
 
     <!-- Filter Tabs -->
     <ul class="nav nav-tabs mb-3">
