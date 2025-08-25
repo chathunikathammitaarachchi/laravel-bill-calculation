@@ -27,6 +27,10 @@ public function prices()
     }
 
 
+public function itemPrices()
+{
+    return $this->hasMany(ItemPrice::class, 'item_id', 'item_code');
+}
 
 
 }

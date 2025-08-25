@@ -10,6 +10,7 @@ use App\Models\GRNDetails;
 use App\Models\ItemSummary;
 use App\Models\CustomerDue;
 use App\Models\DuePayment;
+use App\Models\ItemPrice;
 
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -24,17 +25,20 @@ class GRNController extends Controller
 
     $customers = Customer::all();
     $items = Item::all();
+    $rates = ItemPrice::all(); 
+$items = \App\Models\Item::with('itemPrices')->get();
 
-    return view('grn.create', compact('customers', 'items', 'nextBillNo'));
-}
+
+    return view('grn.create', compact('customers', 'items', 'nextBillNo','rates'));
+    }
 
 
   public function store(Request $request)
-{
+  {
     $request->validate([
         'bill_no' => 'required|unique:bill_master,bill_no',
         'grn_date' => 'required|date',
-'customer_name' => 'nullable|string',
+        'customer_name' => 'nullable|string',
         'total_price' => 'required|numeric',
         'tobe_price' => 'required|numeric',
         'total_discount' => 'required|numeric',
@@ -64,7 +68,7 @@ if (empty($customerName)) {
             'customer_name' => 'Cash',
         ]);
     }
-}
+   }
 
 
     $grn = DB::transaction(function () use ($request, $customerName) {
@@ -72,7 +76,7 @@ if (empty($customerName)) {
         $grn = GRNMaster::create([
             'bill_no' => $request->bill_no,
             'grn_date' => $request->grn_date,
-             'customer_name' => $customerName,
+            'customer_name' => $customerName,
             'total_price' => $request->total_price,
             'tobe_price' => $request->tobe_price,
             'total_discount' => $request->total_discount,
@@ -82,15 +86,19 @@ if (empty($customerName)) {
             'balance' => $request->balance,
         ]);
 
-        foreach ($request->items as $item) {
-            GRNDetails::create([
-                'bill_no' => $grn->bill_no,
-                'item_code' => $item['item_code'],
-                'item_name' => $item['item_name'],
-                'rate' => $item['rate'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-            ]);
+       foreach ($request->items as $item) {
+    // Get rate from ItemPrice table
+    $rate = ItemPrice::where('item_id', $item['item_code'])->value('rate');
+
+    // Create GRNDetails
+    GRNDetails::create([
+        'bill_no' => $grn->bill_no,
+        'item_code' => $item['item_code'],
+        'item_name' => $item['item_name'],
+        'rate' => $rate,
+        'quantity' => $item['quantity'],
+        'price' => $rate * $item['quantity'],
+    ]);
 
 
             $grnDate = \App\Models\GRNMaster::where('bill_no', $request->bill_no)->value('grn_date');
@@ -150,6 +158,7 @@ if ($request->customer_pay < $request->tobe_price) {
 
     return redirect()->route('grn.show', $grn->bill_no)->with('success', 'GRN Created Successfully.');
 }
+
 
 public function showDues(Request $request)
 {

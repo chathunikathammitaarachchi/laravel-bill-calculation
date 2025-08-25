@@ -82,7 +82,7 @@
             <div class="item row align-items-end mb-3">
                 <div class="col-md-2">
                     <label class="form-label">Item Code</label>
-                    <select name="items[0][item_code]" class="form-select item-code" required>
+                    <select name="items[0][item_code]" class="form-select item-code" required style="max-width: 350px;">
                         <option value="" disabled selected>Select Item</option>
                         @foreach($items as $item)
                             <option value="{{ $item->item_code }}" data-name="{{ $item->item_name }}" data-rate="{{ $item->rate }}">
@@ -93,7 +93,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Item Name</label>
-                    <select name="items[0][item_name]" class="form-select item-name" required>
+                    <select name="items[0][item_name]" class="form-select item-name" style="max-width: 350px;" required >
                         <option value="" disabled selected>Select Item</option>
                         @foreach($items as $item)
                             <option value="{{ $item->item_name }}" data-code="{{ $item->item_code }}" data-rate="{{ $item->rate }}">
@@ -102,9 +102,16 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Rate</label>
-                    <input type="number" name="items[0][rate]" class="form-control rate" readonly style="text-align: right;">
+                <div class="col-md-3">
+                    <label class="form-label">Item Rate</label>
+                   <select name="items[0][rate]" class="form-select rate-dropdown" required>
+  <option value="" disabled selected>Select Item Rate</option>
+  @foreach($rates as $price)
+    <option value="{{ $price->rate }}">{{ $price->rate }}</option>
+  @endforeach
+</select>
+
+
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Quantity</label>
@@ -215,19 +222,26 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Set GRN date to today
     document.getElementById('grn_date').value = new Date().toISOString().split('T')[0];
 });
 
 let itemIndex = 1;
 
+// This object should be generated server-side and injected properly
+const itemRates = @json($items->mapWithKeys(function($item) {
+    return [$item->item_code => $item->itemPrices->pluck('rate')->toArray()];
+})->toArray());
+
 function addItem(code = '', name = '', rate = '') {
     const itemsDiv = document.getElementById('items');
     const newItem = document.querySelector('.item').cloneNode(true);
 
-    // Remove labels for cleaner UI
+    // Remove labels for cleaner UI (optional)
     newItem.querySelectorAll('label').forEach(label => label.remove());
 
     newItem.querySelectorAll('select, input').forEach(el => {
+        // Update name attribute index for form submission
         const nameAttr = el.getAttribute('name');
         if (nameAttr) {
             el.setAttribute('name', nameAttr.replace(/\[\d+\]/, `[${itemIndex}]`));
@@ -237,8 +251,17 @@ function addItem(code = '', name = '', rate = '') {
             el.value = code;
         } else if (el.classList.contains('item-name')) {
             el.value = name;
-        } else if (el.classList.contains('rate')) {
-            el.value = rate;
+        } else if (el.classList.contains('rate-dropdown')) {
+            el.innerHTML = '<option value="" disabled selected>Select Item Rate</option>';
+            if (code && itemRates[code]) {
+                itemRates[code].forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r;
+                    opt.textContent = r;
+                    if (r == rate) opt.selected = true;
+                    el.appendChild(opt);
+                });
+            }
         } else if (el.classList.contains('quantity')) {
             el.value = 1;
         } else if (el.classList.contains('price')) {
@@ -249,6 +272,8 @@ function addItem(code = '', name = '', rate = '') {
     });
 
     itemsDiv.appendChild(newItem);
+
+    // Calculate initial price and totals
     updateRowPrice(newItem);
     calculateTotals();
 
@@ -261,10 +286,29 @@ function addItem(code = '', name = '', rate = '') {
     itemIndex++;
 }
 
+function updateRateDropdown(row, itemCode) {
+    const rateDropdown = row.querySelector('.rate-dropdown');
+    if (!rateDropdown) return;
+
+    rateDropdown.innerHTML = '<option value="" disabled selected>Select Item Rate</option>';
+
+    if (itemRates[itemCode]) {
+        itemRates[itemCode].forEach(rate => {
+            const option = document.createElement('option');
+            option.value = rate;
+            option.textContent = rate;
+            rateDropdown.appendChild(option);
+        });
+    }
+}
+
 function updateRowPrice(row) {
-    const rate = parseFloat(row.querySelector('.rate').value) || 0;
+    const rate = parseFloat(row.querySelector('.rate-dropdown').value) || 0;
     const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
-    row.querySelector('.price').value = (rate * quantity).toFixed(2);
+    const priceInput = row.querySelector('.price');
+    if (priceInput) {
+        priceInput.value = (rate * quantity).toFixed(2);
+    }
 }
 
 function calculateTotals() {
@@ -283,29 +327,26 @@ function calculateTotals() {
     document.getElementById('balance').value = (customerPay - tobe).toFixed(2);
 }
 
+// Event delegation for changes in item code, rate, and quantity dropdowns
 document.addEventListener('change', function (e) {
-    if (e.target.classList.contains('item-code') || e.target.classList.contains('item-name')) {
+    if (e.target.classList.contains('item-code')) {
         const row = e.target.closest('.item');
-        const itemCodeSelect = row.querySelector('.item-code');
-        const itemNameSelect = row.querySelector('.item-name');
-        const rateInput = row.querySelector('.rate');
+        const selectedCode = e.target.value;
 
-        if (e.target.classList.contains('item-code')) {
-            const option = itemCodeSelect.selectedOptions[0];
-            const name = option?.getAttribute('data-name') || '';
-            const rate = option?.getAttribute('data-rate') || 0;
+        updateRateDropdown(row, selectedCode);
 
-            itemNameSelect.value = name;
-            rateInput.value = rate;
-        } else {
-            const option = itemNameSelect.selectedOptions[0];
-            const code = option?.getAttribute('data-code') || '';
-            const rate = option?.getAttribute('data-rate') || 0;
+        // Reset rate & price fields
+        const rateDropdown = row.querySelector('.rate-dropdown');
+        if (rateDropdown) rateDropdown.value = '';
 
-            itemCodeSelect.value = code;
-            rateInput.value = rate;
-        }
+        const priceInput = row.querySelector('.price');
+        if (priceInput) priceInput.value = '';
 
+        calculateTotals();
+    }
+
+    if (e.target.classList.contains('rate-dropdown') || e.target.classList.contains('quantity')) {
+        const row = e.target.closest('.item');
         updateRowPrice(row);
         calculateTotals();
     }
@@ -313,18 +354,40 @@ document.addEventListener('change', function (e) {
 
 
 
+const itemNames = @json($items->mapWithKeys(function($item) {
+    return [$item->item_code => $item->item_name];
+})->toArray());
 
+const itemCodes = @json($items->mapWithKeys(function($item) {
+    return [$item->item_name => $item->item_code];
+})->toArray());
 
-
-function refreshPage() {
-    location.reload();
-}
-
-
+// Also update totals on input (live update)
 document.addEventListener('input', function (e) {
-    if (e.target.classList.contains('quantity') || e.target.classList.contains('rate')) {
-        updateRowPrice(e.target.closest('.item'));
+    const row = e.target.closest('.item');
+
+    if (e.target.classList.contains('quantity') || e.target.classList.contains('rate-dropdown')) {
+        updateRowPrice(row);
         calculateTotals();
+    }
+
+    if (e.target.classList.contains('item-code')) {
+        const code = e.target.value.trim();
+        const nameInput = row.querySelector('.item-name');
+        if (nameInput && itemNames[code]) {
+            nameInput.value = itemNames[code];
+        }
+    }
+
+    if (e.target.classList.contains('item-name')) {
+        const name = e.target.value.trim();
+        const codeInput = row.querySelector('.item-code');
+        if (codeInput && itemCodes[name]) {
+            codeInput.value = itemCodes[name];
+
+            // Also update the rate dropdown when name → code changes
+            updateRateDropdown(row, itemCodes[name]);
+        }
     }
 
     if (['total_discount', 'customer_pay'].includes(e.target.id)) {
@@ -332,6 +395,8 @@ document.addEventListener('input', function (e) {
     }
 });
 
+
+// Search input configurations
 const searchConfigs = [
     { inputId: 'search_code', resultId: 'results_code', endpoint: '/items/search/code' },
     { inputId: 'search_name', resultId: 'results_name', endpoint: '/items/search/name' },
@@ -381,6 +446,7 @@ searchConfigs.forEach(config => {
                     qtyInput.select();
                 }
             } else {
+                // Check if first row is empty
                 const firstRow = document.querySelectorAll('.item').length === 1 && !document.querySelector('.item-code').value;
 
                 if (firstRow) {
@@ -388,7 +454,22 @@ searchConfigs.forEach(config => {
 
                     row.querySelector('.item-code').value = code;
                     row.querySelector('.item-name').value = name;
-                    row.querySelector('.rate').value = rate;
+                    
+                    // Populate rate dropdown and select the rate
+                    const rateDropdown = row.querySelector('.rate-dropdown');
+                    if (rateDropdown) {
+                        rateDropdown.innerHTML = '<option value="" disabled>Select Item Rate</option>';
+                        if (itemRates[code]) {
+                            itemRates[code].forEach(r => {
+                                const opt = document.createElement('option');
+                                opt.value = r;
+                                opt.textContent = r;
+                                if (r == rate) opt.selected = true;
+                                rateDropdown.appendChild(opt);
+                            });
+                        }
+                    }
+
                     row.querySelector('.quantity').value = 1;
                     updateRowPrice(row);
                     calculateTotals();
@@ -415,16 +496,13 @@ function limitInput(el, maxLength) {
     }
 }
 
-
+// Add Customer form submission handler
 document.getElementById('addCustomerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const name = document.getElementById('new_customer_name').value.trim();
-const phone = document.getElementById('phone').value.trim(); // Correct ID
+    const phone = document.getElementById('phone').value.trim(); // Correct ID
     const customerId = parseInt(document.getElementById('customer_id').value, 10);
-
-
-
 
     try {
         const resp = await fetch('{{ route('customer.store') }}', {
@@ -461,12 +539,13 @@ const phone = document.getElementById('phone').value.trim(); // Correct ID
         const modalEl = document.getElementById('addCustomerModal');
         const modalInstance = bootstrap.Modal.getInstance(modalEl);
         if (modalInstance) {
-         document.activeElement.blur(); 
+            document.activeElement.blur();
             modalInstance.hide();
         }
 
         this.reset();
 
+        // Add new customer option to select and select it
         const customerSelect = document.getElementById('customer_name');
         const newOption = document.createElement('option');
         newOption.value = data.customer_name;
@@ -478,9 +557,10 @@ const phone = document.getElementById('phone').value.trim(); // Correct ID
         console.error('Add Customer Error:', err);
         alert("Failed to add customer. Check console/logs.");
     }
+});
 
-
-    const modalEl = document.getElementById('addCustomerModal');
+// Inert body when modal is open for accessibility
+const modalEl = document.getElementById('addCustomerModal');
 
 modalEl.addEventListener('show.bs.modal', () => {
     document.body.setAttribute('inert', '');
@@ -489,12 +569,6 @@ modalEl.addEventListener('show.bs.modal', () => {
 modalEl.addEventListener('hidden.bs.modal', () => {
     document.body.removeAttribute('inert');
 });
-
-});
-
-
-
-
 </script>
 
 
