@@ -4,6 +4,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+use App\Models\ItemPrice;
 
 use App\Models\StockTransaction;
 use Illuminate\Support\Carbon;
@@ -29,13 +30,15 @@ public function store(Request $request)
         'item_code'   => 'required|integer|unique:item,item_code',
         'item_name'   => 'required|string',
         'rate'        => 'required|integer',
+        'unit' => 'required|string|max:20',
+  'category' => 'required|string',
         'cost_price'  => 'required|integer',
         'stock'       => 'required|integer',
     ]);
 
     // Create the item
     $item = Item::create($request->only([
-        'item_code', 'item_name', 'rate', 'cost_price', 'stock'
+        'item_code', 'item_name', 'rate', 'cost_price', 'stock','unit', 'category'
     ]));
 
     // Record opening stock as initial transaction
@@ -46,12 +49,21 @@ public function store(Request $request)
             'transaction_type' => 'IN',
             'quantity'         => $item->stock,
             'rate'             => $item->rate,
+            'unit'             => $item->unit,
+            'category'             => $item->category,
             'price'            => $item->stock * $item->rate,
             'reference_no'     => 'OPENING-STOCK-' . now()->format('YmdHis'),
             'source'           => 'Opening Balance',
             'transaction_date' => Carbon::now()->toDateString(),
             'is_opening'       => true,
         ]);
+
+
+
+            $item->prices()->create([
+        'rate'       => $request->rate,
+        'cost_price' => $request->cost_price,
+    ]);
     }
 
     return redirect()->route('items.index')->with('success', 'Item created with opening stock.');
@@ -69,23 +81,36 @@ public function update(Request $request, Item $item)
     $request->validate([
         'item_code'   => 'required|integer|unique:item,item_code,' . $item->id,
         'item_name'   => 'required|string',
-        'rate'        => 'required|integer',
-        'cost_price'  => 'required|integer',
-        // Do NOT validate or update stock here
+        'unit'        => 'required|string|max:20',
+        'category'    => 'required|string',
+        'rate'        => 'required|numeric',
+        'cost_price'  => 'required|numeric',
     ]);
 
-    // Keep stock unchanged — only update other fields
     $item->update([
         'item_code'  => $request->item_code,
         'item_name'  => $request->item_name,
+        'unit'       => $request->unit,
+        'category'   => $request->category,
         'rate'       => $request->rate,
         'cost_price' => $request->cost_price,
-        // ❌ no stock update
     ]);
 
-    return redirect()->route('items.index')->with('success', 'Item updated (stock unchanged).');
-}
+    $lastPrice = $item->prices()->latest('created_at')->first();
 
+    if (
+        !$lastPrice || 
+        $lastPrice->rate != $request->rate || 
+        $lastPrice->cost_price != $request->cost_price
+    ) {
+        $item->prices()->create([
+            'rate'       => $request->rate,
+            'cost_price' => $request->cost_price,
+        ]);
+    }
+
+    return redirect()->route('items.index')->with('success', 'Item updated successfully.');
+}
 
 
     public function destroy(Item $item)

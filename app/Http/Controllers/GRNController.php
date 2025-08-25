@@ -12,7 +12,7 @@ use App\Models\CustomerDue;
 use App\Models\DuePayment;
 
 use Illuminate\Support\Facades\DB;
-use PDF; 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\StockTransaction;
 
 class GRNController extends Controller
@@ -339,8 +339,11 @@ public function update(Request $request, $bill_no)
                 'rate' => $detail['rate'],
                 'quantity' => $detail['quantity'],
                 'price' => $detail['price'],
-            ]);
-$adjustedQty = abs($billItem['quantity']); // OUT transaction is negative
+            ]); 
+
+
+
+$adjustedQty = abs($detail['quantity']);
 
             // Stock transaction
             StockTransaction::create([

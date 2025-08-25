@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\SupplierGRNMaster;
 use App\Models\SupplierGRNDetails;
 use Illuminate\Support\Facades\DB;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Item;
 use App\Models\StockTransaction;
 

@@ -7,7 +7,7 @@ use App\Models\StockTransaction;
 use App\Models\StockBinCard;
 
 use App\Models\DailyStockSummary;
-use PDF; 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
 class DailySummaryController extends Controller

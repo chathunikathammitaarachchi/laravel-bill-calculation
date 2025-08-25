@@ -11,7 +11,7 @@ class Customer extends Model
 
     protected $table = 'customer';
 
-    public $incrementing = false;  // Because customer_id is manually assigned
+    public $incrementing = false;  
     protected $primaryKey = 'customer_id';
     protected $keyType = 'int';
 

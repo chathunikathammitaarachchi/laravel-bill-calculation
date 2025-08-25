@@ -21,7 +21,6 @@
                 </div>
             </div>
         </div>
-        
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -31,7 +30,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -56,7 +54,7 @@
                 </div>
             </div>
         </div>
- <div class="col-md-4">
+    <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Item Summary</h5>
@@ -64,9 +62,7 @@
                     <a href="{{ route('item_summaries.index') }}" class="btn btn-primary">View Summary</a>
                 </div>
             </div>
-        </div>
-
-        
+        </div>        
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -76,22 +72,10 @@
                 </div>
             </div>
         </div>
-        
-       
-        
-       
     </div>
 
 
      <div class="row mb-4">
-        
-        
-        
-
-
-        
-
-
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -101,7 +85,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -111,9 +94,6 @@
                 </div>
             </div>
         </div>
-
-
-
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -125,13 +105,9 @@
         </div>
     </div>
 
-    
-
 
     {{-- Reports Section --}}
     <div class="row mb-4">
-        
-
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -141,8 +117,6 @@
                 </div>
             </div>
         </div>
-        
-
          <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -152,8 +126,6 @@
                 </div>
             </div>
         </div>
-
-
          <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -163,13 +135,12 @@
                 </div>
             </div>
         </div>
-        
     </div>
+
 
     {{-- Transaction Section --}}
     <div class="row mb-5">
-       
-         <div class="col-md-4">
+        <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Stock In Hand</h5>
@@ -178,9 +149,7 @@
                 </div>
             </div>
         </div>
-
-
-          <div class="col-md-4">
+        <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Stock Bin Card</h5>
@@ -189,8 +158,15 @@
                 </div>
             </div>
         </div>
-       
-       
+         <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Item sales graphs</h5>
+                    <p class="card-text">Check Daily Item Sales summary.</p>
+                    <a href="{{ route('stock.bin_card') }}" class="btn btn-primary">Daily Item Saleas summary</a>
+                </div>
+            </div>
+        </div>
     </div>
 
 

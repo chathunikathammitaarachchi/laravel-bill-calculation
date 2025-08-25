@@ -25,6 +25,8 @@
                     <th>Item Name</th>
                     <th>Rate</th>
                     <th>Cost Price</th>
+                    <th>Category</th>
+                    <th>Unit</th>
                     <th>Stock</th>
                     <th class="text-center">Actions</th>
                 </tr>
@@ -37,15 +39,17 @@
                         <td>{{ $item->item_name }}</td>
                         <td>Rs: {{ number_format($item->rate, 2) }}</td>
                         <td>Rs: {{ number_format($item->cost_price, 2) }}</td>
+                        <td>{{ $item->category }}</td>
+                        <td>{{ $item->unit }}</td>
                         <td>{{ $item->stock }}</td>
                         <td class="text-center">
-                            <a href="{{ route('items.edit', $item) }}" class="btn btn-warning btn-sm me-2" title="Edit">
+                            <a href="{{ route('items.edit', $item) }}" class="btn btn-warning btn-sm me-2">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
-                            <form action="{{ route('items.destroy', $item) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this item?');">
+                            <form action="{{ route('items.destroy', $item) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure?');">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-danger btn-sm" title="Delete">
+                                <button class="btn btn-danger btn-sm">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -53,13 +57,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center text-muted fst-italic py-4">No items found.</td>
+                        <td colspan="9" class="text-center text-muted fst-italic py-4">No items found.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Styles -->
 <style>
   body {
     background: linear-gradient(135deg, #e0f7f1 0%, #dbe8f5 100%);

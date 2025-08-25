@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\StockTransaction;
 use Carbon\Carbon;
-use PDF; 
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DailyItemSummaryController extends Controller
 {

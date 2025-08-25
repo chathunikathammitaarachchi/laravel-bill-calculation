@@ -2,15 +2,13 @@
 
 @section('content')
 <style>
-/* Container & Fonts */
+/* --- Styling (cleaned & merged) --- */
 .container {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #2c3e50;
     background: #f9fafb;
     padding-bottom: 3rem;
 }
-
-/* Heading */
 h2 {
     font-weight: 800;
     color: #34495e;
@@ -18,28 +16,22 @@ h2 {
     letter-spacing: 0.05em;
     text-shadow: 1px 1px 1px #ecf0f1;
 }
-
-/* Form Styles */
 form label {
     font-weight: 600;
     color: #34495e;
     margin-bottom: 0.4rem;
 }
-
 form input.form-control {
     border: 1.5px solid #bdc3c7;
     border-radius: 0.5rem;
     transition: all 0.3s ease;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
 }
-
 form input.form-control:focus {
     border-color: #2980b9;
     box-shadow: 0 0 6px rgba(41, 128, 185, 0.5);
     outline: none;
 }
-
-/* Buttons */
 .btn-primary {
     background: linear-gradient(45deg, #2980b9, #3498db);
     border: none;
@@ -52,7 +44,6 @@ form input.form-control:focus {
     background: linear-gradient(45deg, #3498db, #2980b9);
     box-shadow: 0 7px 20px rgba(41, 128, 185, 0.7);
 }
-
 .btn-secondary {
     background: #7f8c8d;
     border-radius: 0.5rem;
@@ -64,22 +55,17 @@ form input.form-control:focus {
     background: #95a5a6;
     color: white;
 }
-
-/* Table Container */
 .table-responsive {
     border-radius: 1rem;
     overflow: hidden;
     box-shadow: 0 8px 25px rgba(0,0,0,0.1);
     background: white;
 }
-
-/* Table Styles */
 table.table-bordered {
     border-collapse: separate;
     border-spacing: 0 1rem;
     font-size: 0.95rem;
 }
-
 table.table-bordered thead th {
     background: #34495e;
     color: #ecf0f1;
@@ -91,111 +77,73 @@ table.table-bordered thead th {
     top: 0;
     z-index: 11;
 }
-
 table.table-bordered tbody tr {
     background: #fdfdfd;
     box-shadow: 0 2px 12px rgba(52, 73, 94, 0.08);
     border-radius: 1rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 table.table-bordered tbody tr:hover {
     transform: translateY(-6px);
     box-shadow: 0 10px 20px rgba(41, 128, 185, 0.3);
     cursor: pointer;
 }
-
 table.table-bordered tbody td {
     vertical-align: middle;
     padding: 1rem 1rem;
     border: none !important;
 }
-
-/* Text Align */
 .text-end {
     text-align: right !important;
 }
-
-/* Highlight Bill No and Totals */
 .fw-bold.text-primary {
     color: #2980b9 !important;
     font-weight: 700;
     font-size: 1.1rem;
 }
-
 .fw-semibold.text-success {
     color: #27ae60 !important;
     font-weight: 600;
     font-size: 1rem;
 }
-
-/* Empty message style */
 td.text-center.text-muted.py-4 {
     font-style: italic;
     color: #95a5a6;
     font-size: 1.1rem;
 }
-
-/* Pagination */
 .mt-4 {
     margin-top: 2rem !important;
 }
-
-/* Item-wise summary table */
-.table-sm.table-bordered {
-    margin-top: 1.5rem;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    box-shadow: 0 4px 18px rgba(41, 128, 185, 0.15);
-}
-
-.table-sm.table-bordered thead th {
-    background: #ecf0f1;
-    color: #34495e;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    padding: 0.75rem 1rem;
-}
-
-/* Chart Titles */
 h5.text-center {
     font-weight: 700;
     color: #2980b9;
     margin-bottom: 1rem;
     letter-spacing: 0.04em;
 }
-
-/* Responsive */
 @media (max-width: 768px) {
     table.table-bordered thead th, table.table-bordered tbody td {
         padding: 0.75rem 0.8rem;
         font-size: 0.9rem;
     }
 }
-
-@media (max-width: 576px) {
-    .table-responsive {
-        overflow-x: auto;
-    }
-}
 </style>
 
 <div class="container py-4">
-    <h2>🧾 Stock Hand Table</h2>
+    <h2>🧾 Item Summary Table</h2>
 
-    {{-- Filter & Search Form --}}
+    {{-- Filter Form --}}
     <form method="GET" action="{{ route('item_summaries.index') }}" class="row g-3 mb-4">
         <div class="col-md-3">
             <label for="start_date">Start Date</label>
-            <input type="date" id="start_date" name="start_date" value="{{ request('start_date') }}" class="form-control">
+            <input type="date" id="start_date" name="start_date" value="{{ old('start_date', request('start_date')) }}" class="form-control">
         </div>
         <div class="col-md-3">
             <label for="end_date">End Date</label>
-            <input type="date" id="end_date" name="end_date" value="{{ request('end_date') }}" class="form-control">
+            <input type="date" id="end_date" name="end_date" value="{{ old('end_date', request('end_date')) }}" class="form-control">
         </div>
         <div class="col-md-4">
             <label for="search">Search (Item Code or Item Name)</label>
-            <input list="item-list" type="text" id="search" name="search" class="form-control" placeholder="Search by Item Code or Item Name" value="{{ request('search') }}">
+            <input list="item-list" type="text" id="search" name="search" class="form-control" placeholder="Search by Item Code or Item Name" value="{{ old('search', request('search')) }}">
             <datalist id="item-list">
                 @foreach($allItems as $item)
                     <option value="{{ $item->item_code }}">{{ $item->item_name }}</option>
@@ -209,168 +157,114 @@ h5.text-center {
         </div>
     </form>
 
-    {{-- Data Table --}}
-    <div class="table-responsive shadow-sm rounded">
-        <table class="table table-bordered table-hover align-middle">
-            <thead class="table-dark sticky-top">
-                <tr>
-                    <th style="width: 10%;">Bill No</th>
-                    <th style="width: 10%;">Item Code</th>
-                    <th style="width: 25%;">Item Name</th>
-                    <th class="text-end" style="width: 10%;">Quantity</th>
-                    <th class="text-end" style="width: 10%;">Rate</th>
-                    <th class="text-end" style="width: 15%;">Total Price</th>
-                    <th style="width: 15%;">Created At</th>
-                </tr>
+     {{-- Filters Display --}}
+    @if($filtersApplied)
+        <table class="table-sm mb-4" style="width: 100%;">
+            <thead>
+                <tr><th>Start Date</th><th>End Date</th><th>Search Item</th></tr>
             </thead>
             <tbody>
-                @php
-                    $prevBill = null;
-                    $rowCounts = $summaries->groupBy('bill_no')->map->count();
-                @endphp
-
-                @forelse($summaries as $summary)
-                    <tr>
-                        @if ($summary->bill_no !== $prevBill)
-                            <td rowspan="{{ $rowCounts[$summary->bill_no] }}" class="fw-bold text-primary">
-                                {{ $summary->bill_no }}
-                            </td>
-                            @php $prevBill = $summary->bill_no; @endphp
-                        @endif
-                        <td>{{ $summary->item_code }}</td>
-                        <td>{{ $summary->item_name }}</td>
-                        <td class="text-end">{{ number_format($summary->quantity) }}</td>
-                        <td class="text-end">Rs. {{ number_format($summary->rate, 2) }}</td>
-                        <td class="text-end fw-semibold text-success">Rs. {{ number_format($summary->total_price, 2) }}</td>
-                        <td>{{ $summary->grn_date }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            🚫 No item summary records found.
-                        </td>
-                    </tr>
-                @endforelse
+                <tr>
+                    <td>{{ request('start_date') ?? 'N/A' }}</td>
+                    <td>{{ request('end_date') ?? 'N/A' }}</td>
+                    <td>{{ request('search') ?? 'N/A' }}</td>
+                </tr>
             </tbody>
         </table>
-    </div>
 
-    {{-- Pagination --}}
-    <div class="mt-4">
-        {{ $summaries->appends(request()->query())->links('pagination::bootstrap-5') }}
-    </div>
+        <form action="{{ route('item_summaries.download_pdf') }}" method="POST" id="pdfForm">
+            @csrf
+            <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+            <input type="hidden" name="end_date" value="{{ request('end_date') }}">
+            <input type="hidden" name="search" value="{{ request('search') }}">
+            <input type="hidden" name="chartData" id="chartDataInput">
+            <input type="hidden" name="lineChartData" id="lineChartDataInput">
+            <button type="submit" class="btn btn-danger mb-4">⬇️ Download PDF</button>
+        </form>
 
-    @php
-        $filtersApplied = request('start_date') || request('end_date') || request('search');
-    @endphp
-
-    @if($filtersApplied && $itemTotals->count())
-        {{-- Download PDF button --}}
-        <div class="mt-4 mb-3">
-            <a href="{{ route('item_summaries.download_pdf', request()->query()) }}" class="btn btn-danger">
-                📄 Download PDF
-            </a>
-        </div>
-
-        {{-- Item-wise summary table --}}
-        <div class="mt-3">
-            <h4>📊 Item-wise Summary for Selected Filters</h4>
-            <table class="table table-sm table-bordered mt-3">
-                <thead class="table-light">
+        @if($dailySummary->count())
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-bordered">
+                <thead>
                     <tr>
-                        <th>Item Code</th>
-                        <th>Item Name</th>
-                        <th class="text-end">Total Quantity</th>
-                        <th class="text-end">Total Sales (Rs.)</th>
+                        <th>Item Code</th><th>Item Name</th><th>Date</th>
+                        <th class="text-end">Qty</th><th class="text-end">Total (Rs.)</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($itemTotals as $code => $data)
+                    @foreach($dailySummary as $row)
                         <tr>
-                            <td>{{ $code }}</td>
-                            <td>{{ $data['item_name'] }}</td>
-                            <td class="text-end">{{ number_format($data['quantity']) }}</td>
-                            <td class="text-end">Rs. {{ number_format($data['total_price'], 2) }}</td>
+                            <td>{{ $row['item_code'] }}</td>
+                            <td>{{ $row['item_name'] }}</td>
+                            <td>{{ $row['date'] }}</td>
+                            <td class="text-end">{{ number_format($row['quantity']) }}</td>
+                            <td class="text-end">Rs. {{ number_format($row['total_price'], 2) }}</td>
                         </tr>
                     @endforeach
+                    {{-- Totals row --}}
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold">Total</td>
+                        <td class="text-end fw-bold">{{ number_format($dailySummary->sum('quantity')) }}</td>
+                        <td class="text-end fw-bold">Rs. {{ number_format($dailySummary->sum('total_price'), 2) }}</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
 
         {{-- Charts --}}
-        <div class="row mt-5">
-            <div class="col-md-6">
-                <h5 class="text-center">📊 Item Quantity Distribution (Pie Chart)</h5>
-                <canvas id="itemPieChart" style="max-height: 400px;"></canvas>
-            </div>
-            <div class="col-md-6">
-                <h5 class="text-center">📈 Item-wise Quantity (Bar Chart)</h5>
-                <canvas id="itemBarChart" style="max-height: 400px;"></canvas>
-            </div>
+        <div class="row my-4">
+            <div class="col-md-6"><canvas id="barChart"></canvas></div>
+            <div class="col-md-6"><canvas id="lineChart"></canvas></div>
         </div>
+        @else
+            <p class="text-muted">🚫 No records found.</p>
+        @endif
+
+    @else
+        {{-- Your main table view when no filters applied --}}
     @endif
 </div>
 
-{{-- Include Chart.js --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-@if($filtersApplied && $itemTotals->count())
 <script>
-    const itemLabels = {!! json_encode($itemTotals->map(fn($d, $code) => $d['item_name'] . ' (' . $code . ')')->values()) !!};
-    const itemQuantities = {!! json_encode($itemTotals->pluck('quantity')->values()) !!};
+document.addEventListener('DOMContentLoaded', function () {
+    const dailySummary = @json($dailySummary);
+    if (!dailySummary.length) return;
 
-    // Pie Chart
-    new Chart(document.getElementById('itemPieChart'), {
-        type: 'pie',
-        data: {
-            labels: itemLabels,
-            datasets: [{
-                data: itemQuantities,
-                backgroundColor: itemLabels.map((_, i) =>
-                    `hsl(${i * 360 / itemLabels.length}, 70%, 60%)`
-                ),
-                borderColor: '#fff',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                title: { display: true, text: 'Item-wise Stock Quantity Distribution' }
-            }
-        }
+    const grouped = {};
+    dailySummary.forEach(row => {
+        if (!grouped[row.item_code]) grouped[row.item_code] = {dates: [], qty: []};
+        grouped[row.item_code].dates.push(row.date);
+        grouped[row.item_code].qty.push(row.quantity);
     });
 
-    // Bar Chart
-    new Chart(document.getElementById('itemBarChart'), {
+    const code = Object.keys(grouped)[0];
+    const rawLabels = grouped[code].dates;
+    const labels = rawLabels.map(d => {
+        const dt = new Date(d);
+        return `${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;
+    });
+    const dataPts = grouped[code].qty;
+
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    const lineCtx = document.getElementById('lineChart').getContext('2d');
+
+    const barChart = new Chart(barCtx, {
         type: 'bar',
-        data: {
-            labels: itemLabels,
-            datasets: [{
-                label: 'Quantity',
-                data: itemQuantities,
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 }
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                title: { display: true, text: 'Item-wise Quantity' }
-            }
-        }
+        data: {labels, datasets:[{label:`Qty (${code})`, data:dataPts, backgroundColor:'rgba(54,162,235,0.7)', borderColor:'rgba(54,162,235,1)', borderWidth:1}]},
+        options: { responsive:true, plugins: { title:{display:true, text:'Quantity Sold (MM.DD)'} }, scales:{ y:{beginAtZero:true}} }
     });
+
+    const lineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {labels, datasets:[{label:`Qty (${code})`, data:dataPts, fill:false, borderColor:'rgba(255,99,132,1)', backgroundColor:'rgba(255,99,132,0.5)', tension:0.3, pointRadius:5}]},
+        options:{ responsive:true, plugins:{ title:{display:true, text:'Quantity Sold (MM.DD)'} }, scales:{ y:{beginAtZero:true}} }
+    });
+
+    document.getElementById('pdfForm').addEventListener('submit', () => {
+        document.getElementById('chartDataInput').value = barChart.toBase64Image();
+        document.getElementById('lineChartDataInput').value = lineChart.toBase64Image();
+    });
+});
 </script>
-
-@endif
-
 @endsection

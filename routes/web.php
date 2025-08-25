@@ -52,7 +52,8 @@ Route::match(['get', 'post'], '/daily-summary/pdf', [DailySummaryController::cla
 
 
 Route::get('/item-summaries', [ItemSummaryController::class, 'index'])->name('item_summaries.index');
-Route::get('/item-summaries/download-pdf', [\App\Http\Controllers\ItemSummaryController::class, 'summarydownloadPDF'])->name('item_summaries.download_pdf');
+// routes/web.php
+Route::post('/item_summaries/download-pdf', [ItemSummaryController::class, 'summarydownloadPDF'])->name('item_summaries.download_pdf');
 Route::get('/stock-movement', [ItemSummaryController::class, 'stockMovement'])->name('stock_movement.index');
 Route::get('/item-summary', [ItemSummaryController::class, 'stockMovement'])->name('item-summary');
 Route::get('/item-summary/autocomplete', [ItemSummaryController::class, 'autocomplete'])->name('item-summary.autocomplete');

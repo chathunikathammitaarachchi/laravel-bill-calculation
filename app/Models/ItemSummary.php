@@ -20,6 +20,12 @@ class ItemSummary extends Model
     ];
 
 
+protected $dates = ['grn_date'];
+
+protected $casts = [
+    'grn_date' => 'datetime',
+];
+
 
 
 public function grnMaster()

@@ -16,10 +16,15 @@ class Item extends Model
         'rate',
         'cost_price',
         'stock',
+        'unit',
+        'category'
     ];
 
 
-
+public function prices()
+    {
+        return $this->hasMany(ItemPrice::class);
+    }
 
 
 
