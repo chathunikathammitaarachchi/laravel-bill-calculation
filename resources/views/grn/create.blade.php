@@ -417,7 +417,6 @@ function addItemIfLastFilled(row) {
     if (
         isFilled &&
         row === lastRow //&&
-        //(itemCode !== lastItemCode || rate !== lastRate)  // comment this out
     ) {
         addItem();
     }
