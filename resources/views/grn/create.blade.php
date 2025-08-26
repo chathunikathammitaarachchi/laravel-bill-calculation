@@ -6,7 +6,7 @@
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<div class="container" style="max-width: 1200px; margin: auto; padding: 20px;  background: linear-gradient(135deg, #e0e0f8ff 0%, #dbe8f5 100%); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+<div class="container" style="max-width: 1500px; margin: auto; padding: 20px;  background: linear-gradient(135deg, #e0e0f8ff 0%, #dbe8f5 100%); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
     <div class="d-flex align-items-center justify-content-between mb-4">
         <h2 class="mb-0">Create Bill</h2>
 
@@ -79,8 +79,8 @@
 
         <hr/>
 
-        <div id="items">
-<div class="item row align-items-end mb-3">
+    <div id="items">
+    <div class="item row align-items-end mb-2">
         {{-- Item Code --}}
         <div class="col-md-2">
             <label class="form-label">Item Code</label>
@@ -111,7 +111,37 @@
             </select>
         </div>
 
-        {{-- Rate --}}
+        <!-- Inside .item row -->
+        <div class="col-md-3">
+            <label class="form-label">Item Rate</label>
+            <div class="input-group">
+                <input type="text" name="items[0][rate]" class="form-control rate-input" readonly>
+            </div>
+        </div>
+
+
+
+        {{-- Quantity --}}
+        <div class="col-md-2">
+            <label class="form-label">Quantity</label>
+            <input type="number" name="items[0][quantity]" class="form-control quantity" 
+                   min="1" value="1" required style="text-align: right;">
+        </div>
+
+        {{-- Price --}}
+        <div class="col-md-2">
+            <label class="form-label">Price</label>
+            <input type="number" name="items[0][price]" class="form-control price" readonly 
+                   style="text-align: right;">  
+        </div>
+
+
+        <div class="col-md-1">
+        <button type="button" class="btn btn-danger btn-sm remove-item" style="margin-top: 30px;">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+         {{-- Rate --}}
       <!-- Rate Selection Modal -->
 <div class="modal fade" id="rateSelectModal" tabindex="-1" aria-labelledby="rateSelectModalLabel">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
@@ -131,32 +161,6 @@
         </div>
     </div>
 </div>
-
-<!-- Inside .item row -->
-<div class="col-md-3">
-    <label class="form-label">Item Rate</label>
-    <div class="input-group">
-        <input type="text" name="items[0][rate]" class="form-control rate-input" readonly>
-    </div>
-</div>
-
-
-
-        {{-- Quantity --}}
-        <div class="col-md-2">
-            <label class="form-label">Quantity</label>
-            <input type="number" name="items[0][quantity]" class="form-control quantity" 
-                   min="1" value="1" required style="text-align: right;">
-        </div>
-
-        {{-- Price --}}
-        <div class="col-md-2">
-            <label class="form-label">Price</label>
-            <input type="number" name="items[0][price]" class="form-control price" readonly 
-                   style="text-align: right;">  
-        </div>
-
-        
     </div>
 </div>
 
@@ -259,6 +263,7 @@
 
 
 
+
 .custom-scroll {
     max-height: 200px;
     overflow-y: auto;
@@ -276,7 +281,14 @@
 function refreshPage() {
     window.location.reload();
 }
-
+document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-item')) {
+            const row = e.target.closest('.item.row');
+            if (row) {
+                row.remove();
+            }
+        }
+    });
 
 document.addEventListener('DOMContentLoaded', function () {
     // Set GRN date to today
