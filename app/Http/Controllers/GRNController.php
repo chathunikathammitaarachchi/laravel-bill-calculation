@@ -241,11 +241,19 @@ public function itemPriceSearch(Request $request)
 {
     $query = $request->input('query');
 
-    $items = Item::where('rate', 'LIKE', "$query%")
-                ->limit(10)
-                ->get();
+    $rate = ItemPrice::with('item')  // assuming relation is 'item'
+                 ->whereRaw("CAST(rate AS CHAR) LIKE ?", ["$query%"])
+                 ->limit(10)
+                 ->get()
+                 ->map(function ($r) {
+                     return [
+                         'item_code' => $r->item->item_code,
+                         'item_name' => $r->item->item_name,
+                         'rate'      => $r->rate,
+                     ];
+                 });
 
-    return response()->json($items);
+    return response()->json($rate);
 }
 
 public function itemCodeSearch(Request $request)
@@ -293,14 +301,8 @@ public function update(Request $request, $bill_no)
     DB::beginTransaction();
 
     try {
-        // Restore old stock
-        foreach ($bill->details as $detail) {
-            $item = Item::where('item_code', $detail->item_code)->first();
-            if ($item) {
-                $item->stock += $detail->quantity;
-                $item->save();
-            }
-        }
+        
+       
 
         // Delete old details & stock transactions
         GRNDetails::where('bill_no', $bill_no)->delete();

@@ -140,7 +140,7 @@
                         </td>
                         <td><input type="text" name="details[{{ $index }}][item_name]" value="{{ $detail->item_name }}" class="form-control" readonly></td>
                         <td><input type="number" name="details[{{ $index }}][rate]" value="{{ $detail->rate }}" class="form-control rate" readonly style="text-align: right;"></td>
-                        <td><input type="number" name="details[{{ $index }}][quantity]" value="{{ $detail->quantity }}" class="form-control quantity" min="1" required style="text-align: right;" readonly ></td>
+                        <td><input type="number" name="details[{{ $index }}][quantity]" value="{{ $detail->quantity }}" class="form-control quantity" min="1" required style="text-align: right;"  ></td>
                         <td><input type="number" name="details[{{ $index }}][price]" value="{{ $detail->price }}" class="form-control price" readonly style="text-align: right;"></td>
                         <td>
                             <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button>

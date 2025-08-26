@@ -4,6 +4,7 @@
 @extends('layouts.app')
 
 @section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 <div class="container" style="max-width: 1200px; margin: auto; padding: 20px;  background: linear-gradient(135deg, #e0e0f8ff 0%, #dbe8f5 100%); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
     <div class="d-flex align-items-center justify-content-between mb-4">
@@ -79,55 +80,90 @@
         <hr/>
 
         <div id="items">
-            <div class="item row align-items-end mb-3">
-                <div class="col-md-2">
-                    <label class="form-label">Item Code</label>
-                    <select name="items[0][item_code]" class="form-select item-code" required style="max-width: 350px;">
-                        <option value="" disabled selected>Select Item</option>
-                        @foreach($items as $item)
-                            <option value="{{ $item->item_code }}" data-name="{{ $item->item_name }}" data-rate="{{ $item->rate }}">
-                                {{ $item->item_code }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Item Name</label>
-                    <select name="items[0][item_name]" class="form-select item-name" style="max-width: 350px;" required >
-                        <option value="" disabled selected>Select Item</option>
-                        @foreach($items as $item)
-                            <option value="{{ $item->item_name }}" data-code="{{ $item->item_code }}" data-rate="{{ $item->rate }}">
-                                {{ $item->item_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Item Rate</label>
-                   <select name="items[0][rate]" class="form-select rate-dropdown" required>
-  <option value="" disabled selected>Select Item Rate</option>
-  @foreach($rates as $price)
-    <option value="{{ $price->rate }}">{{ $price->rate }}</option>
-  @endforeach
-</select>
-
-
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Quantity</label>
-                    <input type="number" name="items[0][quantity]" class="form-control quantity" min="1" value="1" required style="text-align: right;">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Price</label>
-                    <input type="number" name="items[0][price]" class="form-control price" readonly style="text-align: right;">
-                </div>
-            </div>
+<div class="item row align-items-end mb-3">
+        {{-- Item Code --}}
+        <div class="col-md-2">
+            <label class="form-label">Item Code</label>
+            <select name="items[0][item_code]" class="form-select item-code" required>
+                <option value="" disabled selected>Select Item</option>
+                @foreach($items as $item)
+                    <option value="{{ $item->item_code }}" 
+                            data-name="{{ $item->item_name }}" 
+                            data-rate="{{ $item->rate }}">
+                        {{ $item->item_code }}
+                    </option>
+                @endforeach
+            </select>
         </div>
+
+        {{-- Item Name --}}
+        <div class="col-md-3">
+            <label class="form-label">Item Name</label>
+            <select name="items[0][item_name]" class="form-select item-name" required>
+                <option value="" disabled selected>Select Item</option>
+                @foreach($items as $item)
+                    <option value="{{ $item->item_name }}" 
+                            data-code="{{ $item->item_code }}" 
+                            data-rate="{{ $item->rate }}">
+                        {{ $item->item_name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        {{-- Rate --}}
+      <!-- Rate Selection Modal -->
+<div class="modal fade" id="rateSelectModal" tabindex="-1" aria-labelledby="rateSelectModalLabel">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rateSelectModalLabel">Select Rate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Scrollable body -->
+            <div class="modal-body p-3 custom-scroll">
+    <div id="rate-options" class="list-group">
+        <!-- Rates will be injected here -->
+    </div>
+</div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Inside .item row -->
+<div class="col-md-3">
+    <label class="form-label">Item Rate</label>
+    <div class="input-group">
+        <input type="text" name="items[0][rate]" class="form-control rate-input" readonly>
+    </div>
+</div>
+
+
+
+        {{-- Quantity --}}
+        <div class="col-md-2">
+            <label class="form-label">Quantity</label>
+            <input type="number" name="items[0][quantity]" class="form-control quantity" 
+                   min="1" value="1" required style="text-align: right;">
+        </div>
+
+        {{-- Price --}}
+        <div class="col-md-2">
+            <label class="form-label">Price</label>
+            <input type="number" name="items[0][price]" class="form-control price" readonly 
+                   style="text-align: right;">  
+        </div>
+
+        
+    </div>
+</div>
 
         <button type="button" class="btn btn-outline-primary mb-4" onclick="addItem()">+ Add Item</button>
 
         <hr/>
-        <div style="max-width: 450px; margin: 20px auto; padding: 20px; font-family: Arial, sans-serif;margin-left:700px;">
+<div class="col-12 col-md-6 offset-md-6 px-3 py-4" style="max-width: 100%; font-family: Arial, sans-serif;">
             <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
                 <label for="total_price" style="width: 40%; font-weight: 600; margin-right: 10px;">Total Price</label>
                 <input type="number" name="total_price" id="total_price" readonly
@@ -184,26 +220,31 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="new_customer_name" class="form-label">Customer Name</label>
-                        <input type="text" id="new_customer_name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="new_customer_phone" class="form-label">Phone</label>
-                        <input type="number" name="phone" id="phone" class="form-control" autocomplete="tel" required oninput="limitInput(this, 10)">
-                    </div>
-                    <div class="mb-3">
                         <label for="customer_id" class="form-label">Customer ID</label>
-                        <input type="number" id="customer_id" class="form-control" required>
+                        <input type="number" id="customer_id" name="customer_id" class="form-control" required>
                     </div>
+                    <div class="mb-3">
+                        <label for="new_customer_name" class="form-label">Customer Name</label>
+                        <input type="text" id="new_customer_name" name="customer_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="tel" name="phone" id="phone" class="form-control" autocomplete="tel" required maxlength="10">
+                    </div>
+                
                 </div>
                 <div class="modal-footer">
-<button type="submit" class="btn btn-success btn-lg shadow-sm" 
-        style="width: 20%; font-size: 18px; font-weight: 600; border-radius: 12px; 
-               transition: background-color 0.3s ease, transform 0.2s ease; float: right;">
-  Save GRN
-</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Customer</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 
 <style>
+    
   button.btn-success:hover {
     background-color: #28a745cc !important;
     transform: scale(1.05);
@@ -214,13 +255,29 @@
     transform: scale(0.97);
     box-shadow: none;
   }
-</style>                </div>
-            </div>
-        </form>
-    </div>
-</div>
 
+
+
+
+.custom-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: none;          
+    -ms-overflow-style: none;       
+}
+
+.custom-scroll::-webkit-scrollbar {
+    display: none;                  
+}
+
+</style>                
 <script>
+
+function refreshPage() {
+    window.location.reload();
+}
+
+
 document.addEventListener('DOMContentLoaded', function () {
     // Set GRN date to today
     document.getElementById('grn_date').value = new Date().toISOString().split('T')[0];
@@ -234,57 +291,189 @@ const itemRates = @json($items->mapWithKeys(function($item) {
 })->toArray());
 
 function addItem(code = '', name = '', rate = '') {
-    const itemsDiv = document.getElementById('items');
-    const newItem = document.querySelector('.item').cloneNode(true);
+  const itemsDiv = document.getElementById('items');
+  const newItem = document.querySelector('.item').cloneNode(true);
 
-    // Remove labels for cleaner UI (optional)
-    newItem.querySelectorAll('label').forEach(label => label.remove());
+  // Remove labels
+  newItem.querySelectorAll('label').forEach(label => label.remove());
 
-    newItem.querySelectorAll('select, input').forEach(el => {
-        // Update name attribute index for form submission
-        const nameAttr = el.getAttribute('name');
-        if (nameAttr) {
-            el.setAttribute('name', nameAttr.replace(/\[\d+\]/, `[${itemIndex}]`));
-        }
+  newItem.querySelectorAll('select, input').forEach(el => {
+    // Update name index
+    const na = el.getAttribute('name');
+    if (na) el.setAttribute('name', na.replace(/\[\d+\]/, `[${itemIndex}]`));
 
-        if (el.classList.contains('item-code')) {
-            el.value = code;
-        } else if (el.classList.contains('item-name')) {
-            el.value = name;
-        } else if (el.classList.contains('rate-dropdown')) {
-            el.innerHTML = '<option value="" disabled selected>Select Item Rate</option>';
-            if (code && itemRates[code]) {
-                itemRates[code].forEach(r => {
-                    const opt = document.createElement('option');
-                    opt.value = r;
-                    opt.textContent = r;
-                    if (r == rate) opt.selected = true;
-                    el.appendChild(opt);
-                });
-            }
-        } else if (el.classList.contains('quantity')) {
-            el.value = 1;
-        } else if (el.classList.contains('price')) {
-            el.value = '';
-        } else {
-            el.value = '';
-        }
-    });
+    if (el.classList.contains('item-code')) el.value = code;
+    else if (el.classList.contains('item-name')) el.value = name;
+    else if (el.classList.contains('rate-dropdown')) {
+      el.innerHTML = '<option disabled selected>Select Rate</option>';
+      if (code && itemRates[code]) {
+        itemRates[code].forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r;
+          opt.textContent = r;
+          if (r == rate) opt.selected = true;
+          el.appendChild(opt);
+        });
+      }
+    } else if (el.classList.contains('quantity')) el.value = 1;
+    else if (el.classList.contains('price')) el.value = '';
+    else el.value = '';
+  });
 
-    itemsDiv.appendChild(newItem);
-
-    // Calculate initial price and totals
-    updateRowPrice(newItem);
-    calculateTotals();
-
-    const qtyInput = newItem.querySelector('.quantity');
-    if (qtyInput) {
-        qtyInput.focus();
-        qtyInput.select();
-    }
-
-    itemIndex++;
+function focusAndSelect(el) {
+  if (!el) return;
+  el.focus();
+  if (typeof el.select === 'function') {
+    el.select();
+  }
 }
+
+itemsDiv.appendChild(newItem);
+
+// Focus and select the item-code input of the new row safely
+setTimeout(() => {
+  focusAndSelect(newItem.querySelector('.item-code') || newItem.querySelector('.item-name'));
+}, 100);
+
+itemIndex++;
+
+  console.log("New item added. Current itemIndex:", itemIndex);
+
+
+}
+
+
+function addItemIfLastFilled(row) {
+    const itemCode = row.querySelector('.item-code')?.value.trim();
+    const itemName = row.querySelector('.item-name')?.value.trim();
+    // Accept either rate-input or rate-dropdown to get rate value
+    const rateEl = row.querySelector('.rate-input, .rate-dropdown');
+    const rate = rateEl ? rateEl.value.trim() : '';
+    const qty = row.querySelector('.quantity')?.value.trim();
+
+    const isFilled = itemCode && itemName && rate && qty;
+
+    const allRows = document.querySelectorAll('.item');
+    const lastRow = allRows[allRows.length - 1];
+    const lastItemCode = lastRow.querySelector('.item-code')?.value.trim();
+    const lastRateEl = lastRow.querySelector('.rate-input, .rate-dropdown');
+    const lastRate = lastRateEl ? lastRateEl.value.trim() : '';
+
+    if (
+        isFilled &&
+        row === lastRow &&
+        (itemCode !== lastItemCode || rate !== lastRate)
+    ) {
+        addItem();
+    }
+}
+
+
+
+
+
+// Trigger modal after item code or name selected
+document.addEventListener('input', function (e) {
+    if (e.target.classList.contains('item-code') || e.target.classList.contains('item-name')) {
+        const row = e.target.closest('.item');
+        const code = row.querySelector('.item-code')?.value;
+        const name = row.querySelector('.item-name')?.value;
+
+        const itemCode = code || itemCodes[name];
+        if (!itemCode) return;
+
+        const rateInput = row.querySelector('.rate-input');
+        showRateModal(itemCode, rateInput);
+
+        setTimeout(() => {
+            const allFilled = row.querySelector('.item-code')?.value &&
+                              row.querySelector('.item-name')?.value &&
+                              row.querySelector('.rate-input')?.value &&
+                              row.querySelector('.quantity')?.value;
+
+            if (allFilled) {
+                addItem(); 
+            }
+        }, 200); 
+    }
+});
+
+function addItemIfLastFilled(row) {
+    const itemCode = row.querySelector('.item-code')?.value.trim();
+    const itemName = row.querySelector('.item-name')?.value.trim();
+    const rateEl = row.querySelector('.rate-input, .rate-dropdown');
+    const rate = rateEl ? rateEl.value.trim() : '';
+    const qty = row.querySelector('.quantity')?.value.trim();
+
+    const isFilled = itemCode && itemName && rate && qty;
+
+    const allRows = document.querySelectorAll('.item');
+    const lastRow = allRows[allRows.length - 1];
+    const lastItemCode = lastRow.querySelector('.item-code')?.value.trim();
+    const lastRateEl = lastRow.querySelector('.rate-input, .rate-dropdown');
+    const lastRate = lastRateEl ? lastRateEl.value.trim() : '';
+    const lastQty = lastRow.querySelector('.quantity')?.value.trim();
+
+    if (
+        isFilled &&
+        row === lastRow //&&
+        //(itemCode !== lastItemCode || rate !== lastRate)  // comment this out
+    ) {
+        addItem();
+    }
+}
+
+
+
+
+
+
+
+
+document.getElementById('rate-options').addEventListener('click', function (e) {
+    if (e.target.tagName === 'BUTTON') {
+        const selectedRate = e.target.dataset.rate;
+
+        if (currentRateInput) {
+            currentRateInput.value = selectedRate;
+
+            // 👇 Force input event trigger
+            const event = new Event('input', { bubbles: true });
+            currentRateInput.dispatchEvent(event);
+
+            const row = currentRateInput.closest('.item');
+            updateRowPrice(row);
+            calculateTotals();
+
+            // Popup hide
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('rateSelectModal'));
+            modalInstance.hide();
+
+            // After modal is hidden, add new item & focus
+            setTimeout(() => {
+                console.log("Calling addItemIfLastFilled...");
+                addItemIfLastFilled(row);
+
+                // Focus/select new row's item-code input
+                const allRows = document.querySelectorAll('.item');
+                const lastRow = allRows[allRows.length - 1];
+                const codeInput = lastRow.querySelector('.item-code') || lastRow.querySelector('.item-name');
+
+                if (codeInput && typeof codeInput.select === 'function') {
+                    codeInput.focus();
+                    codeInput.select();
+                } else {
+                    codeInput?.focus();
+                }
+            }, 300);  // 300ms delay to allow modal to fully close
+        }
+    }
+});
+
+
+
+
+
 
 function updateRateDropdown(row, itemCode) {
     const rateDropdown = row.querySelector('.rate-dropdown');
@@ -303,13 +492,83 @@ function updateRateDropdown(row, itemCode) {
 }
 
 function updateRowPrice(row) {
-    const rate = parseFloat(row.querySelector('.rate-dropdown').value) || 0;
-    const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+    const rate = parseFloat(row.querySelector('.rate-input')?.value) || 0;
+    const quantity = parseFloat(row.querySelector('.quantity')?.value) || 0;
     const priceInput = row.querySelector('.price');
     if (priceInput) {
         priceInput.value = (rate * quantity).toFixed(2);
     }
 }
+
+function showRateModal(itemCode, targetRateInput) {
+    const rates = itemRates[itemCode] || [];
+
+    if (rates.length === 0) return;
+
+    if (rates.length === 1) {
+        targetRateInput.value = rates[0];
+        const row = targetRateInput.closest('.item');
+        updateRowPrice(row);
+        calculateTotals();
+        return;
+    }
+
+    const rateOptionsContainer = document.getElementById('rate-options');
+    rateOptionsContainer.innerHTML = '';
+    currentFocusedIndex = 0;
+
+    rates.forEach(rate => {
+        const btn = document.createElement('button');
+        btn.classList.add('list-group-item', 'list-group-item-action');
+        btn.textContent = `Rs. ${rate}`;
+        btn.dataset.rate = rate;
+        btn.setAttribute('tabindex', '0');
+        rateOptionsContainer.appendChild(btn);
+    });
+
+    currentRateInput = targetRateInput;
+
+    const modal = new bootstrap.Modal(document.getElementById('rateSelectModal'));
+    modal.show();
+
+    // Delay to allow modal render, then focus first button
+    setTimeout(() => {
+        const firstButton = document.querySelector('#rate-options button');
+        if (firstButton) {
+            firstButton.focus();
+        }
+    }, 200);
+}
+
+let currentFocusedIndex = 0;
+
+document.getElementById('rateSelectModal').addEventListener('keydown', function (e) {
+    const rateButtons = Array.from(document.querySelectorAll('#rate-options button'));
+
+    if (rateButtons.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        currentFocusedIndex = (currentFocusedIndex + 1) % rateButtons.length;
+        rateButtons[currentFocusedIndex].focus();
+    }
+
+    if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        currentFocusedIndex = (currentFocusedIndex - 1 + rateButtons.length) % rateButtons.length;
+        rateButtons[currentFocusedIndex].focus();
+    }
+
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        rateButtons[currentFocusedIndex].click(); 
+    }
+
+    if (e.key === 'Escape') {
+        const modalInstance = bootstrap.Modal.getInstance(document.getElementById('rateSelectModal'));
+        modalInstance.hide();
+    }
+});
 
 function calculateTotals() {
     let total = 0;
@@ -327,30 +586,16 @@ function calculateTotals() {
     document.getElementById('balance').value = (customerPay - tobe).toFixed(2);
 }
 
-// Event delegation for changes in item code, rate, and quantity dropdowns
-document.addEventListener('change', function (e) {
-    if (e.target.classList.contains('item-code')) {
-        const row = e.target.closest('.item');
-        const selectedCode = e.target.value;
+let currentRateInput = null; // Track the rate input currently being set
 
-        updateRateDropdown(row, selectedCode);
+// Function to show modal with rates
 
-        // Reset rate & price fields
-        const rateDropdown = row.querySelector('.rate-dropdown');
-        if (rateDropdown) rateDropdown.value = '';
 
-        const priceInput = row.querySelector('.price');
-        if (priceInput) priceInput.value = '';
 
-        calculateTotals();
-    }
 
-    if (e.target.classList.contains('rate-dropdown') || e.target.classList.contains('quantity')) {
-        const row = e.target.closest('.item');
-        updateRowPrice(row);
-        calculateTotals();
-    }
-});
+
+
+
 
 
 
@@ -454,7 +699,8 @@ searchConfigs.forEach(config => {
 
                     row.querySelector('.item-code').value = code;
                     row.querySelector('.item-name').value = name;
-                    
+                    row.querySelector('.rate-input').value = rate; 
+
                     // Populate rate dropdown and select the rate
                     const rateDropdown = row.querySelector('.rate-dropdown');
                     if (rateDropdown) {
@@ -495,6 +741,7 @@ function limitInput(el, maxLength) {
         el.value = el.value.slice(0, maxLength);
     }
 }
+
 
 // Add Customer form submission handler
 document.getElementById('addCustomerForm').addEventListener('submit', async function(e) {
@@ -555,21 +802,28 @@ document.getElementById('addCustomerForm').addEventListener('submit', async func
 
     } catch (err) {
         console.error('Add Customer Error:', err);
-        alert("Failed to add customer. Check console/logs.");
     }
 });
 
-// Inert body when modal is open for accessibility
+
+
+// Modal event handlers for accessibility
 const modalEl = document.getElementById('addCustomerModal');
+if (modalEl) {
+    modalEl.addEventListener('show.bs.modal', () => {
+        // Focus on first input when modal opens
+        setTimeout(() => {
+            const firstInput = modalEl.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }, 100);
+    });
 
-modalEl.addEventListener('show.bs.modal', () => {
-    document.body.setAttribute('inert', '');
-});
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        // Clear any error states when modal closes
+        const form = document.getElementById('addCustomerForm');
+        if (form) form.reset();
+    });
+}
 
-modalEl.addEventListener('hidden.bs.modal', () => {
-    document.body.removeAttribute('inert');
-});
 </script>
-
-
 @endsection

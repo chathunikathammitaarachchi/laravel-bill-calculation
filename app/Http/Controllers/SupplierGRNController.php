@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Item;
 use App\Models\StockTransaction;
+use App\Models\ItemPrice;
 
 use App\Models\Supplier;
 
@@ -25,7 +26,8 @@ class SupplierGRNController extends Controller
           $suppliers = Supplier::all(); 
 
     $items = Item::all(); 
-
+   $rates = ItemPrice::all(); 
+$items = \App\Models\Item::with('itemPrices')->get();
 
 
     
@@ -34,7 +36,8 @@ class SupplierGRNController extends Controller
         return view('bill.create', [
             'nextGrnNo' => $nextGrnNo,
             'suppliers' => $suppliers,
-        'items'     => $items
+        'items'     => $items,
+        'rates' => $rates
         ]);
     }
 
@@ -57,6 +60,9 @@ class SupplierGRNController extends Controller
             'items.*.price' => 'required|numeric',
         ]);
 
+
+
+        
         DB::transaction(function () use ($request) {
             $master = SupplierGRNMaster::create($request->only([
                 'grn_no','g_date','supplier_name','total_price',
@@ -135,9 +141,13 @@ foreach ($request->items as $grnItem) {
                 
             ]));
 
+
+       
+
             SupplierGRNDetails::where('grn_no', $grn_no)->delete();
 
             foreach ($request->details as $item) {
+    $rate = ItemPrice::where('item_id', $item['item_code'])->value('rate');
 
                 SupplierGRNDetails::create(array_merge($item, ['grn_no' => $grn_no]));
             }
@@ -160,17 +170,25 @@ foreach ($request->items as $grnItem) {
 
     return response()->json($items);
 }
-
 public function itemPriceSearch(Request $request)
 {
     $query = $request->input('query');
 
-    $items = Item::where('rate', 'LIKE', "$query%")
-                ->limit(10)
-                ->get();
+    $rate = ItemPrice::with('item')  // assuming relation is 'item'
+                 ->whereRaw("CAST(rate AS CHAR) LIKE ?", ["$query%"])
+                 ->limit(10)
+                 ->get()
+                 ->map(function ($r) {
+                     return [
+                         'item_code' => $r->item->item_code,
+                         'item_name' => $r->item->item_name,
+                         'rate'      => $r->rate,
+                     ];
+                 });
 
-    return response()->json($items);
+    return response()->json($rate);
 }
+
 
 public function itemCodeSearch(Request $request)
 {

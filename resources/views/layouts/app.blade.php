@@ -7,67 +7,98 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     <style>
+    /* Base Reset */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    html, body {
+        height: 100%;
+        overflow-x: hidden;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f1f3f5;
+    }
+
+    body {
+        display: flex;
+        flex-direction: row;
+        min-height: 100vh;
+    }
+
+    /* Sidebar Styling */
+   .sidebar {
+    width: 250px;
+    min-height: 100vh; 
+    height: 100%; 
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    padding-top: 1rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+
+    .sidebar a {
+        color: #ffffffcc;
+        padding: 12px 20px;
+        display: block;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .sidebar .nav-link.active,
+    .sidebar .nav-link:hover {
+        background-color: rgba(255, 247, 247, 0.1);
+        color: #fff !important;
+        font-weight: bold;
+        border-left: 4px solid #fff;
+    }
+
+    .sidebar h4 a {
+        color: #fff;
+        font-weight: 700;
+        text-transform: uppercase;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Content Area */
+    .content {
+        flex: 1;
+        padding: 2rem;
+    }
+
+    /* Scrollbar Styling (applies to whole page) */
+    body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    body::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+    }
+
+    /* Responsive Layout */
+    @media (max-width: 768px) {
         body {
-            background-color: #f1f3f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            flex-direction: column;
         }
 
         .sidebar {
-            width: 250px;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background: linear-gradient(135deg, #0d6efd, #0a58ca);
-            padding-top: 1rem;
-            color: #fff;
-        }
-
-        .sidebar a {
-            color: #ffffffcc;
-            padding: 12px 20px;
-            display: block;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .sidebar .nav-link.active,
-        .sidebar .nav-link:hover {
-            background-color: rgba(255, 247, 247, 0.1);
-            color: #fff !important;
-            font-weight: bold;
-            border-left: 4px solid #fff;
-        }
-
-        .sidebar h4 a {
-            color: #fff;
-            font-weight: 700;
-            text-transform: uppercase;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            width: 100%;
         }
 
         .content {
-            margin-left: 260px;
-            padding: 2rem;
+            padding: 1rem;
         }
+    }
+</style>
 
-        .nav-item i {
-            margin-right: 8px;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
-            .content {
-                margin-left: 0;
-                padding: 1rem;
-            }
-        }
-    </style>
 </head>
 
 <body>

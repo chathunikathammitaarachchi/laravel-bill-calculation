@@ -112,7 +112,7 @@
         <button type="button" class="btn btn-outline-primary mb-4" onclick="addItem()">+ Add Item</button>
 
         <hr/>
-        <div style="max-width: 450px; margin: 20px auto; padding: 20px; font-family: Arial, sans-serif;margin-left:700px;">
+<div class="col-12 col-md-6 offset-md-6 px-3 py-4" style="max-width: 100%; font-family: Arial, sans-serif;">
             <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
                 <label for="total_price" style="width: 40%; font-weight: 600; margin-right: 10px;">Total Price</label>
                 <input type="number" name="total_price" id="total_price" readonly
