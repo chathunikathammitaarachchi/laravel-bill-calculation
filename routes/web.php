@@ -90,6 +90,12 @@ Route::get('/stock-transactions/out', [GRNController::class, 'showOutTransaction
 Route::get('/bill/report', [SupplierGRNController::class, 'gurureport'])->name('bill.report');
 Route::get('/bill/report/pdf', [SupplierGRNController::class, 'guruexportPdf'])->name('bill.report.pdf');
 Route::get('/stock-transactions/in', [SupplierGRNController::class, 'showInTransactions'])->name('stock.transactions.in');
+Route::get('/bill/summary', [SupplierGRNController::class, 'summary'])->name('bill.summary');
+Route::get('/bill/details/{date}', [SupplierGRNController::class, 'grnDetailsByDate'])->name('bill.details');
+Route::get('/grn-details/{date}/pdf', [SupplierGRNController::class, 'downloadGrnPdf'])->name('grn.details.pdf');
+Route::get('/bill/summary/pdf', [SupplierGRNController::class, 'downloadSummaryPdf'])->name('bill.summary.pdf');
+
+
 
 
 Route::get('/', [GRNController::class, 'create'])->name('grn.create');

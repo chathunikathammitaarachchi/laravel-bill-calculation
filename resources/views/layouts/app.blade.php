@@ -129,6 +129,14 @@
         </a>
     </li>
 
+
+    <li class="nav-item">
+    <a class="nav-link" href="{{ route('bill.summary') }}">
+        <i class="bi bi-list"></i>
+        GRN Summary
+    </a>
+</li>
+
     {{-- Item --}}
     <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">
@@ -197,6 +205,8 @@
             <i class="bi bi-archive"></i> Stock Bin Card
         </a>
     </li>
+
+
 
 
 

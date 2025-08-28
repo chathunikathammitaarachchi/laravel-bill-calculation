@@ -45,6 +45,15 @@
 
     {{-- Item Section --}}
     <div class="row mb-4">
+         <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">GRN Summary</h5>
+                    <p class="card-text">View GRN bill summary and details details.</p>
+                    <a href="{{ route('bill.summary') }}" class="btn btn-primary">GRN Summary</a>
+                </div>
+            </div>
+        </div>
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -63,7 +72,12 @@
                 </div>
             </div>
         </div>        
-        <div class="col-md-4">
+       
+    </div>
+
+
+     <div class="row mb-4">
+         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Manage Customers</h5>
@@ -72,10 +86,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-
-     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -95,7 +105,15 @@
             </div>
         </div>
 
-         <div class="col-md-4">
+         
+       
+    </div>
+
+
+    {{-- Reports Section --}}
+    <div class="row mb-4">
+
+        <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Customer Leager Card</h5>
@@ -104,12 +122,6 @@
                 </div>
             </div>
         </div>
-       
-    </div>
-
-
-    {{-- Reports Section --}}
-    <div class="row mb-4">
          <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -128,7 +140,15 @@
                 </div>
             </div>
         </div>
-         <div class="col-md-4">
+        
+         
+    </div>
+
+
+    {{-- Transaction Section --}}
+    <div class="row mb-5">
+
+ <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">All Stock Transaction</h5>
@@ -137,14 +157,6 @@
                 </div>
             </div>
         </div>
-         
-    </div>
-
-
-    {{-- Transaction Section --}}
-    <div class="row mb-5">
-
-
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -163,7 +175,16 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+       
+         
+    </div>
+
+
+        {{-- Transaction Section --}}
+    <div class="row mb-5">
+
+
+         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Stock Bin Card</h5>
@@ -172,11 +193,10 @@
                 </div>
             </div>
         </div>
+       
          
     </div>
 
-
-    
 @endsection
  {{-- <div class="col-md-4">
             <div class="card shadow-sm">

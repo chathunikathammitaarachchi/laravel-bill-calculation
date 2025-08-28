@@ -10,6 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Item;
 use App\Models\StockTransaction;
 use App\Models\ItemPrice;
+use Carbon\Carbon;
 
 use App\Models\Supplier;
 
@@ -29,10 +30,10 @@ class SupplierGRNController extends Controller
         return view('bill.create', compact('nextGrnNo', 'suppliers', 'items'));
     }
 
-  public function store(Request $request)
+public function store(Request $request)
 {
     $request->validate([
-        'grn_no' => 'required|unique:grnmaster,grn_no',
+        'grn_no' => 'required|unique:grnmaster,grn_no', // ✅ Confirmed table name
         'g_date' => 'required|date',
         'supplier_name' => 'required|string',
         'total_price' => 'required|numeric',
@@ -50,50 +51,65 @@ class SupplierGRNController extends Controller
     ]);
 
     DB::transaction(function () use ($request) {
+        // ✅ Create GRN Master
         $master = SupplierGRNMaster::create($request->only([
             'grn_no', 'g_date', 'supplier_name', 'total_price',
             'tobe_price', 'total_discount', 'supplier_pay', 'balance',
         ]));
 
+        // ✅ Process each GRN item
         foreach ($request->items as $grnItem) {
-            SupplierGRNDetails::create(array_merge($grnItem, [
-                'grn_no' => $master->grn_no,
-            ]));
+            // Create GRN detail
+            SupplierGRNDetails::create([
+                'grn_no'     => $master->grn_no,
+                'item_code'  => $grnItem['item_code'],
+                'item_name'  => $grnItem['item_name'],
+                'rate'       => $grnItem['rate'],
+                'cost_price' => $grnItem['cost_price'],
+                'quantity'   => $grnItem['quantity'],
+                'price'      => $grnItem['price'],
+            ]);
 
+            // Find the item
             $item = Item::where('item_code', $grnItem['item_code'])->first();
 
             if ($item) {
-                // get latest price for this item
+                // Check latest price
                 $latestPrice = ItemPrice::where('item_id', $item->id)
                     ->orderBy('created_at', 'desc')
                     ->first();
 
-                // check if price has changed
                 if (
                     !$latestPrice ||
                     $latestPrice->rate != $grnItem['rate'] ||
                     $latestPrice->cost_price != $grnItem['cost_price']
                 ) {
-                    // insert new price (DON'T update old one)
+                    // Insert new price
                     ItemPrice::create([
-                        'item_id' => $item->id,
-                        'rate' => $grnItem['rate'],
+                        'item_id'    => $item->id,
+                        'rate'       => $grnItem['rate'],
+                        'cost_price' => $grnItem['cost_price'],
+                    ]);
+
+                    // Update item table
+                    $item->update([
+                        'rate'       => $grnItem['rate'],
                         'cost_price' => $grnItem['cost_price'],
                     ]);
                 }
 
                 // Create stock transaction
                 StockTransaction::create([
-                    'item_code' => $grnItem['item_code'],
-                    'item_name' => $grnItem['item_name'],
+                    'item_code'        => $grnItem['item_code'],
+                    'item_name'        => $grnItem['item_name'],
                     'transaction_type' => 'IN',
-                    'quantity' => $grnItem['quantity'],
-                    'rate' => $grnItem['rate'],
-                    'cost_price' => $grnItem['cost_price'],
-                    'price' => $grnItem['price'],
-                    'reference_no' => $request->grn_no,
-                    'source' => 'Supplier GRN',
-                    'transaction_date' => $request->g_date,
+                    'quantity'         => $grnItem['quantity'],
+                    'rate'             => $grnItem['rate'],
+                    'cost_price'       => $grnItem['cost_price'],
+                    'price'            => $grnItem['price'],
+                    'reference_no'     => $master->grn_no,
+                    'source'           => 'Supplier GRN',
+                    'transaction_date' => $master->g_date,
                 ]);
             }
         }
@@ -102,9 +118,6 @@ class SupplierGRNController extends Controller
     return redirect()->route('bill.show', $request->grn_no)
                      ->with('success', 'GRN Created Successfully.');
 }
-
-
-
 
     public function show($grn_no)
     {
@@ -160,7 +173,7 @@ class SupplierGRNController extends Controller
                 'transaction_type' => 'IN',
                 'quantity' => $item['quantity'],
                 'rate' => $item['rate'],
-    'cost_price' => $item['cost_price'], // <-- Must include this
+    'cost_price' => $item['cost_price'], 
                 'price' => $item['price'],
                 'reference_no' => $grn_no,
                 'source' => 'Supplier GRN',
@@ -200,7 +213,8 @@ public function itemPriceSearch(Request $request)
                      return [
                          'item_code' => $r->item->item_code,
                          'item_name' => $r->item->item_name,
-                         'rate'      => $r->rate,
+                         'rate'      => $r->item->rate,
+                         'cost_price'=>$r->cost_price,
                      ];
                  });
 
@@ -218,6 +232,138 @@ public function itemCodeSearch(Request $request)
 
     return response()->json($items);
 }
+
+public function summary(Request $request)
+{
+    $from = $request->input('from_date');
+    $to = $request->input('to_date');
+
+    $query = SupplierGRNMaster::query();
+
+    if ($from && $to) {
+        $query->whereBetween('g_date', [$from, $to]);
+    } elseif ($from) {
+        $query->whereDate('g_date', '>=', $from);
+    } elseif ($to) {
+        $query->whereDate('g_date', '<=', $to);
+    }
+
+    $bills = $query->orderBy('g_date', 'desc')->get();
+
+    $grouped = $bills->groupBy(function($item) {
+        return \Carbon\Carbon::parse($item->g_date)->format('Y-m-d');
+    });
+
+    $dailySummaries = $grouped->map(function($group, $date) {
+        return [
+            'date' => $date,
+            'grn_count' => $group->count(),
+            'total_price' => $group->sum('total_price'),
+            'total_discount' => $group->sum('total_discount'),
+            'total_issued' => $group->sum('tobe_price'),
+        ];
+    });
+
+    // Calculate grand totals
+    $totals = [
+        'grn_count' => $dailySummaries->sum('grn_count'),
+        'total_price' => $dailySummaries->sum('total_price'),
+        'total_discount' => $dailySummaries->sum('total_discount'),
+        'total_issued' => $dailySummaries->sum('total_issued'),
+    ];
+
+    return view('bill.summary', compact('dailySummaries', 'totals'));
+}
+
+
+
+
+
+public function downloadSummaryPdf(Request $request)
+{
+    $from = $request->input('from_date');
+    $to = $request->input('to_date');
+
+    $query = SupplierGRNMaster::query();
+
+    if ($from && $to) {
+        $query->whereBetween('g_date', [$from, $to]);
+    } elseif ($from) {
+        $query->whereDate('g_date', '>=', $from);
+    } elseif ($to) {
+        $query->whereDate('g_date', '<=', $to);
+    }
+
+    $bills = $query->orderBy('g_date', 'desc')->get();
+
+    $grouped = $bills->groupBy(function($item) {
+        return \Carbon\Carbon::parse($item->g_date)->format('Y-m-d');
+    });
+
+    $dailySummaries = $grouped->map(function($group, $date) {
+        return [
+            'date' => $date,
+            'grn_count' => $group->count(),
+            'total_price' => $group->sum('total_price'),
+            'total_discount' => $group->sum('total_discount'),
+            'total_issued' => $group->sum('tobe_price'),
+        ];
+    });
+
+    $totals = [
+        'grn_count' => $dailySummaries->sum('grn_count'),
+        'total_price' => $dailySummaries->sum('total_price'),
+        'total_discount' => $dailySummaries->sum('total_discount'),
+        'total_issued' => $dailySummaries->sum('total_issued'),
+    ];
+
+    $pdf = PDF::loadView('bill.summary_pdf', compact('dailySummaries', 'totals', 'from', 'to'));
+    return $pdf->download('GRN_Summary_Report.pdf');
+}
+
+
+    // Detail page for a single GRN
+public function grnDetailsByDate($date)
+{
+    $grns = SupplierGRNMaster::whereDate('g_date', $date)->get();
+
+    $totals = [
+        'total_price' => $grns->sum('total_price'),
+        'total_discount' => $grns->sum('total_discount'),
+        'total_issued' => $grns->sum('tobe_price'),
+        'total_paid' => $grns->sum('supplier_pay'),
+        'total_balance' => $grns->sum('balance'),
+    ];
+
+    return view('bill.details', compact('grns', 'date', 'totals'));
+}
+
+
+
+
+public function downloadGrnPdf($date)
+{
+    $grns = SupplierGRNMaster::whereDate('g_date', $date)->get();
+
+    $totals = [
+        'total_price' => $grns->sum('total_price'),
+        'total_discount' => $grns->sum('total_discount'),
+        'total_issued' => $grns->sum('tobe_price'),
+        'total_paid' => $grns->sum('supplier_pay'),
+        'total_balance' => $grns->sum('balance'),
+    ];
+
+    $pdf = PDF::loadView('bill.details_pdf', compact('grns', 'date', 'totals'));
+    return $pdf->download("GRN_Details_$date.pdf");
+}
+
+
+
+
+
+
+
+
 
 
 
