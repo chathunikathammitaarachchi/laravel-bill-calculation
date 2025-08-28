@@ -24,6 +24,8 @@
                 <th style="padding: 14px; text-align: center;">Item Code</th>
                 <th style="padding: 14px; text-align: center;">Name</th>
                 <th style="padding: 14px; text-align: center;">Rate</th>
+                                <th style="padding: 14px; text-align: center;">Cost Price</th>
+
                 <th style="padding: 14px; text-align: center;">Quantity</th>
                 <th style="padding: 14px; text-align: center;">Price</th>
             </tr>
@@ -34,6 +36,8 @@
                 <td style="padding: 12px; text-align: center; color: #2d3436;">{{ $detail->item_code }}</td>
                 <td style="padding: 12px; text-align: center; color: #2d3436;">{{ $detail->item_name }}</td>
                 <td style="padding: 12px; text-align: center; color: #2d3436;">{{ number_format($detail->rate, 2) }}</td>
+                                <td style="padding: 12px; text-align: center; color: #2d3436;">{{ number_format($detail->cost_price, 2) }}</td>
+
                 <td style="padding: 12px; text-align: center; color: #2d3436;">{{ $detail->quantity }}</td>
                 <td style="padding: 12px; text-align: center; color: #2d3436;">{{ number_format($detail->price, 2) }}</td>
             </tr>
@@ -92,9 +96,7 @@
 
 </div>
 @endsection
-+
 
-+
 
 
 

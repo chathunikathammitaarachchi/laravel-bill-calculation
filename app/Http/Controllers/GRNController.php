@@ -51,6 +51,7 @@ $items = \App\Models\Item::with('itemPrices')->get();
         'items.*.rate' => 'required|numeric',
         'items.*.quantity' => 'required|integer',
         'items.*.price' => 'required|numeric',
+        
     ]);
 
     $customerName = $request->customer_name;
@@ -84,6 +85,7 @@ if (empty($customerName)) {
             'issued_by' => $request->issued_by,
             'customer_pay' => $request->customer_pay,
             'balance' => $request->balance,
+            
         ]);
 
        foreach ($request->items as $item) {
@@ -162,21 +164,21 @@ if ($request->customer_pay < $request->tobe_price) {
 
 public function showDues(Request $request)
 {
-    $query = CustomerDue::query();
+    $dues = CustomerDue::select(
+        'customer_name',
 
-    if ($request->filled('from_date')) {
-        $query->whereDate('grn_date', '>=', $request->from_date);
-    }
-
-    if ($request->filled('to_date')) {
-        $query->whereDate('grn_date', '<=', $request->to_date);
-    }
-
-    if ($request->filled('customer_name')) {
-        $query->where('customer_name', 'like', $request->customer_name . '%');
-    }
-
-    $dues = $query->orderBy('grn_date', 'desc')->get();
+        DB::raw('SUM(tobe_price) as total_due'),
+        DB::raw('SUM(customer_pay) as total_paid'),
+        DB::raw('SUM(balance) as total_balance'),
+        DB::raw('MAX(grn_date) as last_date') 
+    )
+    ->when($request->from_date, fn($q) => $q->whereDate('grn_date', '>=', $request->from_date))
+    ->when($request->to_date, fn($q) => $q->whereDate('grn_date', '<=', $request->to_date))
+    ->when($request->customer_name, fn($q) => $q->where('customer_name', $request->customer_name))
+    ->groupBy('customer_name')
+    ->orderBy('customer_name')
+   
+    ->get();
 
     return view('grn.dues', compact('dues'));
 }
@@ -579,5 +581,202 @@ public function summaryReportPDF(Request $request)
         'totalTotal', 'totalDiscount', 'totalToBePaid', 'totalPaid', 'totalBalance'
     ))->setPaper('a4')->download('bill-report.pdf');
 }
+
+public function customerLedger(Request $request)
+{
+    $customerId = $request->input('customer_id');
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
+
+    // Show form if no customer selected
+    if (!$customerId) {
+        return view('ledger.customer_ledger_form');
+    }
+
+    $customer = Customer::find($customerId);
+
+    if (!$customer) {
+        return back()->withErrors(['customer_id' => 'Invalid customer ID'])->withInput();
+    }
+
+    // Validate dates
+    if ($startDate && $endDate && $startDate > $endDate) {
+        return back()->withErrors(['end_date' => 'End date must be after start date'])->withInput();
+    }
+
+    $customerName = $customer->customer_name;
+
+    // Calculate opening balance (transactions before start date)
+    $openingBalanceQuery = GRNMaster::where('customer_name', $customerName);
+
+    if ($startDate) {
+        $openingBalanceQuery->where('grn_date', '<', $startDate);
+    }
+
+    $openingTransactions = $openingBalanceQuery->get();
+
+    $openingBalance = 0;
+    foreach ($openingTransactions as $transaction) {
+        $debit = $transaction->tobe_price ?? 0;
+        $credit = $transaction->customer_pay ?? 0;
+        $openingBalance += ($debit - $credit);
+    }
+
+    // Get bills within date range
+    $billsQuery = GRNMaster::where('customer_name', $customerName);
+
+    if ($startDate) {
+        $billsQuery->where('grn_date', '>=', $startDate);
+    }
+    if ($endDate) {
+        $billsQuery->where('grn_date', '<=', $endDate);
+    }
+
+    $bills = $billsQuery->orderBy('grn_date')->get();
+
+    $ledger = [];
+    $runningBalance = $openingBalance;
+
+    // Add opening balance row
+    $ledger[] = [
+        'date' => $startDate ? date('Y-m-d', strtotime($startDate . ' -1 day')) : null,
+        'bill_no' => '',
+        'description' => 'Opening Balance',
+        'debit' => '',
+        'credit' => '',
+        'balance' => $openingBalance,
+    ];
+
+    foreach ($bills as $bill) {
+        $debit = $bill->tobe_price ?? 0;
+        $credit = $bill->customer_pay ?? 0;
+
+        $runningBalance += ($debit - $credit);
+
+        $ledger[] = [
+            'date' => $bill->grn_date,
+            'bill_no' => $bill->bill_no,
+            'description' => 'Sale - Bill ' . $bill->bill_no,
+            'debit' => $debit,
+            'credit' => $credit,
+            'balance' => $runningBalance,
+        ];
+    }
+
+    return view('ledger.customer_ledger', compact('ledger', 'customerName', 'startDate', 'endDate', 'openingBalance'));
+}
+
+public function customerSearch(Request $request)
+{
+    $query = $request->get('query', '');
+
+    if (!$query) {
+        return response()->json([]);
+    }
+
+    // Search customer by id or customer_name (case-insensitive)
+    $customers = Customer::where('id', 'like', "%{$query}%")
+        ->orWhere('customer_name', 'like', "%{$query}%")
+        ->limit(10)
+        ->get(['id', 'customer_name']);
+
+    return response()->json($customers);
+}
+
+
+
+
+
+
+
+
+
+
+public function exportCustomerLedgerPDF(Request $request)
+{
+    // Same logic from your `customerLedger` method
+    $customerId = $request->input('customer_id');
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
+
+    if (!$customerId) {
+        return redirect()->back()->withErrors(['customer_id' => 'Customer ID required']);
+    }
+
+    $customer = Customer::find($customerId);
+    if (!$customer) {
+        return back()->withErrors(['customer_id' => 'Invalid customer ID']);
+    }
+
+    $customerName = $customer->customer_name;
+
+    if ($startDate && $endDate && $startDate > $endDate) {
+        return back()->withErrors(['end_date' => 'End date must be after start date'])->withInput();
+    }
+
+    // Opening balance
+    $openingBalanceQuery = GRNMaster::where('customer_name', $customerName);
+    if ($startDate) {
+        $openingBalanceQuery->where('grn_date', '<', $startDate);
+    }
+
+    $openingTransactions = $openingBalanceQuery->get();
+
+    $openingBalance = 0;
+    foreach ($openingTransactions as $transaction) {
+        $debit = $transaction->tobe_price ?? 0;
+        $credit = $transaction->customer_pay ?? 0;
+        $openingBalance += ($debit - $credit);
+    }
+
+    // Get transactions in range
+    $billsQuery = GRNMaster::where('customer_name', $customerName);
+    if ($startDate) $billsQuery->where('grn_date', '>=', $startDate);
+    if ($endDate) $billsQuery->where('grn_date', '<=', $endDate);
+
+    $bills = $billsQuery->orderBy('grn_date')->get();
+
+    $ledger = [];
+    $runningBalance = $openingBalance;
+
+    $ledger[] = [
+        'date' => $startDate ? date('Y-m-d', strtotime($startDate . ' -1 day')) : null,
+        'bill_no' => '',
+        'description' => 'Opening Balance',
+        'debit' => '',
+        'credit' => '',
+        'balance' => $openingBalance,
+    ];
+
+    foreach ($bills as $bill) {
+        $debit = $bill->tobe_price ?? 0;
+        $credit = $bill->customer_pay ?? 0;
+
+        $runningBalance += ($debit - $credit);
+
+        $ledger[] = [
+            'date' => $bill->grn_date,
+            'bill_no' => $bill->bill_no,
+            'description' => 'Sale - Bill ' . $bill->bill_no,
+            'debit' => $debit,
+            'credit' => $credit,
+            'balance' => $runningBalance,
+        ];
+    }
+
+    // Load the PDF view
+    $pdf = Pdf::loadView('ledger.customer_ledger_pdf', [
+        'ledger' => $ledger,
+        'customerName' => $customerName,
+        'startDate' => $startDate,
+        'endDate' => $endDate,
+        'openingBalance' => $openingBalance,
+    ]);
+
+    return $pdf->download('customer_ledger_' . now()->format('Ymd_His') . '.pdf');
+}
+
+
+
 
 }

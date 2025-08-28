@@ -34,13 +34,13 @@
         @endif
     </div>
 </form>
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 
-    {{-- Success Message --}}
-    @if (session('success'))
-        <div class="alert alert-success" style="font-weight: 600; background-color: #d4edda; border-color: #c3e6cb;">
-            {{ session('success') }}
-        </div>
-    @endif
 
     {{-- Table --}}
     @if($dues->isEmpty())
@@ -50,7 +50,6 @@
         <table class="table table-bordered table-striped" style="margin-bottom: 0;">
             <thead class="table-dark" style="background-color: #2c3e50; color: #fff;">
                 <tr>
-                    <th>Bill No</th>
                     <th>Customer Name</th>
                     <th>Due Amount</th>
                     <th>Paid</th>
@@ -61,31 +60,35 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($dues as $due)
-                    <tr>
-                        <td style="vertical-align: middle;">{{ $due->bill_no }}</td>
-                        <td style="vertical-align: middle;">{{ $due->customer_name }}</td>
-                        <td style="vertical-align: middle; text-align: right;">{{ number_format($due->tobe_price, 2) }}</td>
-                        <td style="vertical-align: middle; text-align: right;">{{ number_format($due->customer_pay, 2) }}</td>
-                        <td style="vertical-align: middle; text-align: right;">{{ number_format($due->balance, 2) }}</td>
-                        <td style="vertical-align: middle;">{{ $due->grn_date }}</td>
-                        <td style="vertical-align: middle;">
-                            @if ($due->balance > 0)
-                                <span class="badge bg-warning text-dark" style="font-weight: 600; padding: 6px 10px; border-radius: 15px;">Pending</span>
-                            @else
-                                <span class="badge bg-success" style="font-weight: 600; padding: 6px 10px; border-radius: 15px;">Settled</span>
-                            @endif
-                        </td>
-                        <td style="vertical-align: middle;">
-                            @if ($due->balance > 0)
-                                <a href="{{ route('due_payments.form', $due->id) }}" class="btn btn-sm btn-primary" style="padding: 5px 10px;">Pay Now</a>
-                            @else
-                                <button class="btn btn-sm btn-secondary" disabled style="padding: 5px 10px;">Paid</button>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
+    @forelse ($dues as $due)
+        <tr>
+            <td style="vertical-align: middle;"><strong>{{ $due->customer_name }}</strong></td>
+            <td style="vertical-align: middle; text-align: right;">{{ number_format($due->total_due, 2) }}</td>
+            <td style="vertical-align: middle; text-align: right;">{{ number_format($due->total_paid, 2) }}</td>
+            <td style="vertical-align: middle; text-align: right;">{{ number_format($due->total_balance, 2) }}</td>
+            <td style="vertical-align: middle;">{{ $due->last_date }}</td>
+            <td style="vertical-align: middle;">
+                @if ($due->total_balance > 0)
+                    <span class="badge bg-warning text-dark" style="font-weight: 600;">Pending</span>
+                @else
+                    <span class="badge bg-success" style="font-weight: 600;">Settled</span>
+                @endif
+            </td>
+            <td style="vertical-align: middle;">
+                @if ($due->total_balance > 0)
+<a href="{{ route('due_payments.form.by.customer', ['customer_name' => $due->customer_name]) }}" class="btn btn-sm btn-primary">Pay Now</a>
+                @else
+                    <button class="btn btn-sm btn-secondary" disabled>Paid</button>
+                @endif
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="8" class="text-center">No dues available.</td>
+        </tr>
+    @endforelse
+</tbody>
+
         </table>
     </div>
     @endif

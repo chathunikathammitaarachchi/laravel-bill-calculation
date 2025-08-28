@@ -16,6 +16,7 @@ class SupplierGRNDetails extends Model
         'item_code',
         'item_name',
         'rate',
+        'cost_price',
         'quantity',
         'price',
     ];

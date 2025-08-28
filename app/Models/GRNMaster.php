@@ -43,4 +43,13 @@ class GRNMaster extends Model
     {
         return $this->hasMany(ItemSummary::class, 'bill_no', 'bill_no');
     }
+
+
+
+
+
+
+
+
+    
 }

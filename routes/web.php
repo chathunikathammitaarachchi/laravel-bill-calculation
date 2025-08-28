@@ -13,6 +13,9 @@ use App\Http\Controllers\DuePaymentController;
 use App\Http\Controllers\StockInHandController;
 use App\Http\Controllers\StockHistoryController;
 use App\Http\Controllers\DailyItemSummaryController;
+Route::get('/customer-ledger', [GRNController::class, 'customerLedger'])->name('customer.ledger');
+Route::get('/customer-ledger/pdf', [GRNController::class, 'exportCustomerLedgerPDF'])->name('ledger.customer.pdf');
+Route::get('/search-customers', [GRNController::class, 'customersearch'])->name('customer.search');
 
 Route::get('/stock-in-hand', [StockTransactionController::class, 'stockInHandIndex'])
      ->name('stock_in_hand.index');
@@ -36,9 +39,9 @@ Route::get('/api/items/autocomplete', [StockHistoryController::class, 'autocompl
 
 Route::post('/due-payments/pay', [DuePaymentController::class, 'payDue'])->name('due_payments.pay');
 Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
-Route::get('/due-payments/{id}/pay', [DuePaymentController::class, 'showPaymentForm'])->name('due_payments.form');
 Route::get('/grn/dues/export-pdf', [GRNController::class, 'customerexportDuesPDF'])->name('grn.dues.export');
-
+Route::get('/due-payments/customer/{customer_name}', [DuePaymentController::class, 'showByCustomer'])->name('due_payments.form.by.customer');
+Route::post('/due-payments/pay', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
 
 Route::get('/grn/summary', [GRNController::class, 'summaryReport'])->name('grn.summary');
 Route::get('/grn/summary/pdf', [GRNController::class, 'summaryReportPDF'])->name('grn.summary.pdf');

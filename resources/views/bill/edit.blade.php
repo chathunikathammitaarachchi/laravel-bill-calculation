@@ -126,7 +126,8 @@
                 <tr>
                     <th>Item Code</th>
                     <th>Item Name</th>
-                    <th>Rate</th>
+                    <th>Rate</th>                    <th>Cost Price</th>
+
                     <th>Quantity</th>
                     <th>Price</th>
                     <th></th>
@@ -140,6 +141,7 @@
                         </td>
                         <td><input type="text" name="details[{{ $index }}][item_name]" value="{{ $detail->item_name }}" class="form-control" readonly></td>
                         <td><input type="number" name="details[{{ $index }}][rate]" value="{{ $detail->rate }}" class="form-control rate" readonly style="text-align: right;"></td>
+                        <td><input type="number" name="details[{{ $index }}][cost_price]" value="{{ $detail->cost_price }}" class="form-control cost_price" readonly style="text-align: right;"></td>
                         <td><input type="number" name="details[{{ $index }}][quantity]" value="{{ $detail->quantity }}" class="form-control quantity" min="1" required style="text-align: right;"  ></td>
                         <td><input type="number" name="details[{{ $index }}][price]" value="{{ $detail->price }}" class="form-control price" readonly style="text-align: right;"></td>
                         <td>
@@ -224,27 +226,28 @@
         table.appendChild(newRow);
     }
 
-    function calculateTotals() {
-        let total = 0;
+   function calculateTotals() {
+    let total = 0;
 
-        document.querySelectorAll('.item-row').forEach(row => {
-            const rate = parseFloat(row.querySelector('.rate').value) || 0;
-            const qty = parseFloat(row.querySelector('.quantity').value) || 0;
-            const price = rate * qty;
-            row.querySelector('.price').value = price.toFixed(2);
-            total += price;
-        });
+    document.querySelectorAll('.item-row').forEach(row => {
+        const cost_price = parseFloat(row.querySelector('.cost_price').value) || 0;
+        const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+        const price = cost_price * qty;
+        row.querySelector('.price').value = price.toFixed(2);
+        total += price;
+    });
 
-        document.getElementById('total_price').value = total.toFixed(2);
+    document.getElementById('total_price').value = total.toFixed(2);
 
-        const discount = parseFloat(document.getElementById('total_discount').value) || 0;
-        const tobe = total - discount;
-        document.getElementById('tobe_price').value = tobe.toFixed(2);
+    const discount = parseFloat(document.getElementById('total_discount').value) || 0;
+    const tobe = total - discount;
+    document.getElementById('tobe_price').value = tobe.toFixed(2);
 
-        const supplierPay = parseFloat(document.getElementById('supplier_pay').value) || 0;
-        const balance = supplierPay - tobe;
-        document.getElementById('balance').value = balance.toFixed(2);
-    }
+    const supplierPay = parseFloat(document.getElementById('supplier_pay').value) || 0;
+    const balance = supplierPay - tobe;
+    document.getElementById('balance').value = balance.toFixed(2);
+}
+
 
     document.addEventListener('input', function (e) {
         if (e.target.classList.contains('quantity') || e.target.id === 'total_discount' || e.target.id === 'supplier_pay') {

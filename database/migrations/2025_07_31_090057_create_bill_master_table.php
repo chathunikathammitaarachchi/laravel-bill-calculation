@@ -21,8 +21,9 @@ return new class extends Migration
                 $table->decimal('balance', 10, 2);
                 $table ->string('received_by');
                 $table ->string('issued_by');
+                
                 $table->timestamps();
-});
+        });
 
     }
 

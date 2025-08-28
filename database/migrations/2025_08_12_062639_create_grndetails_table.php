@@ -18,6 +18,7 @@ return new class extends Migration
                 $table->integer('item_code')->references('grn_no')->on('item')->onDelete('cascade');;
                 $table->string('item_name')->references('grn_no')->on('item')->onDelete('cascade');;
                 $table->integer('rate')->references('grn_no')->on('item')->onDelete('cascade');;
+                $table->integer('cost_price')->references('grn_no')->on('item')->onDelete('cascade');;
                 $table->integer('quantity');
                 $table->decimal('price', 10, 2);
             $table->timestamps();

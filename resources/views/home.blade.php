@@ -94,7 +94,23 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+
+         <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Customer Leager Card</h5>
+                    <p class="card-text">Check the Customer Ledger Card.</p>
+                    <a href="{{ route('customer.ledger') }}" class="btn btn-primary">Customer Ledger Card</a>
+                </div>
+            </div>
+        </div>
+       
+    </div>
+
+
+    {{-- Reports Section --}}
+    <div class="row mb-4">
+         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Billing Reports</h5>
@@ -103,11 +119,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-
-    {{-- Reports Section --}}
-    <div class="row mb-4">
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -126,7 +137,15 @@
                 </div>
             </div>
         </div>
-         <div class="col-md-4">
+         
+    </div>
+
+
+    {{-- Transaction Section --}}
+    <div class="row mb-5">
+
+
+        <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Daily Item Stock</h5>
@@ -135,11 +154,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-
-    {{-- Transaction Section --}}
-    <div class="row mb-5">
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -158,15 +172,7 @@
                 </div>
             </div>
         </div>
-         <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Item sales graphs</h5>
-                    <p class="card-text">Check Daily Item Sales summary.</p>
-                    <a href="{{ route('stock.bin_card') }}" class="btn btn-primary">Daily Item Saleas summary</a>
-                </div>
-            </div>
-        </div>
+         
     </div>
 
 

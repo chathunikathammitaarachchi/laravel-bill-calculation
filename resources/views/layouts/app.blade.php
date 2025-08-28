@@ -158,6 +158,12 @@
         </a>
     </li>
 
+         <li class="nav-item">
+<a class="nav-link" href="{{ route('customer.ledger') }}">            
+<i class="bi bi-journal-text"></i> Customer Ledger
+        </a>
+    </li>
+
     {{-- Reports --}}
     <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('grn.report') ? 'active' : '' }}" href="{{ route('grn.report') }}">
@@ -188,9 +194,15 @@
     </li>
     <li class="nav-item">
         <a class="nav-link" href="{{ route('stock.bin_card') }}">
-            <i class="bi bi-box"></i> Stock Bin Card
+            <i class="bi bi-archive"></i> Stock Bin Card
         </a>
     </li>
+
+
+
+
+
+    
 </ul>
 
 <!-- Main Section Cards -->

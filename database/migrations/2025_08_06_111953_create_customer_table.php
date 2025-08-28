@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('customer', function (Blueprint $table) {
             $table->id(); // Laravel-generated auto-increment PK
 
-            $table->unsignedBigInteger('customer_id')->unique(); // big int for manual ID
+            $table->unsignedBigInteger('customer_id'); // big int for manual ID
             $table->string('customer_name')->unique();
             $table->string('phone');
             $table->timestamps();
