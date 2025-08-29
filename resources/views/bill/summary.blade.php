@@ -22,7 +22,8 @@
     }
 
     .form-group input {
-        min-width: 180px;
+        min-width: 30px;
+        
     }
 
     .btn-primary {

@@ -13,6 +13,9 @@ use App\Http\Controllers\DuePaymentController;
 use App\Http\Controllers\StockInHandController;
 use App\Http\Controllers\StockHistoryController;
 use App\Http\Controllers\DailyItemSummaryController;
+use App\Http\Controllers\SupplierDuePaymentController;
+use App\Models\Supplier;
+
 Route::get('/customer-ledger', [GRNController::class, 'customerLedger'])->name('customer.ledger');
 Route::get('/customer-ledger/pdf', [GRNController::class, 'exportCustomerLedgerPDF'])->name('ledger.customer.pdf');
 Route::get('/search-customers', [GRNController::class, 'customersearch'])->name('customer.search');
@@ -96,7 +99,15 @@ Route::get('/bill-details/{date}/pdf', [SupplierGRNController::class, 'downloadG
 Route::get('/bill/summary/pdf', [SupplierGRNController::class, 'downloadSummaryPdf'])->name('bill.summary.pdf');
 // routes/web.php
 Route::get('/grn-details/pdf', [SupplierGRNController::class, 'downloadGrnPdf'])->name('bill.details.pdf');
+Route::get('/bill/dues', [SupplierGRNController::class, 'showDues'])->name('bill.dues');
 
+Route::post('/due-payments/pay', [SupplierDuePaymentController::class, 'payDue'])->name('due_payments.pay');
+Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
+Route::get('/grn/dues/export-pdf', [SupplierGRNController::class, 'supplierexportDuesPDF'])->name('bill.dues.export');
+Route::get('/due-payments/supplier/{supplier_name}', [SupplierDuePaymentController::class, 'showBySupplier'])
+    ->name('due_payments.form.by.supplier');
+Route::post('/due-payments/pay', [SupplierDuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
+Route::post('/due/pay', [SupplierDuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
 
 
 

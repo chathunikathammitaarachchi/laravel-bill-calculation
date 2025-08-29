@@ -137,6 +137,14 @@
     </a>
 </li>
 
+
+
+ <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('bill.dues') ? 'active' : '' }}" href="{{ route('bill.dues') }}">
+            <i class="bi bi-cash-coin"></i> Supplier Dues
+        </a>
+    </li>
+
     {{-- Item --}}
     <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">

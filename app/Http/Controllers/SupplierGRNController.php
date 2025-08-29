@@ -8,6 +8,8 @@ use App\Models\SupplierGRNDetails;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Item;
+use App\Models\SupplierDue;
+
 use App\Models\StockTransaction;
 use App\Models\ItemPrice;
 use Carbon\Carbon;
@@ -33,7 +35,7 @@ class SupplierGRNController extends Controller
 public function store(Request $request)
 {
     $request->validate([
-        'grn_no' => 'required|unique:grnmaster,grn_no', // ✅ Confirmed table name
+        'grn_no' => 'required|unique:grnmaster,grn_no', 
         'g_date' => 'required|date',
         'supplier_name' => 'required|string',
         'total_price' => 'required|numeric',
@@ -51,13 +53,13 @@ public function store(Request $request)
     ]);
 
     DB::transaction(function () use ($request) {
-        // ✅ Create GRN Master
+        //  Create GRN Master
         $master = SupplierGRNMaster::create($request->only([
             'grn_no', 'g_date', 'supplier_name', 'total_price',
             'tobe_price', 'total_discount', 'supplier_pay', 'balance',
         ]));
 
-        // ✅ Process each GRN item
+        //  Process each GRN item
         foreach ($request->items as $grnItem) {
             // Create GRN detail
             SupplierGRNDetails::create([
@@ -98,6 +100,17 @@ public function store(Request $request)
                     ]);
                 }
 
+
+                if ($request->supplier_pay < $request->tobe_price) {
+    SupplierDue::create([
+'supplier_name' => $request->supplier_name,
+        'grn_no' => $request->grn_no,
+        'g_date' => $request->g_date,
+        'tobe_price' => $request->tobe_price,
+        'supplier_pay' => $request->supplier_pay,
+        'balance' => $request->tobe_price - $request->supplier_pay, 
+    ]);
+}
                 // Create stock transaction
                 StockTransaction::create([
                     'item_code'        => $grnItem['item_code'],
@@ -119,6 +132,57 @@ public function store(Request $request)
                      ->with('success', 'GRN Created Successfully.');
 }
 
+
+
+
+
+public function showDues(Request $request)
+{
+    $dues = SupplierDue::select(
+        'supplier_name',
+
+        DB::raw('SUM(tobe_price) as total_due'),
+        DB::raw('SUM(supplier_pay) as total_paid'),
+        DB::raw('SUM(balance) as total_balance'),
+        DB::raw('MAX(g_date) as last_date') 
+    )
+    ->when($request->from_date, fn($q) => $q->whereDate('g_date', '>=', $request->from_date))
+    ->when($request->to_date, fn($q) => $q->whereDate('g_date', '<=', $request->to_date))
+    ->when($request->supplier_name, fn($q) => $q->where('supplier_name', $request->supplier_name))
+    ->groupBy('supplier_name')
+    ->orderBy('supplier_name')
+   
+    ->get();
+
+    return view('bill.dues', compact('dues'));
+}
+
+
+
+public function supplierexportDuesPDF(Request $request)
+{
+    $query = SupplierDue::query();
+
+    if ($request->filled('from_date')) {
+        $query->whereDate('g_date', '>=', $request->from_date);
+    }
+
+    if ($request->filled('to_date')) {
+        $query->whereDate('g_date', '<=', $request->to_date);
+    }
+
+    if ($request->filled('supplier_name')) {
+        $query->where('supplier_name', 'like', $request->supplier_name . '%');
+    }
+
+    $dues = $query->orderBy('g_date', 'desc')->get();
+
+    $pdf = Pdf::loadView('bill.dues_pdf', compact('dues'));
+    return $pdf->download('supplier_dues.pdf');
+}
+
+
+
     public function show($grn_no)
     {
         $bill = SupplierGRNMaster::with('details')->findOrFail($grn_no);
@@ -131,9 +195,9 @@ public function store(Request $request)
         return view('bill.edit', compact('bill'));
     }
 
-   public function update(Request $request, $grn_no)
+public function update(Request $request, $grn_no)
 {
-    $request->validate([
+    $validated = $request->validate([
         'g_date' => 'required|date',
         'supplier_name' => 'required|string',
         'total_price' => 'required|numeric',
@@ -145,47 +209,52 @@ public function store(Request $request)
         'details.*.item_code' => 'required|integer',
         'details.*.item_name' => 'required|string',
         'details.*.rate' => 'required|numeric',
-'details.*.cost_price' => 'required|numeric',
+        'details.*.cost_price' => 'required|numeric',
         'details.*.quantity' => 'required|integer',
         'details.*.price' => 'required|numeric',
     ]);
 
-    DB::transaction(function () use ($request, $grn_no) {
+    DB::transaction(function () use ($validated, $grn_no) {
         // Update master
         $master = SupplierGRNMaster::findOrFail($grn_no);
-        $master->update($request->only([
-            'g_date', 'supplier_name', 'total_price',
-            'tobe_price', 'total_discount', 'supplier_pay', 'balance',
-        ]));
+        $master->update($validated);
 
         // Delete old details and stock transactions
         SupplierGRNDetails::where('grn_no', $grn_no)->delete();
         StockTransaction::where('reference_no', $grn_no)->where('source', 'Supplier GRN')->delete();
 
-        foreach ($request->details as $item) {
-            // Save new details
+        foreach ($validated['details'] as $item) {
             SupplierGRNDetails::create(array_merge($item, ['grn_no' => $grn_no]));
 
-            // Add new stock transaction
             StockTransaction::create([
                 'item_code' => $item['item_code'],
                 'item_name' => $item['item_name'],
                 'transaction_type' => 'IN',
                 'quantity' => $item['quantity'],
                 'rate' => $item['rate'],
-    'cost_price' => $item['cost_price'], 
+                'cost_price' => $item['cost_price'],
                 'price' => $item['price'],
                 'reference_no' => $grn_no,
                 'source' => 'Supplier GRN',
-                'transaction_date' => $request->g_date,
+                'transaction_date' => $validated['g_date'],
             ]);
         }
 
-       
+        SupplierDue::updateOrCreate(
+            ['grn_no' => $grn_no],
+            [
+                'supplier_name' => $validated['supplier_name'],
+                'g_date' => $validated['g_date'],
+                'tobe_price' => $validated['tobe_price'],
+                'supplier_pay' => $validated['supplier_pay'],
+                'balance' => $validated['tobe_price'] - $validated['supplier_pay'],
+            ]
+        );
     });
 
     return redirect()->route('bill.show', $grn_no)->with('success', 'GRN Updated and Stock Adjusted Successfully.');
 }
+
 
 
 
