@@ -112,7 +112,7 @@
         </div>
 
         <!-- Inside .item row -->
-        <div class="col-md-3">
+    <div class="form-group" style="flex: 0 0 200px;">
             <label class="form-label">Item Rate</label>
             <div class="input-group">
                 <input type="text" name="items[0][rate]" class="form-control rate-input" readonly>
@@ -122,21 +122,21 @@
 
 
         {{-- Quantity --}}
-        <div class="col-md-2">
+    <div class="form-group" style="flex: 0 0 200px;">
             <label class="form-label">Quantity</label>
             <input type="number" name="items[0][quantity]" class="form-control quantity" 
                    min="1" value="1" required style="text-align: right;">
         </div>
 
         {{-- Price --}}
-        <div class="col-md-2">
-            <label class="form-label">Price</label>
+    <div class="form-group" style="flex: 0 0 200px;">
+            <label class="form-label" >Price</label>
             <input type="number" name="items[0][price]" class="form-control price" readonly 
                    style="text-align: right;">  
         </div>
 
 
-        <div class="col-md-1">
+    <div class="form-group" style="flex: 0 0 10px;">
         <button type="button" class="btn btn-danger btn-sm remove-item" style="margin-top: 30px;">
             <i class="bi bi-trash"></i>
         </button>

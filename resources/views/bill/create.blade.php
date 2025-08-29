@@ -67,63 +67,61 @@
 
         <hr/>
 
-        <div id="items">
-            <div class="item row align-items-end mb-3">
-                <div class="col-md-2">
-                    <label class="form-label">Item Code</label>
-                    <select name="items[0][item_code]" class="form-select item-code" required>
-    <option value="" disabled selected>Select Item</option>
-    @foreach($items as $item)
-        <option value="{{ $item->item_code }}" data-name="{{ $item->item_name }}" data-rate="{{ $item->rate }}" data-cost-price="{{ $item->cost_price }}">
+       <div id="items">
+  <div class="item d-flex align-items-end mb-3 gap-2">
+    <div class="form-group" style="flex: 0 0 150px;">
+      <label class="form-label">Item Code</label>
+      <select name="items[0][item_code]" class="form-select item-code" required>
+        <option value="" disabled selected>Select</option>
+        @foreach($items as $item)
+          <option value="{{ $item->item_code }}" data-name="{{ $item->item_name }}" data-rate="{{ $item->rate }}" data-cost-price="{{ $item->cost_price }}">
             {{ $item->item_code }}
-        </option>
-    @endforeach
-</select>
-
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Item Name</label>
-                    <select name="items[0][item_name]" class="form-select item-name" required>
-                        <option value="" disabled selected>Select Item</option>
-                        @foreach($items as $item)
-                            <option value="{{ $item->item_name }}" data-code="{{ $item->item_code }}" data-rate="{{ $item->rate }}">
-                                {{ $item->item_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-
-                 
-                <div class="col-md-2">
-                    <label class="form-label">Rate</label>
-                    <input type="number" name="items[0][rate]" class="form-control rate" style="text-align: right;">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Cost Price</label>
-                    <input type="number" name="items[0][cost_price]" class="form-control cost_price" style="text-align: right;">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Quantity</label>
-                    <input type="number" name="items[0][quantity]" class="form-control quantity" min="1" value="1" required style="text-align: right;">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Price</label>
-                    <input type="number" name="items[0][price]" class="form-control price" readonly style="text-align: right;">
-                </div>
-
-                <div class="col-md-1">
+          </option>
+        @endforeach
+      </select>
+    </div>
+    
+    <div class="form-group" style="flex: 0 0 150px;">
+      <label class="form-label">Item Name</label>
+      <select name="items[0][item_name]" class="form-select item-name" required>
+        <option value="" disabled selected>Select</option>
+        @foreach($items as $item)
+          <option value="{{ $item->item_name }}" data-code="{{ $item->item_code }}" data-rate="{{ $item->rate }}">
+            {{ $item->item_name }}
+          </option>
+        @endforeach
+      </select>
+    </div>
+    
+    <div class="form-group" style="flex: 0 0 150px;">
+      <label class="form-label">Rate</label>
+      <input type="number" name="items[0][rate]" class="form-control rate" style="text-align: right;">
+    </div>
+    
+    <div class="form-group" style="flex: 0 0 180px;">
+      <label class="form-label">Cost Price</label>
+      <input type="number" name="items[0][cost_price]" class="form-control cost_price" style="text-align: right;">
+    </div>
+    
+    <div class="form-group" style="flex: 0 0 180px;">
+      <label class="form-label">Quantity</label>
+      <input type="number" name="items[0][quantity]" class="form-control quantity" min="1" value="1" required style="text-align: right;">
+    </div>
+    
+    <div class="form-group" style="flex: 0 0 180px;">
+      <label class="form-label">Price</label>
+      <input type="number" name="items[0][price]" class="form-control price" readonly style="text-align: right;">
+    </div>
+    
+    <div class="col-md-1">
         <button type="button" class="btn btn-danger btn-sm remove-item" style="margin-top: 30px;">
             <i class="bi bi-trash"></i>
         </button>
     </div>
-            </div>
+  </div>
+</div>
 
-
-            
-        </div>
-
-        <button type="button" class="btn btn-outline-primary mb-4" onclick="addItem()">+ Add Item</button>
+<button type="button" class="btn btn-outline-primary mb-4" onclick="addItem()">+ Add Item</button>
 
         <hr/>
 
@@ -172,15 +170,16 @@
 <script>
 
 
-
 document.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-item')) {
-            const row = e.target.closest('.item.row');
-            if (row) {
-                row.remove();
-            }
+    if (e.target.closest('.remove-item')) {
+        const row = e.target.closest('.item');  // <- changed here
+        if (row) {
+            row.remove();
         }
-    });
+    }
+});
+
+
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('g_date').value = new Date().toISOString().split('T')[0];
 });
@@ -319,11 +318,11 @@ searchConfigs.forEach(config => {
             .then(data => {
                 let results = '';
                 data.forEach(item => {
-                    results += `
-                        <button type="button" class="list-group-item list-group-item-action"
-                            data-code="${item.item_code}" data-name="${item.item_name}" data-rate="${item.rate}">
-                            ${item.item_code} - ${item.item_name} - Rs.${item.rate}
-                        </button>`;
+                   results += `
+    <button type="button" class="list-group-item list-group-item-action"
+        data-code="${item.item_code}" data-name="${item.item_name}" data-rate="${item.rate}" data-cost_price="${item.cost_price}">
+        ${item.item_code} - ${item.item_name} - Rs.${item.rate}
+    </button>`;
                 });
                 resultEl.innerHTML = results;
             });
@@ -334,6 +333,7 @@ searchConfigs.forEach(config => {
             const code = e.target.getAttribute('data-code');
             const name = e.target.getAttribute('data-name');
             const rate = e.target.getAttribute('data-rate');
+            const costPrice = e.target.getAttribute('data-cost_price');
 
             const existingItem = Array.from(document.querySelectorAll('.item-code')).find(select => select.value === code);
 
@@ -353,6 +353,13 @@ searchConfigs.forEach(config => {
                     row.querySelector('.item-code').value = code;
                     row.querySelector('.item-name').value = name;
                     row.querySelector('.rate').value = rate;
+
+                    // Fix here: use correct class name selector
+                    const costPriceInput = row.querySelector('.cost_price');  // underscore here
+                    if (costPriceInput) {
+                        costPriceInput.value = costPrice;
+                    }
+
                     row.querySelector('.quantity').value = 1;
                     updateRowPrice(row);
                     calculateTotals();
@@ -363,7 +370,7 @@ searchConfigs.forEach(config => {
                         qtyInput.select();
                     }
                 } else {
-                    addItem(code, name, rate);
+                    addItem(code, name, rate, costPrice); // make sure addItem handles costPrice with correct selector
                 }
             }
 
@@ -372,6 +379,7 @@ searchConfigs.forEach(config => {
         }
     });
 });
+
 </script>
 
 @endsection

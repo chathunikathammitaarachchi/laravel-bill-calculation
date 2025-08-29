@@ -34,15 +34,17 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($dailySummaries as $summary)
-                <tr>
-                    <td>{{ $summary['date'] }}</td>
-                    <td>{{ $summary['grn_count'] }}</td>
-                    <td>{{ number_format($summary['total_price'], 2) }}</td>
-                    <td>{{ number_format($summary['total_discount'], 2) }}</td>
-                    <td>{{ number_format($summary['total_issued'], 2) }}</td>
-                </tr>
-            @endforeach
+           @foreach($dailySummaries as $summary)
+<tr>
+    <td>{{ $summary['date'] }}</td>
+    <td>{{ $summary['grn_count'] }}</td>
+    <td>Rs {{ number_format($summary['total_price'], 2) }}</td>
+    <td>Rs {{ number_format($summary['total_discount'], 2) }}</td>
+    <td>Rs {{ number_format($summary['total_issued'], 2) }}</td>
+   
+</tr>
+@endforeach
+
             <tr class="totals-row">
                 <td>Total</td>
                 <td>{{ $totals['grn_count'] }}</td>

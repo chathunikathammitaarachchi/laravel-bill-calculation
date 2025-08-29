@@ -82,48 +82,54 @@
         <button type="submit" class="btn btn-primary mr-2">Filter</button>
         <a href="{{ route('bill.summary') }}" class="btn btn-secondary">Clear</a>
     </form>
+   @if(request('from_date') && request('to_date') && count($dailySummaries) > 0)
     <table class="table table-bordered">
-        <thead class="thead-light">
-            <tr>
-                <th>Date</th>
-                <th>GRN Count</th>
-                <th>Total Price</th>
-                <th>Total Discount</th>
-                <th>Total Issued</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-    @foreach($dailySummaries as $summary)
+    <thead class="thead-light">
         <tr>
-            <td>{{ $summary['date'] }}</td>
-            <td>{{ $summary['grn_count'] }}</td>
-            <td>Rs {{ number_format($summary['total_price'], 2) }}</td>
-            <td>Rs {{ number_format($summary['total_discount'], 2) }}</td>
-            <td>Rs {{ number_format($summary['total_issued'], 2) }}</td>
-            <td>
-                <a href="{{ route('bill.details', ['date' => $summary['date']]) }}" class="btn btn-sm btn-info">View</a>
-            </td>
+            <th>Date</th>
+            <th>GRN Count</th>
+            <th>Total Price</th>
+            <th>Total Discount</th>
+            <th>Total Issued</th>
         </tr>
-    @endforeach
+    </thead>
+    <tbody>
+        @foreach($dailySummaries as $summary)
+            <tr>
+                <td>{{ $summary['date'] }}</td>
+                <td>{{ $summary['grn_count'] }}</td>
+                <td>Rs {{ number_format($summary['total_price'], 2) }}</td>
+                <td>Rs {{ number_format($summary['total_discount'], 2) }}</td>
+                <td>Rs {{ number_format($summary['total_issued'], 2) }}</td>
+            </tr>
+        @endforeach
 
-    {{-- Total row --}}
-    <tr style="font-weight: bold; background-color: #e9ecef;">
-        <td>Total</td>
-        <td>{{ $totals['grn_count'] }}</td>
-        <td>Rs {{ number_format($totals['total_price'], 2) }}</td>
-        <td>Rs {{ number_format($totals['total_discount'], 2) }}</td>
-        <td>Rs {{ number_format($totals['total_issued'], 2) }}</td>
-        <td></td>
-    </tr>
-</tbody>
+        {{-- Totals row --}}
+        <tr style="font-weight: bold; background-color: #e9ecef;">
+            <td>Total</td>
+            <td>{{ $totals['grn_count'] }}</td>
+            <td>Rs {{ number_format($totals['total_price'], 2) }}</td>
+            <td>Rs {{ number_format($totals['total_discount'], 2) }}</td>
+            <td>Rs {{ number_format($totals['total_issued'], 2) }}</td>
+        </tr>
+    </tbody>
+</table>
 
-    </table>
 
     <a href="{{ route('bill.summary.pdf', request()->only('from_date', 'to_date')) }}" 
-   class="btn btn-success ml-2">
-   ⬇ Download PDF
-</a>
+       class="btn btn-success ml-2">
+       ⬇ Download PDF
+    </a>
+
+    <a href="{{ route('bill.details', ['from' => request('from_date'), 'to' => request('to_date')]) }}" 
+       class="btn btn-info ml-2">
+        🔍 View Filtered Details
+    </a>
+@elseif(request('from_date') && request('to_date'))
+    <div class="alert alert-warning mt-3">
+        No GRNs found for the selected date range.
+    </div>
+@endif
 
 </div>
 @endsection

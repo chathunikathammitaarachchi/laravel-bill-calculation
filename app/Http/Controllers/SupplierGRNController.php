@@ -191,44 +191,42 @@ public function store(Request $request)
 
 
 
-    public function itemNameSearch(Request $request)
+ public function itemNameSearch(Request $request)
 {
     $query = $request->input('query');
 
-    $items = Item::where('item_name', 'LIKE', "%$query%")
-                ->limit(10)
-                ->get();
+    $items = Item::with('itemPrice')
+        ->where('item_name', 'LIKE', "%$query%")
+        ->limit(10)
+        ->get()
+        ->map(function ($item) {
+            return [
+                'item_code' => $item->item_code,
+                'item_name' => $item->item_name,
+                'rate'      => $item->itemPrice->rate ?? null,
+                'cost_price'=> $item->itemPrice->cost_price ?? null,
+            ];
+        });
 
     return response()->json($items);
 }
-public function itemPriceSearch(Request $request)
-{
-    $query = $request->input('query');
-
-    $rate = ItemPrice::with('item')  // assuming relation is 'item'
-                 ->whereRaw("CAST(rate AS CHAR) LIKE ?", ["$query%"])
-                 ->limit(10)
-                 ->get()
-                 ->map(function ($r) {
-                     return [
-                         'item_code' => $r->item->item_code,
-                         'item_name' => $r->item->item_name,
-                         'rate'      => $r->item->rate,
-                         'cost_price'=>$r->cost_price,
-                     ];
-                 });
-
-    return response()->json($rate);
-}
-
 
 public function itemCodeSearch(Request $request)
 {
     $query = $request->input('query');
 
-    $items = Item::where('item_code', 'LIKE', "%$query%")
-                ->limit(10)
-                ->get();
+    $items = Item::with('itemPrice')
+        ->where('item_code', 'LIKE', "%$query%")
+        ->limit(10)
+        ->get()
+        ->map(function ($item) {
+            return [
+                'item_code' => $item->item_code,
+                'item_name' => $item->item_name,
+                'rate'      => $item->itemPrice->rate ?? null,
+                'cost_price'=> $item->itemPrice->cost_price ?? null,
+            ];
+        });
 
     return response()->json($items);
 }
@@ -323,9 +321,69 @@ public function downloadSummaryPdf(Request $request)
 
 
     // Detail page for a single GRN
-public function grnDetailsByDate($date)
+
+
+
+public function grnDetailsByDate(Request $request, $date = null)
 {
-    $grns = SupplierGRNMaster::whereDate('g_date', $date)->get();
+    $from = $request->input('from');
+    $to = $request->input('to');
+
+    if ($from && $to) {
+        $grns = SupplierGRNMaster::whereBetween('g_date', [$from, $to])->get();
+        $rangeLabel = "$from to $to";
+    } elseif ($date) {
+        $grns = SupplierGRNMaster::whereDate('g_date', $date)->get();
+        $rangeLabel = $date;
+    } else {
+        return redirect()->back()->with('error', 'No valid date provided.');
+    }
+
+    // Group by date
+    $groupedGrns = $grns->groupBy(function ($item) {
+        return \Carbon\Carbon::parse($item->g_date)->format('Y-m-d');
+    });
+
+    // Calculate overall totals
+    $totals = [
+        'total_price' => $grns->sum('total_price'),
+        'total_discount' => $grns->sum('total_discount'),
+        'total_issued' => $grns->sum('tobe_price'),
+        'total_paid' => $grns->sum('supplier_pay'),
+        'total_balance' => $grns->sum('balance'),
+    ];
+
+    return view('bill.details', [
+        'groupedGrns' => $groupedGrns,
+        'rangeLabel' => $rangeLabel,
+        'totals' => $totals,
+    ]);
+}
+
+
+
+
+// Controller
+
+public function downloadGrnPdf(Request $request)
+{
+    $from = $request->input('from');
+    $to = $request->input('to');
+    $date = $request->input('date');
+
+    if ($from && $to) {
+        $grns = SupplierGRNMaster::whereBetween('g_date', [$from, $to])->get();
+        $rangeLabel = "$from to $to";
+    } elseif ($date) {
+        $grns = SupplierGRNMaster::whereDate('g_date', $date)->get();
+        $rangeLabel = $date;
+    } else {
+        return redirect()->back()->with('error', 'No valid date provided.');
+    }
+
+    $groupedGrns = $grns->groupBy(function ($item) {
+        return \Carbon\Carbon::parse($item->g_date)->format('Y-m-d');
+    });
 
     $totals = [
         'total_price' => $grns->sum('total_price'),
@@ -335,27 +393,17 @@ public function grnDetailsByDate($date)
         'total_balance' => $grns->sum('balance'),
     ];
 
-    return view('bill.details', compact('grns', 'date', 'totals'));
+    $pdf = PDF::loadView('bill.details_pdf', [
+        'groupedGrns' => $groupedGrns,
+        'rangeLabel' => $rangeLabel,
+        'totals' => $totals,
+    ]);
+
+    $filename = "GRN_Details_{$rangeLabel}.pdf";
+
+    return $pdf->download($filename);
 }
 
-
-
-
-public function downloadGrnPdf($date)
-{
-    $grns = SupplierGRNMaster::whereDate('g_date', $date)->get();
-
-    $totals = [
-        'total_price' => $grns->sum('total_price'),
-        'total_discount' => $grns->sum('total_discount'),
-        'total_issued' => $grns->sum('tobe_price'),
-        'total_paid' => $grns->sum('supplier_pay'),
-        'total_balance' => $grns->sum('balance'),
-    ];
-
-    $pdf = PDF::loadView('bill.details_pdf', compact('grns', 'date', 'totals'));
-    return $pdf->download("GRN_Details_$date.pdf");
-}
 
 
 
