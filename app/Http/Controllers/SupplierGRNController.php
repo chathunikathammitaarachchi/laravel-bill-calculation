@@ -181,6 +181,19 @@ public function supplierexportDuesPDF(Request $request)
     return $pdf->download('supplier_dues.pdf');
 }
 
+public function autocomplete(Request $request)
+{
+    $search = $request->get('q');
+
+    $suppliers = \App\Models\SupplierDue::where('supplier_name', 'like', '%' . $search . '%')
+        ->select('supplier_name')
+        ->distinct()
+        ->orderBy('supplier_name')
+        ->limit(10)
+        ->get();
+
+    return response()->json($suppliers);
+}
 
 
     public function show($grn_no)
