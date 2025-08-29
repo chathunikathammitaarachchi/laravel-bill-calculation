@@ -40,18 +40,33 @@ Route::get('/home', function () {
 
 Route::get('/api/items/autocomplete', [StockHistoryController::class, 'autocomplete'])->name('items.autocomplete');
 
+Route::get('/bill/dues', [SupplierGRNController::class, 'showDues'])->name('bill.dues');
+
+
+
+
+
+Route::get('/grn/dues', [GRNController::class, 'showDues'])->name('grn.dues');
+
 Route::post('/due-payments/pay', [DuePaymentController::class, 'payDue'])->name('due_payments.pay');
 Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
 Route::get('/grn/dues/export-pdf', [GRNController::class, 'customerexportDuesPDF'])->name('grn.dues.export');
-Route::get('/due-payments/customer/{customer_name}', [DuePaymentController::class, 'showByCustomer'])->name('due_payments.form.by.customer');
+Route::get('/due-payments/customer/{customer_name}', [DuePaymentController::class, 'showByCustomer'])
+    ->name('due_payments.form.by.customer');
 Route::post('/due-payments/pay', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
+Route::post('/due/pay', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
+
+// web.php
+Route::post('/customer/pay-due', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
+
+
+
 
 Route::get('/grn/summary', [GRNController::class, 'summaryReport'])->name('grn.summary');
 Route::get('/grn/summary/pdf', [GRNController::class, 'summaryReportPDF'])->name('grn.summary.pdf');
 
 
 
-Route::get('/grn/dues', [GRNController::class, 'showDues'])->name('grn.dues');
 Route::get('/daily-summary', [DailySummaryController::class, 'index'])->name('daily.summary');
 Route::match(['get', 'post'], '/daily-summary/pdf', [DailySummaryController::class, 'dailydownloadPdf'])->name('daily.summary.pdf');
 
@@ -103,11 +118,13 @@ Route::get('/bill/dues', [SupplierGRNController::class, 'showDues'])->name('bill
 
 Route::post('/due-payments/pay', [SupplierDuePaymentController::class, 'payDue'])->name('due_payments.pay');
 Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
-Route::get('/grn/dues/export-pdf', [SupplierGRNController::class, 'supplierexportDuesPDF'])->name('bill.dues.export');
+Route::get('/bill/dues/export-pdf', [SupplierGRNController::class, 'supplierexportDuesPDF'])->name('bill.dues.export');
 Route::get('/due-payments/supplier/{supplier_name}', [SupplierDuePaymentController::class, 'showBySupplier'])
     ->name('due_payments.form.by.supplier');
 Route::post('/due-payments/pay', [SupplierDuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
 Route::post('/due/pay', [SupplierDuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
+Route::get('/autocomplete-suppliers', [SupplierDuePaymentController::class, 'autocomplete'])->name('suppliers.autocomplete');
+
 
 
 

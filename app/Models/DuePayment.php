@@ -13,6 +13,10 @@ class DuePayment extends Model
         'customer_due_id',
         'payment_method',
         'amount',
+        'cheque_number',
+        'bank_name',
+        'branch_name',
+        'cheque_date',
     ];
 
     public function customerDue()
