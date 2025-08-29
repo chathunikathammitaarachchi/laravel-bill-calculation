@@ -16,15 +16,15 @@
         <label for="to_date" class="form-label" style="font-weight: 600;">To Date</label>
         <input type="date" name="to_date" id="to_date" value="{{ request('to_date') }}" class="form-control" style="border: 1px solid #ccc; border-radius: 4px;">
     </div>
-    <div class="col-md-3">
-        <label for="supplier_name" class="form-label" style="font-weight: 600;">Supplier Name</label>
-        <input list="suppliers" name="supplier_name" id="supplier_name" value="{{ request('supplier_name') }}" class="form-control" placeholder="Type supplier name..." style="border: 1px solid #ccc; border-radius: 4px;">
-        <datalist id="suppliers">
-            @foreach(\App\Models\SupplierDue::select('supplier_name')->distinct()->orderBy('supplier_name')->get() as $supplier)
-                <option value="{{ $supplier->supplier_name }}">
-            @endforeach
-        </datalist>
-    </div>
+   <div class="col-md-3">
+    <label for="supplier_name" class="form-label" style="font-weight: 600;">Supplier Name</label>
+    <select id="supplier_name" name="supplier_name" class="form-control" style="width: 100%;">
+        @if(request('supplier_name'))
+            <option value="{{ request('supplier_name') }}" selected>{{ request('supplier_name') }}</option>
+        @endif
+    </select>
+</div>
+
     <div class="col-md-3 d-flex align-items-end" style="gap: 10px;">
         <button type="submit" class="btn btn-primary" style="flex: 1;">Filter</button>
         <a href="{{ route('bill.dues') }}" class="btn btn-secondary" style="flex: 1;">Reset</a>
@@ -93,4 +93,36 @@
     </div>
     @endif
 </div>
+
+
+<script>
+$(document).ready(function() {
+    $('#supplier_name').select2({
+        placeholder: 'Search supplier name...',
+        minimumInputLength: 1,
+        ajax: {
+            url: '{{ route("suppliers.autocomplete") }}',
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    q: params.term // search term
+                };
+            },
+            processResults: function(data) {
+                return {
+                    results: data.map(function(item) {
+                        return {
+                            id: item.supplier_name,
+                            text: item.supplier_name
+                        };
+                    })
+                };
+            },
+            cache: true
+        }
+    });
+});
+</script>
+
 @endsection

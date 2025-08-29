@@ -7,8 +7,21 @@
             <h5 class="mb-0">Pay Due - Supplier: {{ $supplier_name }}</h5>
         </div>
 
-
         <div class="card-body">
+            @if(session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="mb-3">
                 <label class="form-label"><strong>Supplier:</strong></label>
                 <div class="form-control-plaintext">{{ $supplier_name }}</div>
@@ -35,25 +48,26 @@
 
                 <div class="mb-3">
                     <label for="payment_method" class="form-label">Payment Method</label>
-                  <select name="payment_method" id="payment_method" class="form-select" required>
-    <option value="">-- Select Payment Method --</option>
-    <option value="Cash" {{ old('payment_method') == 'Cash' ? 'selected' : '' }}>Cash</option>
-    <option value="Cheque" {{ old('payment_method') == 'Cheque' ? 'selected' : '' }}>Cheque</option>
-</select>
-
+                    <select name="payment_method" id="payment_method" class="form-select" required>
+                        <option value="">-- Select Payment Method --</option>
+                        <option value="Cash" {{ old('payment_method') == 'Cash' ? 'selected' : '' }}>Cash</option>
+                        <option value="Cheque" {{ old('payment_method') == 'Cheque' ? 'selected' : '' }}>Cheque</option>
+                    </select>
                 </div>
-<div class="mb-3" id="cheque-fields" style="display: none;">
-    <label for="cheque_number" class="form-label">Cheque Number</label>
-<input type="text" name="cheque_number" class="form-control" value="{{ old('cheque_number') }}">
 
-    <label for="bank_name" class="form-label mt-2">Bank Name</label>
-<input type="text" name="bank_name" class="form-control" value="{{ old('bank_name') }}">
-   <label for="branch_name" class="form-label mt-2">Branch Name</label>
-<input type="text" name="branch_name" class="form-control" value="{{ old('branch_name') }}">
+                <div class="mb-3" id="cheque-fields" style="display: none;">
+                    <label class="form-label">Cheque Number</label>
+                    <input type="text" name="cheque_number" class="form-control" value="{{ old('cheque_number') }}">
 
-    <label for="cheque_date" class="form-label mt-2">Cheque Date</label>
-<input type="date" name="cheque_date" class="form-control" value="{{ old('cheque_date') }}">
-</div>
+                    <label class="form-label mt-2">Bank Name</label>
+                    <input type="text" name="bank_name" class="form-control" value="{{ old('bank_name') }}">
+
+                    <label class="form-label mt-2">Branch Name</label>
+                    <input type="text" name="branch_name" class="form-control" value="{{ old('branch_name') }}">
+
+                    <label class="form-label mt-2">Cheque Date</label>
+                    <input type="date" name="cheque_date" class="form-control" value="{{ old('cheque_date') }}">
+                </div>
 
                 <div class="mb-4">
                     <label for="amount" class="form-label">Amount to Pay</label>
@@ -68,6 +82,7 @@
                             max="{{ $totalBalance }}" 
                             min="0.01" 
                             required
+                            value="{{ old('amount') }}"
                             placeholder="Enter amount (max {{ $totalBalance }})"
                         >
                     </div>
@@ -75,31 +90,45 @@
                 </div>
 
                 <div class="d-flex justify-content-between">
-                    <a href="{{ route('bill.dues') }}" class="btn btn-secondary">Cancel</a>
+                    <a href="{{ route('bill.dues') }}" class="btn btn-secondary">Back</a>
                     <button type="submit" class="btn btn-success">Submit Payment</button>
                 </div>
             </form>
+
         </div>
     </div>
 </div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const methodSelect = document.getElementById('payment_method');
-    const chequeFields = document.getElementById('cheque-fields');
+    document.addEventListener('DOMContentLoaded', function () {
+        const methodSelect = document.getElementById('payment_method');
+        const chequeFields = document.getElementById('cheque-fields');
 
-    function toggleChequeFields() {
-        if (methodSelect.value === 'Cheque') {
-            chequeFields.style.display = 'block';
-        } else {
-            chequeFields.style.display = 'none';
+        function toggleChequeFields() {
+            chequeFields.style.display = methodSelect.value === 'Cheque' ? 'block' : 'none';
         }
-    }
 
-    methodSelect.addEventListener('change', toggleChequeFields);
-    toggleChequeFields(); // call once on page load
-});
-
+        methodSelect.addEventListener('change', toggleChequeFields);
+        toggleChequeFields(); // Call on page load
+    });
 </script>
 
+@if(session('receipt_url'))
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const receiptUrl = {!! json_encode(session('receipt_url')) !!};
+        if (receiptUrl) {
+            const a = document.createElement('a');
+            a.href = receiptUrl;
+            a.download = receiptUrl.split('/').pop();
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    });
+</script>
+@endif
+
+
 @endsection
- 
