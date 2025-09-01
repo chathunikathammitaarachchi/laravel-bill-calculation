@@ -30,7 +30,7 @@
                 <th>GRN Count</th>
                 <th>Total Price (Rs)</th>
                 <th>Total Discount (Rs)</th>
-                <th>Total Issued (Rs)</th>
+                <th>Total Amount (Rs)</th>
             </tr>
         </thead>
         <tbody>
