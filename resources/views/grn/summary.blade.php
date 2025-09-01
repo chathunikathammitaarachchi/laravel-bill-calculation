@@ -24,12 +24,26 @@
         </div>
     </form>
 
-    <div class="mb-3">
-        <a href="{{ route('grn.summary.pdf', ['from_date' => request('from_date'), 'to_date' => request('to_date'), 'customer_name' => request('customer_name')]) }}" 
-           class="btn btn-danger">
-            Download PDF
-        </a>
-    </div>
+    <div class="col-md-3 d-flex align-items-end">
+    <a href="{{ route('grn.summary.pdf', ['from_date' => request('from_date'), 'to_date' => request('to_date')]) }}" 
+       target="pdfFrame"
+       class="btn btn-danger">
+        Download & Print PDF
+    </a>
+
+    <iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+    <script>
+        function printIframe() {
+            const iframe = document.getElementById('pdfFrame');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        }
+    </script>
+</div>
+
 
     @if(request('from_date') || request('to_date') || request('customer_name'))
         <div class="alert alert-info">
