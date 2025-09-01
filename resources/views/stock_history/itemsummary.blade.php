@@ -26,9 +26,22 @@
                     🔄 Reset
                 </a>
 
-                <a href="{{ route('itemsummary.pdf', request()->all()) }}" target="_blank" class="btn btn-success">
-                    📄 Download PDF
-                </a>
+           <a href="{{ route('itemsummary.pdf', request()->all()) }}" target="pdfFrame" class="btn btn-success">
+    📄 Download & Print PDF
+</a>
+
+<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+<script>
+    function printIframe() {
+        const iframe = document.getElementById('pdfFrame');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+</script>
+
             </div>
         </div>
     </form>
