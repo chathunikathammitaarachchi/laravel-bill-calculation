@@ -33,9 +33,24 @@
 
 <div class="col-md-3 d-flex align-items-end">
     <a href="{{ route('grn.report.pdf', ['from_date' => request('from_date'), 'to_date' => request('to_date')]) }}" 
+       target="pdfFrame"
        class="btn btn-danger">
-        Download PDF
+        Download & Print PDF
     </a>
+
+    <iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+    <script>
+        function printIframe() {
+            const iframe = document.getElementById('pdfFrame');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        }
+    </script>
+</div>
+
 </div>
 <hr/>
 
