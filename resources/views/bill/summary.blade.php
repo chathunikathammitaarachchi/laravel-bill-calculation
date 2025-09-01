@@ -91,7 +91,7 @@
             <th>GRN Count</th>
             <th>Total Price</th>
             <th>Total Discount</th>
-            <th>Total Issued</th>
+            <th>Total Amount</th>
         </tr>
     </thead>
     <tbody>
