@@ -99,6 +99,7 @@
     </div>
 </div>
 
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const methodSelect = document.getElementById('payment_method');
@@ -118,15 +119,19 @@
     document.addEventListener('DOMContentLoaded', function () {
         const receiptUrl = {!! json_encode(session('receipt_url')) !!};
         if (receiptUrl) {
-            const a = document.createElement('a');
-            a.href = receiptUrl;
-            a.download = receiptUrl.split('/').pop();
-            a.target = '_blank';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            // Open in new tab
+            const printWindow = window.open(receiptUrl, '_blank');
+
+            // Try to auto-print once the PDF loads
+            printWindow.addEventListener('load', function () {
+                printWindow.print();
+            });
+
+            // Fallback: if browser blocks auto-print, at least open the file
         }
     });
 </script>
 @endif
+
+
 @endsection
