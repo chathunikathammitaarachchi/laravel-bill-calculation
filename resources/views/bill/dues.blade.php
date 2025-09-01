@@ -7,7 +7,7 @@
     </h2>
 
     {{-- Filter Form --}}
-   <form method="GET" action="{{ route('bill.dues') }}" class="row g-3 mb-4" style="background: #f9f9f9; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+     <form method="GET" action="{{ route('bill.dues') }}" class="row g-3 mb-4" style="background: #f9f9f9; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     <div class="col-md-3">
         <label for="from_date" class="form-label" style="font-weight: 600;">From Date</label>
         <input type="date" name="from_date" id="from_date" value="{{ request('from_date') }}" class="form-control" style="border: 1px solid #ccc; border-radius: 4px;">
@@ -16,13 +16,15 @@
         <label for="to_date" class="form-label" style="font-weight: 600;">To Date</label>
         <input type="date" name="to_date" id="to_date" value="{{ request('to_date') }}" class="form-control" style="border: 1px solid #ccc; border-radius: 4px;">
     </div>
-   <div class="col-md-3">
-    <label for="supplier_name" class="form-label" style="font-weight: 600;">Supplier Name</label>
-    <select id="supplier_name" name="supplier_name" class="form-control" style="width: 100%;">
-        @if(request('supplier_name'))
-            <option value="{{ request('supplier_name') }}" selected>{{ request('supplier_name') }}</option>
-        @endif
-    </select>
+    <div class="col-md-3">
+        <label for="supplier_name" class="form-label" style="font-weight: 600;">Customer Name</label>
+        <input list="customers" name="supplier_name" id="supplier_name" value="{{ request('supplier_name') }}" class="form-control" placeholder="Type customer name..." style="border: 1px solid #ccc; border-radius: 4px;">
+        <datalist id="customers">
+            @foreach(\App\Models\SupplierDue::select('supplier_name')->distinct()->orderBy('supplier_name')->get() as $customer)
+                <option value="{{ $customer->supplier_name }}">
+            @endforeach
+        </datalist>
+    </div>
 </div>
 
     <div class="col-md-3 d-flex align-items-end" style="gap: 10px;">
