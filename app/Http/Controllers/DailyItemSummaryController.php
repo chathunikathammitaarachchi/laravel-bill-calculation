@@ -175,7 +175,7 @@ public function itemsummarydownloadPdf(Request $request)
 
     $fileName = 'daily_item_summary_' . ($start ?? 'all') . '_to_' . ($end ?? 'all') . '.pdf';
 
-    return $pdf->download($fileName);
+    return $pdf->stream($fileName);
 }
 
 }
