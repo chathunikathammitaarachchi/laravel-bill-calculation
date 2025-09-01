@@ -45,6 +45,7 @@ Route::get('/bill/dues', [SupplierGRNController::class, 'showDues'])->name('bill
 
 
 
+Route::post('/due/pay/print', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay.print');
 
 Route::get('/grn/dues', [GRNController::class, 'showDues'])->name('grn.dues');
 
@@ -58,6 +59,8 @@ Route::post('/due/pay', [DuePaymentController::class, 'payDueByCustomer'])->name
 
 // web.php
 Route::post('/customer/pay-due', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
+Route::get('/grn/dues/customer/{customer_name}', [DuePaymentController::class, 'showByCustomer'])->name('grn.dues.by.customer');
+Route::get('/receipt/{customer_name}', [DuePaymentController::class, 'showReceipt'])->name('receipt.show');
 
 
 
@@ -124,6 +127,7 @@ Route::get('/due-payments/supplier/{supplier_name}', [SupplierDuePaymentControll
 Route::post('/due-payments/pay', [SupplierDuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
 Route::post('/due/pay', [SupplierDuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
 Route::get('/autocomplete-suppliers', [SupplierDuePaymentController::class, 'autocomplete'])->name('suppliers.autocomplete');
+
 
 
 
