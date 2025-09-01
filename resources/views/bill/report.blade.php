@@ -27,12 +27,7 @@
 
 
 
-<div class="col-md-3 d-flex align-items-end">
-    <a href="{{ route('bill.report.pdf', ['from_date' => request('from_date'), 'to_date' => request('to_date')]) }}" 
-       class="btn btn-danger">
-        Download PDF
-    </a>
-</div>
+
 <hr/>
 
 @if(request('from_date') || request('to_date'))
@@ -82,5 +77,24 @@
         <div class="alert alert-warning">No Bills found for the selected date.</div>
     @endif
 </div>
+<!-- Add a form that submits to the PDF stream route -->
+<form id="pdfForm" action="{{ route('bill.report.pdf') }}" method="GET" target="pdfFrame">
+    <input type="hidden" name="from_date" value="{{ request('from_date') }}">
+    <input type="hidden" name="to_date" value="{{ request('to_date') }}">
+    <button type="submit" class="btn btn-danger">Download & Print PDF</button>
+</form>
+
+<!-- Hidden iframe to hold PDF -->
+<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+<script>
+    function printIframe() {
+        const iframe = document.getElementById('pdfFrame');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+</script>
 
 @endsection
