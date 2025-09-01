@@ -102,7 +102,7 @@ public function dailydownloadPdf(Request $request)
         'barChartImage' => $barChartImage
     ]);
 
-    return $pdf->download('Daily_Stock_Summary.pdf');
+    return $pdf->stream('Daily_Stock_Summary.pdf');
 }
 
 
@@ -156,7 +156,7 @@ public function stockOnHandPdf(Request $request)
 
     $pdf = Pdf::loadView('stock_on_hand.pdf', compact('stockData', 'asOfDate'));
 
-    return $pdf->download('stock_on_hand_report.pdf');
+    return $pdf->stream('stock_on_hand_report.pdf');
 }
 
 
