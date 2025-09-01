@@ -117,10 +117,23 @@
 </table>
 
 
-    <a href="{{ route('bill.summary.pdf', request()->only('from_date', 'to_date')) }}" 
-       class="btn btn-success ml-2">
-       ⬇ Download PDF
-    </a>
+<form method="GET" action="{{ route('bill.summary.pdf') }}" target="pdfFrame" class="d-inline">
+    <input type="hidden" name="from_date" value="{{ request('from_date') }}">
+    <input type="hidden" name="to_date" value="{{ request('to_date') }}">
+    <button type="submit" class="btn btn-success ml-2">⬇ Download & Print PDF</button>
+</form>
+
+<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+<script>
+    function printIframe() {
+        const iframe = document.getElementById('pdfFrame');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+</script>
 
     <a href="{{ route('bill.details', ['from' => request('from_date'), 'to' => request('to_date')]) }}" 
        class="btn btn-info ml-2">
