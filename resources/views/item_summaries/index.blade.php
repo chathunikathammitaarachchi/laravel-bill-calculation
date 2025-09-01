@@ -172,15 +172,30 @@ h5.text-center {
             </tbody>
         </table>
 
-        <form action="{{ route('item_summaries.download_pdf') }}" method="POST" id="pdfForm">
-            @csrf
-            <input type="hidden" name="start_date" value="{{ request('start_date') }}">
-            <input type="hidden" name="end_date" value="{{ request('end_date') }}">
-            <input type="hidden" name="search" value="{{ request('search') }}">
-            <input type="hidden" name="chartData" id="chartDataInput">
-            <input type="hidden" name="lineChartData" id="lineChartDataInput">
-            <button type="submit" class="btn btn-danger mb-4">⬇️ Download PDF</button>
-        </form>
+       <form action="{{ route('item_summaries.download_pdf') }}" method="POST" id="pdfForm" target="pdfFrame">
+    @csrf
+    <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+    <input type="hidden" name="end_date" value="{{ request('end_date') }}">
+    <input type="hidden" name="search" value="{{ request('search') }}">
+    <input type="hidden" name="chartData" id="chartDataInput">
+    <input type="hidden" name="lineChartData" id="lineChartDataInput">
+
+    <button type="submit" class="btn btn-danger mb-4">
+        ⬇️ Download & Print PDF
+    </button>
+</form>
+
+<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+<script>
+    function printIframe() {
+        const iframe = document.getElementById('pdfFrame');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+</script>
 
         @if($dailySummary->count())
         <div class="table-responsive shadow-sm rounded">
