@@ -27,7 +27,7 @@ class ItemController extends Controller
 public function store(Request $request)
 {
     $request->validate([
-        'item_code'   => 'required|integer|unique:item,item_code',
+        'item_code'   => 'required|string|unique:item,item_code',
         'item_name'   => 'required|string',
         'rate'        => 'required|integer',
         'unit' => 'required|string|max:20',
@@ -79,7 +79,7 @@ public function store(Request $request)
 public function update(Request $request, Item $item)
 {
     $request->validate([
-        'item_code'   => 'required|integer|unique:item,item_code,' . $item->id,
+        'item_code'   => 'required|string|unique:item,item_code,' . $item->id,
         'item_name'   => 'required|string',
         'unit'        => 'required|string|max:20',
         'category'    => 'required|string',
