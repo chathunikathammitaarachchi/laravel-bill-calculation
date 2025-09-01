@@ -202,7 +202,7 @@ public function customerexportDuesPDF(Request $request)
     $dues = $query->orderBy('grn_date', 'desc')->get();
 
     $pdf = Pdf::loadView('grn.dues_pdf', compact('dues'));
-    return $pdf->download('customer_dues.pdf');
+    return $pdf->stream('customer_dues.pdf');
 }
 
 
@@ -484,7 +484,7 @@ public function exportPdf(Request $request)
         'totalIssued' => $totalIssued,
     ]);
 
-    return $pdf->download('grn-report.pdf');
+    return $pdf->stream('grn-report.pdf');
 }
 
 public function summaryReport(Request $request)
@@ -579,7 +579,7 @@ public function summaryReportPDF(Request $request)
     return Pdf::loadView('grn.summary_pdf', compact(
         'groupedGrns', 'fromDate', 'toDate', 'customerName', 'openingBalance',
         'totalTotal', 'totalDiscount', 'totalToBePaid', 'totalPaid', 'totalBalance'
-    ))->setPaper('a4')->download('bill-report.pdf');
+    ))->setPaper('a4')->stream('bill-report.pdf');
 }
 
 public function customerLedger(Request $request)
@@ -773,7 +773,7 @@ public function exportCustomerLedgerPDF(Request $request)
         'openingBalance' => $openingBalance,
     ]);
 
-    return $pdf->download('customer_ledger_' . now()->format('Ymd_His') . '.pdf');
+    return $pdf->stream('customer_ledger_' . now()->format('Ymd_His') . '.pdf');
 }
 
 
