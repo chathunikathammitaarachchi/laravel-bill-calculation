@@ -20,7 +20,6 @@ class DatabaseSeeder extends Seeder
 
         // Run seeders in correct order
         $this->call([
-            CustomerSeeder::class,
             SupplierSeeder::class,
             
 
