@@ -174,7 +174,7 @@
           <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
     <label for="total_discount" style="width: 40%; font-weight: 600; margin-right: 10px;">Total Discount</label>
     <input type="number" name="total_discount" id="total_discount" readonly
-           style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: right; background-color: #f8fff9;">
+           style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: right;">
 </div>
 
             <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-end;">
