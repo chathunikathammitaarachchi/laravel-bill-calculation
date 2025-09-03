@@ -42,7 +42,7 @@
                 <div class="form-control-plaintext text-danger fw-bold">Rs. {{ number_format($totalBalance, 2) }}</div>
             </div>
 
-            <form action="{{ route('due.pay') }}" method="POST">
+<form action="{{ route('due.pay') }}" method="POST">
                 @csrf
                 <input type="hidden" name="supplier_name" value="{{ $supplier_name }}">
 
