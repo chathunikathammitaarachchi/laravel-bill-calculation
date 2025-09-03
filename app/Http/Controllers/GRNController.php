@@ -97,18 +97,19 @@ foreach ($request->items as $itemData) {
         return back()->with('error', 'Item not found: ' . $itemData['item_name']);
     }
 
-    $quantity = $itemData['quantity'];
     $rate = $itemData['rate']; 
-    $discount = 0;
+   $discount = 0;
+$quantity = $itemData['quantity'];
 
-    // CHANGED: Fixed amount discount instead of percentage
-    if ($quantity >= 3 && $quantity <= 5) {
-        $discount = $item->discount_1 ?? 0; // This is now a fixed amount, not percentage
-    } elseif ($quantity > 5 && $quantity <= 8) {
-        $discount = $item->discount_2 ?? 0; // This is now a fixed amount, not percentage
-    } elseif ($quantity > 8) {
-        $discount = $item->discount_3 ?? 0; // This is now a fixed amount, not percentage
-    }
+// Apply the highest applicable discount
+if ($item->discount_3_qty !== null && $quantity >= $item->discount_3_qty) {
+    $discount = $item->discount_3;
+} elseif ($item->discount_2_qty !== null && $quantity >= $item->discount_2_qty) {
+    $discount = $item->discount_2;
+} elseif ($item->discount_1_qty !== null && $quantity >= $item->discount_1_qty) {
+    $discount = $item->discount_1;
+}
+
 
     // CHANGED: Direct subtraction instead of percentage calculation
     $basePrice = $rate * $quantity;
