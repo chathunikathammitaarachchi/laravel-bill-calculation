@@ -34,12 +34,16 @@ public function store(Request $request)
   'category' => 'required|string',
         'cost_price'  => 'required|integer',
         'stock'       => 'required|integer',
+            'discount_1' => 'nullable|integer|min:0|max:100',
+    'discount_2' => 'nullable|integer|min:0|max:100',
+    'discount_3' => 'nullable|integer|min:0|max:100',
     ]);
 
     // Create the item
     $item = Item::create($request->only([
-        'item_code', 'item_name', 'rate', 'cost_price', 'stock','unit', 'category'
-    ]));
+    'item_code', 'item_name', 'rate', 'cost_price', 'stock', 'unit', 'category',
+    'discount_1', 'discount_2', 'discount_3'
+]));
 
     // Record opening stock as initial transaction
     if ($item->stock > 0) {
@@ -85,16 +89,23 @@ public function update(Request $request, Item $item)
         'category'    => 'required|string',
         'rate'        => 'required|numeric',
         'cost_price'  => 'required|numeric',
+        'discount_1' => 'nullable|integer|min:0|max:100',
+    'discount_2' => 'nullable|integer|min:0|max:100',
+    'discount_3' => 'nullable|integer|min:0|max:100',
     ]);
 
-    $item->update([
-        'item_code'  => $request->item_code,
-        'item_name'  => $request->item_name,
-        'unit'       => $request->unit,
-        'category'   => $request->category,
-        'rate'       => $request->rate,
-        'cost_price' => $request->cost_price,
-    ]);
+   $item->update([
+    'item_code'   => $request->item_code,
+    'item_name'   => $request->item_name,
+    'rate'        => $request->rate,
+    'cost_price'  => $request->cost_price,
+    'stock'       => $request->stock,
+    'unit'        => $request->unit,
+    'category'    => $request->category,
+    'discount_1'  => $request->discount_1,
+    'discount_2'  => $request->discount_2,
+    'discount_3'  => $request->discount_3,
+]);
 
     $lastPrice = $item->prices()->latest('created_at')->first();
 
