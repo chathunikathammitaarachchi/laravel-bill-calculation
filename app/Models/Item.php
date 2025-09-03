@@ -21,6 +21,9 @@ class Item extends Model
         'discount_1',
     'discount_2',
     'discount_3',
+     'discount_1_qty',
+    'discount_2_qty',
+    'discount_3_qty',
     ];
 
 
