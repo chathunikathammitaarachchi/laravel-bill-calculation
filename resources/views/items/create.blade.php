@@ -89,6 +89,20 @@
         <input type="number" name="stock" id="stock" class="form-control form-control-lg" placeholder="Stock" required>
         <label for="stock" class="text-muted">Stock</label>
       </div>
+<div class="form-group">
+    <label for="discount_1">Discount 1 (%)</label>
+    <input type="number" name="discount_1" class="form-control" value="{{ old('discount_1', $item->discount_1 ?? '') }}" min="0" max="100">
+</div>
+
+<div class="form-group">
+    <label for="discount_2">Discount 2 (%)</label>
+    <input type="number" name="discount_2" class="form-control" value="{{ old('discount_2', $item->discount_2 ?? '') }}" min="0" max="100">
+</div>
+
+<div class="form-group">
+    <label for="discount_3">Discount 3 (%)</label>
+    <input type="number" name="discount_3" class="form-control" value="{{ old('discount_3', $item->discount_3 ?? '') }}" min="0" max="100">
+</div>
 
       <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold shadow-sm">
         Add Item
