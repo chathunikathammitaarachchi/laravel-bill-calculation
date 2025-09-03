@@ -89,19 +89,17 @@
         <input type="number" name="stock" id="stock" class="form-control form-control-lg" placeholder="Stock" required>
         <label for="stock" class="text-muted">Stock</label>
       </div>
-<div class="form-group">
-    <label for="discount_1">Discount 1 </label>
-    <input type="number" name="discount_1" class="form-control" value="{{ old('discount_1', $item->discount_1 ?? '') }}" min="0" max="100">
-</div>
 
-<div class="form-group">
-    <label for="discount_2">Discount 2 </label>
-    <input type="number" name="discount_2" class="form-control" value="{{ old('discount_2', $item->discount_2 ?? '') }}" min="0" max="100">
-</div>
+<!-- Discount inputs inline style -->
+<div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+  <input type="number" name="discount_1_qty" placeholder="Min Qty for Discount 1" style="width: 160px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+  <input type="number" name="discount_1" placeholder="Discount 1 Amount" style="width: 160px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+  
+  <input type="number" name="discount_2_qty" placeholder="Min Qty for Discount 2" style="width: 160px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+  <input type="number" name="discount_2" placeholder="Discount 2 Amount" style="width: 160px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
 
-<div class="form-group">
-    <label for="discount_3">Discount 3 </label>
-    <input type="number" name="discount_3" class="form-control" value="{{ old('discount_3', $item->discount_3 ?? '') }}" min="0" max="100">
+  <input type="number" name="discount_3_qty" placeholder="Min Qty for Discount 3" style="width: 160px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+  <input type="number" name="discount_3" placeholder="Discount 3 Amount" style="width: 160px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
 </div>
 
       <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold shadow-sm">
@@ -182,6 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
     background: #43cea2;
     border: none;
     transition: background 0.3s ease;
+      margin-top: 20px;
+
   }
   button.btn-success:hover {
     background: #2abf91;
