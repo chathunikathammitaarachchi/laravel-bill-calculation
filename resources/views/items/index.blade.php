@@ -28,6 +28,11 @@
                     <th>Category</th>
                     <th>Unit</th>
                     <th>Stock</th>
+                    <th>Discount 1</th> 
+                    <th>Discount 2</th> 
+
+                    <th>Discount 3</th> 
+
                     <th class="text-center">Actions</th>
                 </tr>
             </thead>
@@ -42,6 +47,10 @@
                         <td>{{ $item->category }}</td>
                         <td>{{ $item->unit }}</td>
                         <td>{{ $item->stock }}</td>
+    <td>{{ $item->discount_1 ?? '-' }}%</td> 
+    <td>{{ $item->discount_2 ?? '-' }}%</td> 
+    <td>{{ $item->discount_3 ?? '-' }}%</td> 
+
                         <td class="text-center">
                             <a href="{{ route('items.edit', $item) }}" class="btn btn-warning btn-sm me-2">
                                 <i class="bi bi-pencil-square"></i>
