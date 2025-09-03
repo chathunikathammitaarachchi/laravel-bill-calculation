@@ -20,7 +20,7 @@
         <table class="table table-striped table-hover align-middle mb-0 text-center">
             <thead class="table-primary">
                 <tr>
-                    <th scope="col">#</th>
+                    <th scope="col">Number</th>
                     <th scope="col">Item Code</th>
                     <th scope="col" class="text-start">Item Name</th>
                     <th scope="col">Rate</th>
