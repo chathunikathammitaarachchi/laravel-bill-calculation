@@ -47,9 +47,9 @@
                         <td>{{ $item->category }}</td>
                         <td>{{ $item->unit }}</td>
                         <td>{{ $item->stock }}</td>
-    <td>{{ $item->discount_1 ?? '-' }}%</td> 
-    <td>{{ $item->discount_2 ?? '-' }}%</td> 
-    <td>{{ $item->discount_3 ?? '-' }}%</td> 
+                        <td>Rs:{{ $item->discount_1 ?? '-' }}</td> 
+                        <td>Rs:{{ $item->discount_2 ?? '-' }}</td> 
+                        <td>Rs:{{ $item->discount_3 ?? '-' }}</td> 
 
                         <td class="text-center">
                             <a href="{{ route('items.edit', $item) }}" class="btn btn-warning btn-sm me-2">
