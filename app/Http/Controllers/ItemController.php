@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\ItemPrice;
+use Illuminate\Validation\Rule;
 
 use App\Models\StockTransaction;
 use Illuminate\Support\Carbon;
@@ -32,23 +33,36 @@ public function checkCode(Request $request)
 
 public function store(Request $request)
 {
-    $request->validate([
-    'item_code'       => 'required|string|unique:item,item_code',
-'item_name' => 'required|string|unique:item,item_name',
-    'rate'            => 'required|numeric|min:0',
-    'cost_price'      => 'required|numeric|min:0',
-    'stock'           => 'required|integer|min:0',
-    'unit'            => 'required|string|max:20',
-    'category'        => 'required|string|max:100',
-
-    // Discounts (optional)
+$request->validate([
+    'item_code' => [
+        'required',
+        'string',
+        Rule::unique('item', 'item_code'),
+    ],
+    'item_name' => [
+        'required',
+        'string',
+        Rule::unique('item')->where(function ($query) use ($request) {
+            return $query->whereRaw('LOWER(item_name) = ?', [strtolower($request->item_name)]);
+        }),
+    ],
+    'rate'       => 'required|numeric|min:0',
+    'cost_price' => 'required|numeric|min:0',
+    'stock'      => 'required|integer|min:0',
+    'unit'       => 'required|string|max:20',
+    'category'   => 'required|string|max:100',
     'discount_1'      => 'nullable|numeric|min:0',
     'discount_2'      => 'nullable|numeric|min:0',
     'discount_3'      => 'nullable|numeric|min:0',
     'discount_1_qty'  => 'nullable|integer|min:0',
     'discount_2_qty'  => 'nullable|integer|min:0',
     'discount_3_qty'  => 'nullable|integer|min:0',
+], [
+    'item_name.unique' => '❗ Item name already exists (case-insensitive). Please choose a different name.',
 ]);
+
+
+
 
     $item = Item::create($request->only([
         'item_code', 'item_name', 'rate', 'cost_price', 'stock', 'unit', 'category',
@@ -95,9 +109,19 @@ public function checkName(Request $request)
 
 public function update(Request $request, Item $item)
 {
-    $request->validate([
-        'item_code' => 'required|string|unique:item,item_code,' . $item->id,
-    'item_name' => 'required|string|unique:item,item_name,' . $item->id,
+$request->validate([
+    'item_code' => [
+        'required',
+        'string',
+        Rule::unique('item', 'item_code')->ignore($item->id),
+    ],
+    'item_name' => [
+        'required',
+        'string',
+        Rule::unique('item')->ignore($item->id)->where(function ($query) use ($request) {
+            return $query->whereRaw('LOWER(item_name) = ?', [strtolower($request->item_name)]);
+        }),
+    ],
         'unit'         => 'required|string|max:20',
         'category'     => 'required|string',
         'rate'         => 'required|numeric',
@@ -108,8 +132,10 @@ public function update(Request $request, Item $item)
         'discount_1_qty' => 'nullable|integer|min:0',
         'discount_2_qty' => 'nullable|integer|min:0',
         'discount_3_qty' => 'nullable|integer|min:0',
-    ]);
-
+],
+ [
+    'item_name.unique' => '❗ Item name already exists (case-insensitive). Please choose a different name.',
+]);
     $item->update([
         'item_code'     => $request->item_code,
         'item_name'     => $request->item_name,
