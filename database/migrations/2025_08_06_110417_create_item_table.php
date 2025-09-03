@@ -21,7 +21,9 @@ return new class extends Migration
             $table->string('category');
 
             $table->integer('stock');
-
+ $table->integer('discount_1')->nullable();
+        $table->integer('discount_2')->nullable();
+        $table->integer('discount_3')->nullable();
             $table->timestamps();
         });
     }
