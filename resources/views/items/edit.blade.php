@@ -78,11 +78,26 @@
 
       <input type="hidden" name="category" id="category_hidden">
 
-      <!-- STOCK -->
-      <div class="form-floating mb-4">
-        <input type="number" class="form-control form-control-lg" id="stock" value="{{ $item->stock }}" readonly>
-        <label for="stock" class="text-muted">Stock</label>
-      </div>
+    <!-- STOCK -->
+<div class="form-floating mb-4">
+  <input type="number" class="form-control form-control-lg" id="stock" name="stock" value="{{ $item->stock }}" readonly>
+  <label for="stock" class="text-muted">Stock</label>
+</div>
+
+<div class="form-group">
+    <label for="discount_1">Discount 1 (%)</label>
+    <input type="number" name="discount_1" class="form-control" value="{{ old('discount_1', $item->discount_1 ?? '') }}" min="0" max="100">
+</div>
+
+<div class="form-group">
+    <label for="discount_2">Discount 2 (%)</label>
+    <input type="number" name="discount_2" class="form-control" value="{{ old('discount_2', $item->discount_2 ?? '') }}" min="0" max="100">
+</div>
+
+<div class="form-group">
+    <label for="discount_3">Discount 3 (%)</label>
+    <input type="number" name="discount_3" class="form-control" value="{{ old('discount_3', $item->discount_3 ?? '') }}" min="0" max="100">
+</div>
 
       <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold shadow-sm">
         Update Item
@@ -162,6 +177,28 @@
     } else {
       document.getElementById('category_select').value = currentCategory;
       categoryHidden.value = currentCategory;
+    }
+  });
+
+    document.querySelector('form').addEventListener('submit', function(e) {
+    const unitSelect = document.getElementById('unit_select');
+    const unitInput = document.getElementById('unit_input');
+    const unitHidden = document.getElementById('unit_hidden');
+    
+    const categorySelect = document.getElementById('category_select');
+    const categoryInput = document.getElementById('custom_category');
+    const categoryHidden = document.getElementById('category_hidden');
+
+    if (unitSelect.value === 'other') {
+      unitHidden.value = unitInput.value;
+    } else {
+      unitHidden.value = unitSelect.value;
+    }
+
+    if (categorySelect.value === 'other') {
+      categoryHidden.value = categoryInput.value;
+    } else {
+      categoryHidden.value = categorySelect.value;
     }
   });
 </script>
