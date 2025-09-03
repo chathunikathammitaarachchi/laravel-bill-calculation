@@ -17,7 +17,10 @@ class Item extends Model
         'cost_price',
         'stock',
         'unit',
-        'category'
+        'category',
+        'discount_1',
+    'discount_2',
+    'discount_3',
     ];
 
 
