@@ -27,25 +27,28 @@ class ItemController extends Controller
 public function store(Request $request)
 {
     $request->validate([
-        'item_code'   => 'required|string|unique:item,item_code',
-        'item_name'   => 'required|string',
-        'rate'        => 'required|integer',
-        'unit' => 'required|string|max:20',
-  'category' => 'required|string',
-        'cost_price'  => 'required|integer',
-        'stock'       => 'required|integer',
-            'discount_1' => 'nullable|integer|min:0|max:100',
-    'discount_2' => 'nullable|integer|min:0|max:100',
-    'discount_3' => 'nullable|integer|min:0|max:100',
+        'item_code'    => 'required|string|unique:item,item_code',
+        'item_name'    => 'required|string',
+        'rate'         => 'required|integer',
+        'unit'         => 'required|string|max:20',
+        'category'     => 'required|string',
+        'cost_price'   => 'required|integer',
+        'stock'        => 'required|integer',
+        'discount_1'   => 'nullable|integer|min:0|max:100',
+        'discount_2'   => 'nullable|integer|min:0|max:100',
+        'discount_3'   => 'nullable|integer|min:0|max:100',
+        'discount_1_qty' => 'nullable|integer|min:0',
+        'discount_2_qty' => 'nullable|integer|min:0',
+        'discount_3_qty' => 'nullable|integer|min:0',
     ]);
 
-    // Create the item
     $item = Item::create($request->only([
-    'item_code', 'item_name', 'rate', 'cost_price', 'stock', 'unit', 'category',
-    'discount_1', 'discount_2', 'discount_3'
-]));
+        'item_code', 'item_name', 'rate', 'cost_price', 'stock', 'unit', 'category',
+        'discount_1', 'discount_2', 'discount_3',
+        'discount_1_qty', 'discount_2_qty', 'discount_3_qty'
+    ]));
 
-    // Record opening stock as initial transaction
+    // Rest of your logic for StockTransaction and ItemPrice here...
     if ($item->stock > 0) {
         StockTransaction::create([
             'item_code'        => $item->item_code,
@@ -54,7 +57,7 @@ public function store(Request $request)
             'quantity'         => $item->stock,
             'rate'             => $item->rate,
             'unit'             => $item->unit,
-            'category'             => $item->category,
+            'category'         => $item->category,
             'price'            => $item->stock * $item->rate,
             'reference_no'     => 'OPENING-STOCK-' . now()->format('YmdHis'),
             'source'           => 'Opening Balance',
@@ -62,18 +65,14 @@ public function store(Request $request)
             'is_opening'       => true,
         ]);
 
-
-
-            $item->prices()->create([
-        'rate'       => $request->rate,
-        'cost_price' => $request->cost_price,
-    ]);
+        $item->prices()->create([
+            'rate'       => $request->rate,
+            'cost_price' => $request->cost_price,
+        ]);
     }
 
     return redirect()->route('items.index')->with('success', 'Item created with opening stock.');
 }
-
-
 
     public function edit(Item $item)
     {
@@ -83,35 +82,41 @@ public function store(Request $request)
 public function update(Request $request, Item $item)
 {
     $request->validate([
-        'item_code'   => 'required|string|unique:item,item_code,' . $item->id,
-        'item_name'   => 'required|string',
-        'unit'        => 'required|string|max:20',
-        'category'    => 'required|string',
-        'rate'        => 'required|numeric',
-        'cost_price'  => 'required|numeric',
-        'discount_1' => 'nullable|integer|min:0|max:100',
-    'discount_2' => 'nullable|integer|min:0|max:100',
-    'discount_3' => 'nullable|integer|min:0|max:100',
+        'item_code'    => 'required|string|unique:item,item_code,' . $item->id,
+        'item_name'    => 'required|string',
+        'unit'         => 'required|string|max:20',
+        'category'     => 'required|string',
+        'rate'         => 'required|numeric',
+        'cost_price'   => 'required|numeric',
+        'discount_1'   => 'nullable|integer|min:0|max:100',
+        'discount_2'   => 'nullable|integer|min:0|max:100',
+        'discount_3'   => 'nullable|integer|min:0|max:100',
+        'discount_1_qty' => 'nullable|integer|min:0',
+        'discount_2_qty' => 'nullable|integer|min:0',
+        'discount_3_qty' => 'nullable|integer|min:0',
     ]);
 
-   $item->update([
-    'item_code'   => $request->item_code,
-    'item_name'   => $request->item_name,
-    'rate'        => $request->rate,
-    'cost_price'  => $request->cost_price,
-    'stock'       => $request->stock,
-    'unit'        => $request->unit,
-    'category'    => $request->category,
-    'discount_1'  => $request->discount_1,
-    'discount_2'  => $request->discount_2,
-    'discount_3'  => $request->discount_3,
-]);
+    $item->update([
+        'item_code'     => $request->item_code,
+        'item_name'     => $request->item_name,
+        'rate'          => $request->rate,
+        'cost_price'    => $request->cost_price,
+        'stock'         => $request->stock,
+        'unit'          => $request->unit,
+        'category'      => $request->category,
+        'discount_1'    => $request->discount_1,
+        'discount_2'    => $request->discount_2,
+        'discount_3'    => $request->discount_3,
+        'discount_1_qty' => $request->discount_1_qty,
+        'discount_2_qty' => $request->discount_2_qty,
+        'discount_3_qty' => $request->discount_3_qty,
+    ]);
 
     $lastPrice = $item->prices()->latest('created_at')->first();
 
     if (
-        !$lastPrice || 
-        $lastPrice->rate != $request->rate || 
+        !$lastPrice ||
+        $lastPrice->rate != $request->rate ||
         $lastPrice->cost_price != $request->cost_price
     ) {
         $item->prices()->create([
