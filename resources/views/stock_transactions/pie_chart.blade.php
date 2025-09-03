@@ -18,9 +18,24 @@
 
 
 <a href="{{ route('stock.download', ['start_date' => $startDate, 'end_date' => $endDate]) }}"
+   target="pdfFrame"
    class="btn btn-danger mb-3">
     <i class="bi bi-file-earmark-pdf"></i> Download PDF Report
 </a>
+
+<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+<script>
+    function printIframe() {
+        const iframe = document.getElementById('pdfFrame');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+</script>
+
+
  
     <div class="row" style="width: 80%; margin: auto;">
         <div class="col-md-6">

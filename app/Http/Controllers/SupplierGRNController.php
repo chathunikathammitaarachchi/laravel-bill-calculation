@@ -398,7 +398,7 @@ public function downloadSummaryPdf(Request $request)
     ];
 
     $pdf = PDF::loadView('bill.summary_pdf', compact('dailySummaries', 'totals', 'from', 'to'));
-    return $pdf->download('GRN_Summary_Report.pdf');
+    return $pdf->stream('GRN_Summary_Report.pdf');
 }
 
 
@@ -483,7 +483,7 @@ public function downloadGrnPdf(Request $request)
 
     $filename = "GRN_Details_{$rangeLabel}.pdf";
 
-    return $pdf->download($filename);
+    return $pdf->stream($filename);
 }
 
 
@@ -560,7 +560,7 @@ public function downloadGrnPdf(Request $request)
             'toDate'         => $request->to_date,
         ]);
 
-        return $pdf->download('bill-report.pdf');
+return $pdf->stream('bill-report.pdf');
     }
 
 

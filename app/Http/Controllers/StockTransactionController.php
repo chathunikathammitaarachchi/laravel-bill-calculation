@@ -71,7 +71,7 @@ class StockTransactionController extends Controller
         $pdf = PDF::loadView('stock_transactions.report_pdf', compact('transactions', 'startDate', 'endDate', 'type', 'summary'));
         $fileName = 'stock_transactions_report_' . now()->format('Ymd_His') . '.pdf';
 
-        return $pdf->download($fileName);
+        return $pdf->stream($fileName);
     }
 
     public function downloadPdf(Request $request)
@@ -84,7 +84,7 @@ class StockTransactionController extends Controller
         $pdf = PDF::loadView('stock_transactions.stock_pdf', compact('labels', 'values', 'startDate', 'endDate'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->download('stock-in-out-report.pdf');
+        return $pdf->stream('stock-in-out-report.pdf');
     }
 
     public function transaction(Request $request)

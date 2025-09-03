@@ -17,6 +17,8 @@ use App\Http\Controllers\SupplierDuePaymentController;
 use App\Models\Supplier;
 
 Route::get('/customer-ledger', [GRNController::class, 'customerLedger'])->name('customer.ledger');
+Route::get('/customer/search', [GRNController::class, 'search'])->name('customer.search');
+
 Route::get('/customer-ledger/pdf', [GRNController::class, 'exportCustomerLedgerPDF'])->name('ledger.customer.pdf');
 Route::get('/search-customers', [GRNController::class, 'customersearch'])->name('customer.search');
 

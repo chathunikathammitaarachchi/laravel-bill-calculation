@@ -102,7 +102,7 @@ public function index(Request $request)
         'lineChartImage' => $lineChartImage,
     ]);
 
-    return $pdf->download('item-summary-report.pdf');
+    return $pdf->stream('item-summary-report.pdf');
 }
 
 

@@ -25,6 +25,14 @@
         .label {
             font-weight: bold;
         }
+
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+
     </style>
 </head>
 <body>
@@ -50,16 +58,17 @@
         <div class="line"></div>
         <div style="text-align:center; margin-top: 30px;">Thank you for your payment!</div>
     </div>
-<div style="text-align: center; margin-top: 30px;">
+<div class="no-print" style="text-align: center; margin-top: 30px;">
     <a href="{{ route('grn.dues.by.customer', ['customer_name' => $customer_name]) }}" class="btn btn-primary">Back to Dues</a>
 </div>
+
 
     {{-- 🖨️ Trigger print after load --}}
     <script>
         window.onload = function () {
             setTimeout(function () {
                 window.print();
-            }, 300); // small delay to ensure layout is rendered
+            }, 300); 
         };
     </script>
 </body>

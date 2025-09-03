@@ -67,11 +67,26 @@
         </tfoot>
     </table>
     <hr/>
-      <form method="GET" action="{{ route('ledger.customer.pdf') }}" target="_blank">
+     <!-- Submit PDF into iframe, not new tab -->
+<form method="GET" action="{{ route('ledger.customer.pdf') }}" target="pdfFrame">
     <input type="hidden" name="customer_id" value="{{ request('customer_id') }}">
     <input type="hidden" name="start_date" value="{{ $startDate }}">
     <input type="hidden" name="end_date" value="{{ $endDate }}">
-    <button type="submit" class="btn btn-sm btn-danger">Download PDF</button>
+    <button type="submit" class="btn btn-sm btn-danger">Download & Print PDF</button>
 </form>
+
+<!-- Hidden iframe to load the PDF and trigger print -->
+<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+<script>
+    function printIframe() {
+        const iframe = document.getElementById('pdfFrame');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+</script>
+
 </div>
 @endsection

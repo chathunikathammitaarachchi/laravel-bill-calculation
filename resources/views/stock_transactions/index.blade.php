@@ -47,14 +47,29 @@
         </li>
     </ul>
 
-    <!-- PDF + Chart Buttons -->
-    <a href="{{ route('stock.transactions.pdf', request()->query()) }}" class="btn btn-danger mb-3" target="_blank">
-        Download PDF Report
-    </a>
+<!-- PDF + Chart Buttons -->
+<a href="{{ route('stock.transactions.pdf', request()->query()) }}" class="btn btn-danger mb-3" target="pdfFrame">
+    Download & Print PDF Report
+</a>
+
+<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+<script>
+    function printIframe() {
+        const iframe = document.getElementById('pdfFrame');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+</script>
+
 
     <a href="{{ route('showPieChart', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" class="btn btn-primary mb-3">
         View Stock Charts
     </a>
+
+    
 
     <!-- Summary -->
     @if(request('start_date') && request('end_date'))

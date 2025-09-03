@@ -31,17 +31,33 @@
         $totalOut = 0;
     @endphp
 
-    {{-- PDF Export Form --}}
-    @if(count($openingBalances) || count($dailySummary))
-        <form method="POST" id="chartForm" action="{{ route('daily.summary.pdf') }}">
-            @csrf
-            <input type="hidden" name="start_date" value="{{ request('start_date') }}">
-            <input type="hidden" name="end_date" value="{{ request('end_date') }}">
-            <input type="hidden" name="pie_chart_image" id="pie_chart_image">
-            <input type="hidden" name="bar_chart_image" id="bar_chart_image">
-            <button type="button" id="downloadPdfBtn" class="btn btn-danger mb-3">Download PDF with Charts</button>
-        </form>
-    @endif
+  @if(count($openingBalances) || count($dailySummary))
+    <form method="POST" id="chartForm" action="{{ route('daily.summary.pdf') }}" target="pdfFrame">
+        @csrf
+        <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+        <input type="hidden" name="end_date" value="{{ request('end_date') }}">
+        <input type="hidden" name="pie_chart_image" id="pie_chart_image">
+        <input type="hidden" name="bar_chart_image" id="bar_chart_image">
+        <button type="button" id="downloadPdfBtn" class="btn btn-danger mb-3">Download PDF with Charts</button>
+    </form>
+@endif
+
+<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+<script>
+    document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+        document.getElementById('chartForm').submit();
+    });
+
+    function printIframe() {
+        const iframe = document.getElementById('pdfFrame');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+</script>
+
 
     {{-- Combined Table --}}
 @if((request('start_date') && count($openingBalances)) || count($dailySummary))

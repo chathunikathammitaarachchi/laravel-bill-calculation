@@ -136,9 +136,22 @@
         }
     @endphp
 
-    <a href="{{ route('bill.details.pdf', $pdfParams) }}" class="btn btn-download">
-        ⬇ Download PDF
-    </a>
+<a href="{{ route('bill.details.pdf', $pdfParams) }}" target="pdfFrame" class="btn btn-download">
+    ⬇ Print / Save PDF
+</a>
+
+<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
+
+<script>
+    function printIframe() {
+        const iframe = document.getElementById('pdfFrame');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print(); // user can save as PDF or print
+        }
+    }
+</script>
+
     <a href="{{ route('bill.summary') }}" class="btn btn-back">
         ← Back to Summary
     </a>

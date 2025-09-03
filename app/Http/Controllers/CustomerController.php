@@ -57,6 +57,22 @@ class CustomerController extends Controller
 
         $customer->update($request->all());
 
+
+
+
+        // Get the old customer name before update
+    $oldCustomerName = $customer->customer_name;
+
+    // Update customer
+    $customer->update($request->all());
+
+    // If customer name changed, update it in dues table (if dues use customer_name)
+    if ($oldCustomerName !== $request->customer_name) {
+        \DB::table('dues') // Replace 'dues' with your actual dues table
+            ->where('customer_name', $oldCustomerName)
+            ->update(['customer_name' => $request->customer_name]);
+    }
+
         return redirect()->route('customer.index')->with('success', 'customer updated successfully.');
     }
 
