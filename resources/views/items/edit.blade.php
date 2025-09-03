@@ -84,20 +84,24 @@
   <label for="stock" class="text-muted">Stock</label>
 </div>
 
-<div class="form-group">
-    <label for="discount_1">Discount 1 (%)</label>
-    <input type="number" name="discount_1" class="form-control" value="{{ old('discount_1', $item->discount_1 ?? '') }}" min="0" max="100">
-</div>
 
-<div class="form-group">
-    <label for="discount_2">Discount 2 (%)</label>
-    <input type="number" name="discount_2" class="form-control" value="{{ old('discount_2', $item->discount_2 ?? '') }}" min="0" max="100">
-</div>
+<input type="number" name="discount_1_qty" placeholder="Min Qty for Discount 1" value="{{ old('discount_1_qty', $item->discount_1_qty) }}" 
+  style="width: 180px; padding: 8px 12px; margin: 6px 10px 6px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
 
-<div class="form-group">
-    <label for="discount_3">Discount 3 (%)</label>
-    <input type="number" name="discount_3" class="form-control" value="{{ old('discount_3', $item->discount_3 ?? '') }}" min="0" max="100">
-</div>
+<input type="number" name="discount_1" placeholder="Discount 1 Amount" value="{{ old('discount_1', $item->discount_1) }}" 
+  style="width: 180px; padding: 8px 12px; margin: 6px 0 6px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+
+<input type="number" name="discount_2_qty" placeholder="Min Qty for Discount 2" value="{{ old('discount_2_qty', $item->discount_2_qty) }}" 
+  style="width: 180px; padding: 8px 12px; margin: 6px 10px 6px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+
+<input type="number" name="discount_2" placeholder="Discount 2 Amount" value="{{ old('discount_2', $item->discount_2) }}" 
+  style="width: 180px; padding: 8px 12px; margin: 6px 0 6px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+
+<input type="number" name="discount_3_qty" placeholder="Min Qty for Discount 3" value="{{ old('discount_3_qty', $item->discount_3_qty) }}" 
+  style="width: 180px; padding: 8px 12px; margin: 6px 10px 6px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+
+<input type="number" name="discount_3" placeholder="Discount 3 Amount" value="{{ old('discount_3', $item->discount_3) }}" 
+  style="width: 180px; padding: 8px 12px; margin: 6px 0 6px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
 
       <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold shadow-sm">
         Update Item
@@ -205,6 +209,16 @@
 
 <!-- STYLES -->
 <style>
+  button.btn-primary {
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+button.btn-primary:hover {
+  transform: translateY(0);
+  box-shadow: 0 8px 20px rgba(67, 134, 206, 0.6);
+}
+
   body {
     background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
