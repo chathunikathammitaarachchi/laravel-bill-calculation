@@ -117,17 +117,25 @@ Route::get('/bill-details/{date}/pdf', [SupplierGRNController::class, 'downloadG
 Route::get('/bill/summary/pdf', [SupplierGRNController::class, 'downloadSummaryPdf'])->name('bill.summary.pdf');
 // routes/web.php
 Route::get('/grn-details/pdf', [SupplierGRNController::class, 'downloadGrnPdf'])->name('bill.details.pdf');
+
+
+// Show list of dues
 Route::get('/bill/dues', [SupplierGRNController::class, 'showDues'])->name('bill.dues');
 
-Route::post('/due-payments/pay', [SupplierDuePaymentController::class, 'payDue'])->name('due_payments.pay');
-Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
+// Show payment form by supplier name
+Route::get('/supplier/pay-due/{supplier_name}', [SupplierDuePaymentController::class, 'showBySupplier'])->name('due_payments.form.by.supplier');
+
+// Submit payment form (POST)
+Route::post('/supplier/pay-due', [SupplierDuePaymentController::class, 'payDueBySupplier'])->name('due.pay');
+
+// Export dues PDF
 Route::get('/bill/dues/export-pdf', [SupplierGRNController::class, 'supplierexportDuesPDF'])->name('bill.dues.export');
-Route::get('/due-payments/supplier/{supplier_name}', [SupplierDuePaymentController::class, 'showBySupplier'])
-    ->name('due_payments.form.by.supplier');
-Route::post('/due-payments/pay', [SupplierDuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
-Route::post('/due/pay', [SupplierDuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
+
+// Supplier autocomplete (AJAX)
 Route::get('/autocomplete-suppliers', [SupplierDuePaymentController::class, 'autocomplete'])->name('suppliers.autocomplete');
 
+// Success page view after payment (optional)
+Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
 
 
 
