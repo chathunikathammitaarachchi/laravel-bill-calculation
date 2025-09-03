@@ -18,8 +18,8 @@
     </div>
     <div class="col-md-3">
         <label for="supplier_name" class="form-label" style="font-weight: 600;">Supplier Name</label>
-        <input list="customers" name="supplier_name" id="supplier_name" value="{{ request('supplier_name') }}" class="form-control" placeholder="Type supplier name..." style="border: 1px solid #ccc; border-radius: 4px;">
-        <datalist id="customers">
+        <input list="suppliers" name="supplier_name" id="supplier_name" value="{{ request('supplier_name') }}" class="form-control" placeholder="Type supplier name..." style="border: 1px solid #ccc; border-radius: 4px;">
+        <datalist id="suppliers">
             @foreach(\App\Models\SupplierDue::select('supplier_name')->distinct()->orderBy('supplier_name')->get() as $supplier)
                 <option value="{{ $supplier->supplier_name }}">
             @endforeach
