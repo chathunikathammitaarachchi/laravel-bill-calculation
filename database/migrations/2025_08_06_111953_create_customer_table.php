@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id(); // Laravel-generated auto-increment PK
 
             $table->unsignedBigInteger('customer_id'); // big int for manual ID
-            $table->string('customer_name')->unique();
+$table->string('customer_name');
             $table->string('phone');
             $table->timestamps();
         });
