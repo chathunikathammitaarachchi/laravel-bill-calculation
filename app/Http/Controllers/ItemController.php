@@ -23,24 +23,32 @@ class ItemController extends Controller
         return view('items.create');
     }
 
+public function checkCode(Request $request)
+{
+    $exists = Item::where('item_code', $request->item_code)->exists();
+
+    return response()->json(['exists' => $exists]);
+}
 
 public function store(Request $request)
 {
     $request->validate([
-        'item_code'    => 'required|string|unique:item,item_code',
-        'item_name'    => 'required|string',
-        'rate'         => 'required|integer',
-        'unit'         => 'required|string|max:20',
-        'category'     => 'required|string',
-        'cost_price'   => 'required|integer',
-        'stock'        => 'required|integer',
-        'discount_1'   => 'nullable|integer|min:0|max:100',
-        'discount_2'   => 'nullable|integer|min:0|max:100',
-        'discount_3'   => 'nullable|integer|min:0|max:100',
-        'discount_1_qty' => 'nullable|integer|min:0',
-        'discount_2_qty' => 'nullable|integer|min:0',
-        'discount_3_qty' => 'nullable|integer|min:0',
-    ]);
+    'item_code'       => 'required|string|unique:item,item_code',
+'item_name' => 'required|string|unique:item,item_name',
+    'rate'            => 'required|numeric|min:0',
+    'cost_price'      => 'required|numeric|min:0',
+    'stock'           => 'required|integer|min:0',
+    'unit'            => 'required|string|max:20',
+    'category'        => 'required|string|max:100',
+
+    // Discounts (optional)
+    'discount_1'      => 'nullable|numeric|min:0',
+    'discount_2'      => 'nullable|numeric|min:0',
+    'discount_3'      => 'nullable|numeric|min:0',
+    'discount_1_qty'  => 'nullable|integer|min:0',
+    'discount_2_qty'  => 'nullable|integer|min:0',
+    'discount_3_qty'  => 'nullable|integer|min:0',
+]);
 
     $item = Item::create($request->only([
         'item_code', 'item_name', 'rate', 'cost_price', 'stock', 'unit', 'category',
@@ -78,12 +86,18 @@ public function store(Request $request)
     {
         return view('items.edit', compact('item'));
     }
+public function checkName(Request $request)
+{
+    $exists = Item::where('item_name', $request->item_name)->exists();
+
+    return response()->json(['exists' => $exists]);
+}
 
 public function update(Request $request, Item $item)
 {
     $request->validate([
-        'item_code'    => 'required|string|unique:item,item_code,' . $item->id,
-        'item_name'    => 'required|string',
+        'item_code' => 'required|string|unique:item,item_code,' . $item->id,
+    'item_name' => 'required|string|unique:item,item_name,' . $item->id,
         'unit'         => 'required|string|max:20',
         'category'     => 'required|string',
         'rate'         => 'required|numeric',

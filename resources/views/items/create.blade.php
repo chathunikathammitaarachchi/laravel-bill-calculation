@@ -147,6 +147,69 @@
     hidden.value = select.value;
   }
 }
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.querySelector('form');
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const requiredFields = [
+      'item_code',
+      'item_name',
+      'rate',
+      'cost_price',
+      'stock',
+      'unit_hidden',
+      'category_hidden',
+    ];
+
+    let allFilled = true;
+
+    requiredFields.forEach(id => {
+      const field = document.getElementById(id);
+      if (!field || !field.value.trim()) {
+        allFilled = false;
+        field.classList.add('is-invalid'); // Bootstrap invalid class
+      } else {
+        field.classList.remove('is-invalid');
+      }
+    });
+
+    if (!allFilled) {
+      alert("❗ Please fill out all required fields before submitting.");
+      return;
+    }
+
+    const itemCode = document.getElementById('item_code').value.trim();
+    const itemName = document.getElementById('item_name').value.trim();
+
+    try {
+      const codeResponse = await fetch(`/items/check-code?item_code=${itemCode}`);
+      const codeData = await codeResponse.json();
+
+      if (codeData.exists) {
+        alert("🚫 This item code already exists! Please use a different one.");
+        document.getElementById('item_code').focus();
+        return;
+      }
+
+      const nameResponse = await fetch(`/items/check-name?item_name=${encodeURIComponent(itemName)}`);
+      const nameData = await nameResponse.json();
+
+      if (nameData.exists) {
+        alert("🚫 This item name already exists! Please choose another name.");
+        document.getElementById('item_name').focus();
+        return;
+      }
+
+      form.submit(); 
+
+    } catch (err) {
+      alert("Error checking item code or name.");
+      console.error(err);
+    }
+  });
+});
 
 
 document.addEventListener('DOMContentLoaded', () => {

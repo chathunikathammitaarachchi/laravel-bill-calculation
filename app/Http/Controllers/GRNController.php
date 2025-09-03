@@ -255,7 +255,7 @@ public function itemNameSearch(Request $request)
 {
     $query = $request->input('query');
 
-    $items = Item::where('item_name', 'LIKE', "%$query%")
+    $items = Item::where('item_name', 'ILIKE', "%$query%")
                 ->limit(10)
                 ->get();
 
@@ -267,7 +267,7 @@ public function itemPriceSearch(Request $request)
     $query = $request->input('query');
 
     $rate = ItemPrice::with('item')  // assuming relation is 'item'
-                 ->whereRaw("CAST(rate AS CHAR) LIKE ?", ["$query%"])
+                 ->whereRaw("CAST(rate AS CHAR) ILIKE ?", ["$query%"])
                  ->limit(10)
                  ->get()
                  ->map(function ($r) {
@@ -285,7 +285,7 @@ public function itemCodeSearch(Request $request)
 {
     $query = $request->input('query');
 
-    $items = Item::where('item_code', 'LIKE', "%$query%")
+    $items = Item::where('item_code', 'ILIKE', "%$query%")
                 ->limit(10)
                 ->get();
 

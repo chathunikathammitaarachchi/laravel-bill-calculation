@@ -100,6 +100,8 @@ Route::get('/stock/transactions', [StockTransactionController::class, 'index'])-
 Route::get('/items/stock', [ItemController::class, 'stock'])->name('items.stock');
 Route::get('/stock', [ItemController::class, 'stock'])->name('stock.index');
 Route::post('/stock/transaction', [ItemController::class, 'addStockTransaction'])->name('stock.transaction');
+Route::get('/items/check-code', [ItemController::class, 'checkCode']);
+Route::get('/items/check-name', [ItemController::class, 'checkName']);
 
 
 

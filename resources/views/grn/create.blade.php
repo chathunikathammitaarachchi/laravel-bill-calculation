@@ -399,60 +399,13 @@ function addItemIfLastFilled(row) {
         addItem();
     }
 }
-function updateRowPrice(row) {
-    if (!row) return 0;
 
-    const rateEl = row.querySelector('.rate-input, .rate-dropdown');
-    const rate = parseFloat(rateEl?.value) || 0;
-    const quantity = parseFloat(row.querySelector('.quantity')?.value) || 0;
-    const itemCode = row.querySelector('.item-code')?.value;
-    const priceInput = row.querySelector('.price');
-    
-    if (!priceInput || !itemCode || rate === 0 || quantity === 0) return 0;
 
-    // Calculate base price
-    let basePrice = rate * quantity;
-    let discount = 0;
 
-    // Apply quantity-based FIXED AMOUNT discount 
-    if (itemDiscounts[itemCode]) {
-        const discounts = itemDiscounts[itemCode]; 
-        // discounts is expected to have discount_1_qty, discount_1, discount_2_qty, discount_2, discount_3_qty, discount_3 keys
-
-        // Apply the highest applicable discount based on quantity
-        if (discounts.discount_3_qty !== null && quantity >= discounts.discount_3_qty) {
-            discount = discounts.discount_3 || 0;
-        } else if (discounts.discount_2_qty !== null && quantity >= discounts.discount_2_qty) {
-            discount = discounts.discount_2 || 0;
-        } else if (discounts.discount_1_qty !== null && quantity >= discounts.discount_1_qty) {
-            discount = discounts.discount_1 || 0;
-        }
-    }
-
-    // Calculate final price (ensure it doesn't go below zero)
-    const finalPrice = Math.max(basePrice - discount, 0); 
-
-    // Update the price input field
-    priceInput.value = finalPrice.toFixed(2);
-    
-    // Store discount amount in data attribute for total calculation
-    row.setAttribute('data-item-discount', discount);
-
-    // Optional: Log discount info for debugging
-    if (discount > 0) {
-        console.log(`Item: ${itemCode}, Qty: ${quantity}, Rate: ${rate}, Base: ${basePrice}, Fixed Discount: Rs.${discount}, Final: ${finalPrice}`);
-    }
-
-    // Return the discount amount applied
-    return discount;
-}
-
-// Updated calculateTotals function to include item discounts
 function calculateTotals() {
     let total = 0;
     let totalItemDiscounts = 0;
 
-    // Calculate total price and total item discounts
     document.querySelectorAll('.item').forEach(row => {
         const priceInput = row.querySelector('.price');
         const itemDiscount = parseFloat(row.getAttribute('data-item-discount')) || 0;
@@ -463,14 +416,11 @@ function calculateTotals() {
 
     document.getElementById('total_price').value = total.toFixed(2);
 
-    const additionalDiscount = 0;  // You can set this to 0 or get it from wherever you want if any extra discount
-    // total discount = item discounts + additional discounts
+    const additionalDiscount = 0; 
     const totalDiscount = totalItemDiscounts + additionalDiscount;
 
-    // Update the single Total Discount input (read-only)
     document.getElementById('total_discount').value = totalDiscount.toFixed(2);
 
-    // Calculate original price before any discounts
     const originalPrice = total + totalItemDiscounts;
     const tobe = originalPrice - totalDiscount;
 
@@ -480,11 +430,9 @@ function calculateTotals() {
     document.getElementById('balance').value = (customerPay - tobe).toFixed(2);
 }
 
-// Main input event listener
 document.addEventListener('input', function (e) {
     const row = e.target.closest('.item');
 
-    // Trigger price update when quantity or rate changes
     if (e.target.classList.contains('quantity') || 
         e.target.classList.contains('rate-input') || 
         e.target.classList.contains('rate-dropdown')) {
@@ -514,7 +462,8 @@ document.addEventListener('input', function (e) {
     }
 });
 
-// Trigger modal after item code or name selected
+
+
 document.addEventListener('input', function (e) {
     if (e.target.classList.contains('item-code') || e.target.classList.contains('item-name')) {
         const row = e.target.closest('.item');
@@ -539,75 +488,30 @@ document.addEventListener('input', function (e) {
         }, 200); 
     }
 });
-
-document.getElementById('rate-options').addEventListener('click', function (e) {
-    if (e.target.tagName === 'BUTTON') {
-        const selectedRate = e.target.dataset.rate;
-
-        if (currentRateInput) {
-            currentRateInput.value = selectedRate;
-
-            // Force input event trigger
-            const event = new Event('input', { bubbles: true });
-            currentRateInput.dispatchEvent(event);
-
-            const row = currentRateInput.closest('.item');
-            updateRowPrice(row); // This will now apply discounts
-            calculateTotals();
-
-            // Popup hide
-            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('rateSelectModal'));
-            modalInstance.hide();
-
-            // After modal is hidden, add new item & focus
-            setTimeout(() => {
-                console.log("Calling addItemIfLastFilled...");
-                addItemIfLastFilled(row);
-
-                // Focus/select new row's item-code input
-                const allRows = document.querySelectorAll('.item');
-                const lastRow = allRows[allRows.length - 1];
-                const codeInput = lastRow.querySelector('.item-code') || lastRow.querySelector('.item-name');
-
-                if (codeInput && typeof codeInput.select === 'function') {
-                    codeInput.focus();
-                    codeInput.select();
-                } else {
-                    codeInput?.focus();
-                }
-            }, 300);
-        }
-    }
-});
-
-function updateRateDropdown(row, itemCode) {
-    const rateDropdown = row.querySelector('.rate-dropdown');
-    if (!rateDropdown) return;
-
-    rateDropdown.innerHTML = '<option value="" disabled selected>Select Item Rate</option>';
-
-    if (itemRates[itemCode]) {
-        itemRates[itemCode].forEach(rate => {
-            const option = document.createElement('option');
-            option.value = rate;
-            option.textContent = rate;
-            rateDropdown.appendChild(option);
-        });
-    }
-}
-
 function showRateModal(itemCode, targetRateInput) {
     const rates = itemRates[itemCode] || [];
 
     if (rates.length === 0) return;
-
     if (rates.length === 1) {
-        targetRateInput.value = rates[0];
-        const row = targetRateInput.closest('.item');
-        updateRowPrice(row);
-        calculateTotals();
-        return;
+    targetRateInput.value = rates[0];
+    const row = targetRateInput.closest('.item');
+
+    const qtyInput = row.querySelector('.quantity');
+    if (qtyInput && (!qtyInput.value || qtyInput.value == 0)) {
+        qtyInput.value = 1;
     }
+
+    updateRowPrice(row);
+    calculateTotals();
+
+    const event = new Event('input', { bubbles: true });
+    targetRateInput.dispatchEvent(event);
+
+    return;
+}
+
+
+
 
     const rateOptionsContainer = document.getElementById('rate-options');
     rateOptionsContainer.innerHTML = '';
@@ -627,7 +531,6 @@ function showRateModal(itemCode, targetRateInput) {
     const modal = new bootstrap.Modal(document.getElementById('rateSelectModal'));
     modal.show();
 
-    // Delay to allow modal render, then focus first button
     setTimeout(() => {
         const firstButton = document.querySelector('#rate-options button');
         if (firstButton) {
@@ -635,6 +538,113 @@ function showRateModal(itemCode, targetRateInput) {
         }
     }, 200);
 }
+
+
+function updateRowPrice(row) {
+    if (!row) return 0;
+
+    const rateEl = row.querySelector('.rate-input, .rate-dropdown');
+    const rate = parseFloat(rateEl?.value) || 0;
+    const quantity = parseFloat(row.querySelector('.quantity')?.value) || 0;
+    const itemCode = row.querySelector('.item-code')?.value;
+    const priceInput = row.querySelector('.price');
+    
+    if (!priceInput || !itemCode || rate === 0 || quantity === 0) return 0;
+
+    let basePrice = rate * quantity;
+    let discountPerUnit = 0;
+
+    if (itemDiscounts[itemCode]) {
+        const discounts = itemDiscounts[itemCode]; 
+
+        if (discounts.discount_3_qty !== null && quantity >= discounts.discount_3_qty) {
+            discountPerUnit = discounts.discount_3 || 0;
+        } else if (discounts.discount_2_qty !== null && quantity >= discounts.discount_2_qty) {
+            discountPerUnit = discounts.discount_2 || 0;
+        } else if (discounts.discount_1_qty !== null && quantity >= discounts.discount_1_qty) {
+            discountPerUnit = discounts.discount_1 || 0;
+        }
+    }
+
+    let discount = discountPerUnit * quantity;
+
+    const finalPrice = Math.max(basePrice - discount, 0); 
+
+    priceInput.value = finalPrice.toFixed(2);
+    
+    row.setAttribute('data-item-discount', discount);
+
+    if (discount > 0) {
+        console.log(`Item: ${itemCode}, Qty: ${quantity}, Rate: ${rate}, Base: ${basePrice}, Unit Discount: Rs.${discountPerUnit}, Total Discount: Rs.${discount}, Final: ${finalPrice}`);
+    }
+
+    return discount;
+}
+
+
+
+
+document.getElementById('rate-options').addEventListener('click', function (e) {
+    if (e.target.tagName === 'BUTTON') {
+        const selectedRate = e.target.dataset.rate;
+
+        if (currentRateInput) {
+            const row = currentRateInput.closest('.item');
+
+            const qtyInput = row.querySelector('.quantity');
+            if (qtyInput && (!qtyInput.value || parseFloat(qtyInput.value) === 0)) {
+                qtyInput.value = 1;
+            }
+
+            currentRateInput.value = selectedRate;
+
+            const event = new Event('input', { bubbles: true });
+            currentRateInput.dispatchEvent(event);
+
+            updateRowPrice(row);
+            calculateTotals();
+
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('rateSelectModal'));
+            modalInstance.hide();
+
+            setTimeout(() => {
+                addItemIfLastFilled(row);
+
+                const allRows = document.querySelectorAll('.item');
+                const lastRow = allRows[allRows.length - 1];
+                const codeInput = lastRow.querySelector('.item-code') || lastRow.querySelector('.item-name');
+
+                if (codeInput && typeof codeInput.select === 'function') {
+                    codeInput.focus();
+                    codeInput.select();
+                } else {
+                    codeInput?.focus();
+                }
+            }, 300);
+        }
+    }
+});
+
+
+
+
+function updateRateDropdown(row, itemCode) {
+    const rateDropdown = row.querySelector('.rate-dropdown');
+    if (!rateDropdown) return;
+
+    rateDropdown.innerHTML = '<option value="" disabled selected>Select Item Rate</option>';
+
+    if (itemRates[itemCode]) {
+        itemRates[itemCode].forEach(rate => {
+            const option = document.createElement('option');
+            option.value = rate;
+            option.textContent = rate;
+            rateDropdown.appendChild(option);
+        });
+    }
+}
+
+
 
 let currentFocusedIndex = 0;
 let currentRateInput = null;
