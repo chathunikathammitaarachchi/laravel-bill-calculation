@@ -88,33 +88,54 @@ if (empty($customerName)) {
             
         ]);
 
-       foreach ($request->items as $item) {
-    // Get rate from ItemPrice table
-    $rate = ItemPrice::where('item_id', $item['item_code'])->value('rate');
+// 1. UPDATE PHP CODE (Controller store method)
 
-    // Create GRNDetails
+foreach ($request->items as $itemData) {
+    $item = Item::where('item_code', $itemData['item_code'])->first();
+
+    if (!$item) {
+        return back()->with('error', 'Item not found: ' . $itemData['item_name']);
+    }
+
+    $quantity = $itemData['quantity'];
+    $rate = $itemData['rate']; 
+    $discount = 0;
+
+    // CHANGED: Fixed amount discount instead of percentage
+    if ($quantity >= 3 && $quantity <= 5) {
+        $discount = $item->discount_1 ?? 0; // This is now a fixed amount, not percentage
+    } elseif ($quantity > 5 && $quantity <= 8) {
+        $discount = $item->discount_2 ?? 0; // This is now a fixed amount, not percentage
+    } elseif ($quantity > 8) {
+        $discount = $item->discount_3 ?? 0; // This is now a fixed amount, not percentage
+    }
+
+    // CHANGED: Direct subtraction instead of percentage calculation
+    $basePrice = $rate * $quantity;
+    $finalPrice = $basePrice - $discount; // Direct subtraction of fixed amount
+
+    // Ensure price doesn't go negative
+    $finalPrice = max($finalPrice, 0);
+
     GRNDetails::create([
-        'bill_no' => $grn->bill_no,
-        'item_code' => $item['item_code'],
-        'item_name' => $item['item_name'],
-        'rate' => $rate,
-        'quantity' => $item['quantity'],
-        'price' => $rate * $item['quantity'],
+        'bill_no'   => $grn->bill_no,
+        'item_code' => $itemData['item_code'],
+        'item_name' => $itemData['item_name'],
+        'rate'      => $rate,
+        'quantity'  => $quantity,
+        'price'     => $finalPrice,
     ]);
 
-
-            $grnDate = \App\Models\GRNMaster::where('bill_no', $request->bill_no)->value('grn_date');
-
-            ItemSummary::create([
-                'item_code' => $item['item_code'],
-                'item_name' => $item['item_name'],
-                'quantity' => $item['quantity'],
-                'rate' => $item['rate'],
-                'total_price' => $item['price'],
-                'bill_no' => $grn->bill_no,
-                'grn_date' => $request->grn_date,
-            ]);
-        }
+    ItemSummary::create([
+        'item_code' => $itemData['item_code'],
+        'item_name' => $itemData['item_name'],
+        'quantity'  => $quantity,
+        'rate'      => $rate,
+        'total_price' => $finalPrice,
+        'bill_no'   => $grn->bill_no,
+        'grn_date'  => $request->grn_date,
+    ]);
+}
 
 
 
@@ -136,23 +157,24 @@ if ($request->customer_pay < $request->tobe_price) {
         foreach ($request->items as $billItem) {
             $item = Item::where('item_code', $billItem['item_code'])->first();
 
-            if ($item && $item->stock >= $billItem['quantity']) {
-                $item->save();
+           if ($item && $item->stock >= $billItem['quantity']) {
+    $item->save();
 
-                StockTransaction::create([
-                    'item_code' => $billItem['item_code'],
-                    'item_name' => $billItem['item_name'],
-                    'transaction_type' => 'OUT',
-                    'quantity' => $billItem['quantity'],
-                    'rate' => $billItem['rate'],
-                    'price' => $billItem['price'],
-                    'reference_no' => $request->bill_no,
-                    'source' => 'Customer Bill',
-                    'transaction_date' => $request->grn_date,
-                ]);
-            } else {
-                return back()->with('error', 'Not enough stock for item: ' . $item->item_name);
-            }
+    StockTransaction::create([
+        'item_code' => $billItem['item_code'],
+        'item_name' => $billItem['item_name'],
+        'transaction_type' => 'OUT',
+        'quantity' => $billItem['quantity'],
+        'rate' => $billItem['rate'],
+        'price' => $billItem['price'],
+        'reference_no' => $request->bill_no,
+        'source' => 'Customer Bill',
+        'transaction_date' => $request->grn_date,
+    ]);
+} else {
+    return back()->with('error', 'Not enough stock for item: ' . $item->item_name);
+}
+
         }
 
         return $grn;
