@@ -1,6 +1,3 @@
-
- <!--Create Bill code -->
-
 @extends('layouts.app')
 
 @section('content')
@@ -173,11 +170,13 @@
                 <input type="number" name="total_price" id="total_price" readonly
                        style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: right;">
             </div>
-            <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
-                <label for="total_discount" style="width: 40%; font-weight: 600; margin-right: 10px;">Total Discount</label>
-                <input type="number" name="total_discount" id="total_discount" value="0" min="0"
-                       style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: right;">
-            </div>
+         
+          <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
+    <label for="total_discount" style="width: 40%; font-weight: 600; margin-right: 10px;">Total Discount</label>
+    <input type="number" name="total_discount" id="total_discount" readonly
+           style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: right; background-color: #f8fff9;">
+</div>
+
             <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-end;">
                 <label for="tobe_price" style="width: 40%; font-weight: 600; margin-right: 10px;">To Be Paid</label>
                 <input type="number" name="tobe_price" id="tobe_price" readonly
@@ -302,11 +301,15 @@ let itemIndex = 1;
 // Pass the discount data from PHP to JavaScript
 const itemDiscounts = {!! json_encode($items->mapWithKeys(function($item) {
     return [$item->item_code => [
+        'discount_1_qty' => $item->discount_1_qty ?? null,
         'discount_1' => $item->discount_1 ?? 0,
+        'discount_2_qty' => $item->discount_2_qty ?? null,
         'discount_2' => $item->discount_2 ?? 0,
+        'discount_3_qty' => $item->discount_3_qty ?? null,
         'discount_3' => $item->discount_3 ?? 0,
     ]];
 })->toArray()) !!};
+
 
 // This object should be generated server-side and injected properly
 const itemRates = @json($items->mapWithKeys(function($item) {
@@ -377,46 +380,8 @@ function addItem(code = '', name = '', rate = '') {
     console.log("New item added. Current itemIndex:", itemIndex);
 }
 
-// SINGLE updateRowPrice function with discount logic
-// 2. UPDATE JAVASCRIPT CODE (updateRowPrice function)
 
-// SINGLE updateRowPrice function with FIXED AMOUNT discount logic
-function updateRowPrice(row) {
-    if (!row) return;
 
-    const rateEl = row.querySelector('.rate-input, .rate-dropdown');
-    const rate = parseFloat(rateEl?.value) || 0;
-    const quantity = parseFloat(row.querySelector('.quantity')?.value) || 0;
-    const itemCode = row.querySelector('.item-code')?.value;
-    const priceInput = row.querySelector('.price');
-    
-    if (!priceInput || !itemCode || rate === 0 || quantity === 0) return;
-
-    // Calculate base price
-    let basePrice = rate * quantity;
-    let discount = 0;
-
-    // Apply quantity-based FIXED AMOUNT discount 
-    if (itemDiscounts[itemCode]) {
-        const discounts = itemDiscounts[itemCode];
-        
-        if (quantity >= 3 && quantity <= 5) {
-            discount = discounts.discount_1 || 0; 
-        } else if (quantity > 5 && quantity <= 8) {
-            discount = discounts.discount_2 || 0;
-        } else if (quantity > 8) {
-            discount = discounts.discount_3 || 0; 
-        }
-    }
-
-    const finalPrice = Math.max(basePrice - discount, 0); 
-
-    priceInput.value = finalPrice.toFixed(2);
-
-    if (discount > 0) {
-        console.log(`Item: ${itemCode}, Qty: ${quantity}, Rate: ${rate}, Base: ${basePrice}, Fixed Discount: Rs.${discount}, Final: ${finalPrice}`);
-    }
-}
 
 function addItemIfLastFilled(row) {
     const itemCode = row.querySelector('.item-code')?.value.trim();
@@ -434,6 +399,120 @@ function addItemIfLastFilled(row) {
         addItem();
     }
 }
+function updateRowPrice(row) {
+    if (!row) return 0;
+
+    const rateEl = row.querySelector('.rate-input, .rate-dropdown');
+    const rate = parseFloat(rateEl?.value) || 0;
+    const quantity = parseFloat(row.querySelector('.quantity')?.value) || 0;
+    const itemCode = row.querySelector('.item-code')?.value;
+    const priceInput = row.querySelector('.price');
+    
+    if (!priceInput || !itemCode || rate === 0 || quantity === 0) return 0;
+
+    // Calculate base price
+    let basePrice = rate * quantity;
+    let discount = 0;
+
+    // Apply quantity-based FIXED AMOUNT discount 
+    if (itemDiscounts[itemCode]) {
+        const discounts = itemDiscounts[itemCode]; 
+        // discounts is expected to have discount_1_qty, discount_1, discount_2_qty, discount_2, discount_3_qty, discount_3 keys
+
+        // Apply the highest applicable discount based on quantity
+        if (discounts.discount_3_qty !== null && quantity >= discounts.discount_3_qty) {
+            discount = discounts.discount_3 || 0;
+        } else if (discounts.discount_2_qty !== null && quantity >= discounts.discount_2_qty) {
+            discount = discounts.discount_2 || 0;
+        } else if (discounts.discount_1_qty !== null && quantity >= discounts.discount_1_qty) {
+            discount = discounts.discount_1 || 0;
+        }
+    }
+
+    // Calculate final price (ensure it doesn't go below zero)
+    const finalPrice = Math.max(basePrice - discount, 0); 
+
+    // Update the price input field
+    priceInput.value = finalPrice.toFixed(2);
+    
+    // Store discount amount in data attribute for total calculation
+    row.setAttribute('data-item-discount', discount);
+
+    // Optional: Log discount info for debugging
+    if (discount > 0) {
+        console.log(`Item: ${itemCode}, Qty: ${quantity}, Rate: ${rate}, Base: ${basePrice}, Fixed Discount: Rs.${discount}, Final: ${finalPrice}`);
+    }
+
+    // Return the discount amount applied
+    return discount;
+}
+
+// Updated calculateTotals function to include item discounts
+function calculateTotals() {
+    let total = 0;
+    let totalItemDiscounts = 0;
+
+    // Calculate total price and total item discounts
+    document.querySelectorAll('.item').forEach(row => {
+        const priceInput = row.querySelector('.price');
+        const itemDiscount = parseFloat(row.getAttribute('data-item-discount')) || 0;
+        
+        total += parseFloat(priceInput?.value) || 0;
+        totalItemDiscounts += itemDiscount;
+    });
+
+    document.getElementById('total_price').value = total.toFixed(2);
+
+    const additionalDiscount = 0;  // You can set this to 0 or get it from wherever you want if any extra discount
+    // total discount = item discounts + additional discounts
+    const totalDiscount = totalItemDiscounts + additionalDiscount;
+
+    // Update the single Total Discount input (read-only)
+    document.getElementById('total_discount').value = totalDiscount.toFixed(2);
+
+    // Calculate original price before any discounts
+    const originalPrice = total + totalItemDiscounts;
+    const tobe = originalPrice - totalDiscount;
+
+    document.getElementById('tobe_price').value = tobe.toFixed(2);
+
+    const customerPay = parseFloat(document.getElementById('customer_pay').value) || 0;
+    document.getElementById('balance').value = (customerPay - tobe).toFixed(2);
+}
+
+// Main input event listener
+document.addEventListener('input', function (e) {
+    const row = e.target.closest('.item');
+
+    // Trigger price update when quantity or rate changes
+    if (e.target.classList.contains('quantity') || 
+        e.target.classList.contains('rate-input') || 
+        e.target.classList.contains('rate-dropdown')) {
+        updateRowPrice(row);
+        calculateTotals();
+    }
+
+    if (e.target.classList.contains('item-code')) {
+        const code = e.target.value.trim();
+        const nameInput = row.querySelector('.item-name');
+        if (nameInput && itemNames[code]) {
+            nameInput.value = itemNames[code];
+        }
+    }
+
+    if (e.target.classList.contains('item-name')) {
+        const name = e.target.value.trim();
+        const codeInput = row.querySelector('.item-code');
+        if (codeInput && itemCodes[name]) {
+            codeInput.value = itemCodes[name];
+            updateRateDropdown(row, itemCodes[name]);
+        }
+    }
+
+    if (['total_discount', 'customer_pay'].includes(e.target.id)) {
+        calculateTotals();
+    }
+});
 
 // Trigger modal after item code or name selected
 document.addEventListener('input', function (e) {
@@ -588,55 +667,9 @@ document.getElementById('rateSelectModal').addEventListener('keydown', function 
     }
 });
 
-function calculateTotals() {
-    let total = 0;
-    document.querySelectorAll('.price').forEach(input => {
-        total += parseFloat(input.value) || 0;
-    });
 
-    document.getElementById('total_price').value = total.toFixed(2);
 
-    const discount = parseFloat(document.getElementById('total_discount').value) || 0;
-    const tobe = total - discount;
-    document.getElementById('tobe_price').value = tobe.toFixed(2);
 
-    const customerPay = parseFloat(document.getElementById('customer_pay').value) || 0;
-    document.getElementById('balance').value = (customerPay - tobe).toFixed(2);
-}
-
-// Main input event listener
-document.addEventListener('input', function (e) {
-    const row = e.target.closest('.item');
-
-    // Trigger price update when quantity or rate changes
-    if (e.target.classList.contains('quantity') || 
-        e.target.classList.contains('rate-input') || 
-        e.target.classList.contains('rate-dropdown')) {
-        updateRowPrice(row);
-        calculateTotals();
-    }
-
-    if (e.target.classList.contains('item-code')) {
-        const code = e.target.value.trim();
-        const nameInput = row.querySelector('.item-name');
-        if (nameInput && itemNames[code]) {
-            nameInput.value = itemNames[code];
-        }
-    }
-
-    if (e.target.classList.contains('item-name')) {
-        const name = e.target.value.trim();
-        const codeInput = row.querySelector('.item-code');
-        if (codeInput && itemCodes[name]) {
-            codeInput.value = itemCodes[name];
-            updateRateDropdown(row, itemCodes[name]);
-        }
-    }
-
-    if (['total_discount', 'customer_pay'].includes(e.target.id)) {
-        calculateTotals();
-    }
-});
 
 // Search input configurations
 const searchConfigs = [
