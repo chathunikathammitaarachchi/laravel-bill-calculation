@@ -42,7 +42,7 @@
                 <div class="form-control-plaintext text-danger fw-bold">Rs. {{ number_format($totalBalance, 2) }}</div>
             </div>
 
-            <form action="{{ route('due.pay') }}" method="POST">
+            <form action="{{ route('customer_due.pay') }}" method="POST">
                 @csrf
                 <input type="hidden" name="customer_name" value="{{ $customer_name }}">
 
@@ -73,14 +73,14 @@
                     <label for="amount" class="form-label">Amount to Pay</label>
                     <div class="input-group">
                         <span class="input-group-text">Rs.</span>
-                        <input 
-                            type="number" 
-                            class="form-control" 
-                            id="amount" 
-                            name="amount" 
-                            step="0.01" 
-                            max="{{ $totalBalance }}" 
-                            min="0.01" 
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="amount"
+                            name="amount"
+                            step="0.01"
+                            max="{{ $totalBalance }}"
+                            min="0.01"
                             required
                             value="{{ old('amount') }}"
                             placeholder="Enter amount (max {{ $totalBalance }})"
@@ -90,15 +90,13 @@
                 </div>
 
                 <div class="d-flex justify-content-between">
-                    <a href="{{ route('grn.dues') }}" class="btn btn-secondary">Back</a>
+                    <a href="{{ route('customer_dues.list') }}" class="btn btn-secondary">Back</a>
                     <button type="submit" class="btn btn-success">Submit Payment</button>
                 </div>
             </form>
-
         </div>
     </div>
 </div>
-
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -110,28 +108,7 @@
         }
 
         methodSelect.addEventListener('change', toggleChequeFields);
-        toggleChequeFields(); // Call on page load
+        toggleChequeFields();
     });
 </script>
-
-@if(session('receipt_url'))
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const receiptUrl = {!! json_encode(session('receipt_url')) !!};
-        if (receiptUrl) {
-            // Open in new tab
-            const printWindow = window.open(receiptUrl, '_blank');
-
-            // Try to auto-print once the PDF loads
-            printWindow.addEventListener('load', function () {
-                printWindow.print();
-            });
-
-            // Fallback: if browser blocks auto-print, at least open the file
-        }
-    });
-</script>
-@endif
-
-
 @endsection
