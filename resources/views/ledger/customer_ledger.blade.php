@@ -1,92 +1,62 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container" style="max-width: 900px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
-
-  
-
-<h4 style="text-align: center; color: #222; margin-bottom: 25px;">Ledger for {{ $customerName }}</h4>
+<div class="container" style="max-width: 900px; margin: 50px auto; background: #fff; padding: 20px; border-radius: 10px;">
+    <h4 class="text-center mb-3">Ledger for Customer: {{ $customerName }}</h4>
     @if($startDate && $endDate)
-        <p style="text-align: center; font-size: 16px; color: #555;">
-            From <strong>{{ $startDate }}</strong> to <strong>{{ $endDate }}</strong>
-        </p>
+        <p class="text-center">From <strong>{{ $startDate }}</strong> to <strong>{{ $endDate }}</strong></p>
     @endif
 
-    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <thead>
-            <tr style="background-color: #007bff; color: white; text-align: left;">
-                <th style="padding: 12px; border: 1px solid #ddd;">Date</th>
-                <th style="padding: 12px; border: 1px solid #ddd;">Bill No</th>
-                <th style="padding: 12px; border: 1px solid #ddd;">Description</th>
-                <th style="padding: 12px; border: 1px solid #ddd; text-align: right;">Debit</th>
-                <th style="padding: 12px; border: 1px solid #ddd; text-align: right;">Credit</th>
-                <th style="padding: 12px; border: 1px solid #ddd; text-align: right;">Balance</th>
+    <table class="table table-bordered mt-4">
+        <thead class="table-primary">
+            <tr>
+                <th>Date</th>
+                <th>Invoice No</th>
+                <th>Description</th>
+                <th class="text-end">paid</th>
+                <th class="text-end">Total to be paid</th>
+                <th class="text-end">Balance</th>
             </tr>
         </thead>
-     <tbody>
-    @php
-        $totalDebit = 0;
-        $totalCredit = 0;
-        $totalBalance = 0;
-    @endphp
+        <tbody>
+            @php
+                $totalDebit = 0;
+                $totalCredit = 0;
+                $balance = $openingBalance;
+            @endphp
 
-@foreach ($ledger as $entry)
-        @php
-            $debit = is_numeric($entry['debit']) ? $entry['debit'] : 0;
-            $credit = is_numeric($entry['credit']) ? $entry['credit'] : 0;
+            <tr>
+                <td>{{ $startDate ? \Carbon\Carbon::parse($startDate)->subDay()->toDateString() : '-' }}</td>
+                <td>-</td>
+                <td>Opening Balance</td>
+                <td class="text-end">-</td>
+                <td class="text-end">-</td>
+                <td class="text-end">{{ number_format($openingBalance, 2) }}</td>
+            </tr>
 
-            $totalDebit += $debit;
-            $totalCredit += $credit;
-            $totalBalance += $credit - $debit;
-        @endphp
-
-        <tr style="background-color: {{ $loop->even ? '#f9f9f9' : 'white' }};">
-            <td style="padding: 10px; border: 1px solid #ddd;">{{ $entry['date'] ?? '-' }}</td>
-            <td style="padding: 10px; border: 1px solid #ddd;">{{ $entry['bill_no'] ?: '-' }}</td>
-            <td style="padding: 10px; border: 1px solid #ddd;">{{ $entry['description'] }}</td>
-            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">
-                {{ $entry['debit'] !== '' ? number_format($entry['debit'], 2) : '-' }}
-            </td>
-            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">
-                {{ $entry['credit'] !== '' ? number_format($entry['credit'], 2) : '-' }}
-            </td>
-            <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">
-                {{ number_format($totalBalance, 2) }}
-            </td>
-        </tr>
-    @endforeach
-</tbody>
-
+            @foreach($ledger as $entry)
+                @php
+                    $debit = is_numeric($entry['debit']) ? $entry['debit'] : null;
+                    $credit = is_numeric($entry['credit']) ? $entry['credit'] : null;
+                @endphp
+                <tr>
+                    <td>{{ $entry['date'] }}</td>
+                    <td>{{ $entry['invoice_no'] }}</td>
+                    <td>{{ $entry['description'] }}</td>
+                    <td class="text-end">{{ number_format($debit, 2) }}</td>
+                    <td class="text-end">{{ number_format($credit, 2) }}</td>
+                    <td class="text-end">{{ number_format($balance, 2) }}</td>
+                </tr>
+            @endforeach
+        </tbody>
         <tfoot>
-            <tr style="font-weight: bold; background-color: #e9ecef;">
-                <td colspan="3" style="padding: 12px; border: 1px solid #ddd; text-align: right;">Totals</td>
-                <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">{{ number_format($totalDebit, 2) }}</td>
-                <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">{{ number_format($totalCredit, 2) }}</td>
-                <td style="padding: 12px; border: 1px solid #ddd;"></td>
+            <tr class="fw-bold">
+                <td colspan="3" class="text-end">Total</td>
+                <td class="text-end">{{ number_format($totalDebit, 2) }}</td>
+                <td class="text-end">{{ number_format($totalCredit, 2) }}</td>
+                <td></td>
             </tr>
         </tfoot>
     </table>
-    <hr/>
-     <!-- Submit PDF into iframe, not new tab -->
-<form method="GET" action="{{ route('ledger.customer.pdf') }}" target="pdfFrame">
-    <input type="hidden" name="customer_id" value="{{ request('customer_id') }}">
-    <input type="hidden" name="start_date" value="{{ $startDate }}">
-    <input type="hidden" name="end_date" value="{{ $endDate }}">
-    <button type="submit" class="btn btn-sm btn-danger">Download & Print PDF</button>
-</form>
-
-<!-- Hidden iframe to load the PDF and trigger print -->
-<iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
-
-<script>
-    function printIframe() {
-        const iframe = document.getElementById('pdfFrame');
-        if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-        }
-    }
-</script>
-
 </div>
 @endsection
