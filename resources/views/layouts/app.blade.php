@@ -144,7 +144,9 @@
             <i class="bi bi-cash-coin"></i> Supplier Dues
         </a>
     </li>
-
+<li class="nav-item">
+                    <a class="nav-link" href="{{ route('supplier.ledger') }}">Supplier Ledger</a>
+                </li>
     {{-- Item --}}
     <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">
