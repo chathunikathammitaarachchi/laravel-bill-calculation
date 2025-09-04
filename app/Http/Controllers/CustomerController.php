@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\GRNMaster;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+
 
 class CustomerController extends Controller
 {
@@ -73,5 +77,86 @@ public function store(Request $request)
         $customer->delete();
 
         return redirect()->route('customer.index')->with('success', '🗑️ Customer deleted successfully.');
+    }
+
+
+public function customerLedger(Request $request)
+{
+    $customerId = $request->input('customer_id');
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
+
+    if (!$customerId) {
+        return view('ledger.customer_ledger_form');
+    }
+
+    $customer = Customer::find($customerId);
+    if (!$customer) {
+        return back()->withErrors(['customer_id' => 'Invalid customer ID'])->withInput();
+    }
+
+    if ($startDate && $endDate && $startDate > $endDate) {
+        return back()->withErrors(['end_date' => 'End date must be after start date'])->withInput();
+    }
+
+    $customerName = $customer->customer_name;
+
+    // Calculate opening balance: sum of payments - total price before start date
+    $openingBalanceQuery = GRNMaster::where('customer_name', $customerName);
+    if ($startDate) {
+        $openingBalanceQuery->where('grn_date', '<', $startDate);
+    }
+    $openingInvoices = $openingBalanceQuery->get();
+
+    $openingBalance = 0;
+    foreach ($openingInvoices as $invoice) {
+        $debit = $invoice->customer_pay ?? 0;    // Amount paid by customer (Debit)
+        $credit = $invoice->total_price ?? 0;    // Invoice total (Credit)
+        $openingBalance += ($debit - $credit);   // Debit - Credit for running balance
+    }
+
+    // Fetch invoices within date range
+    $invoicesQuery = GRNMaster::where('customer_name', $customerName);
+    if ($startDate) $invoicesQuery->where('grn_date', '>=', $startDate);
+    if ($endDate) $invoicesQuery->where('grn_date', '<=', $endDate);
+
+    $invoices = $invoicesQuery->orderBy('grn_date')->get();
+
+    $ledger = [];
+    $runningBalance = $openingBalance;
+
+ 
+
+    foreach ($invoices as $invoice) {
+        $debit = $invoice->customer_pay ?? 0;
+        $credit = $invoice->total_price ?? 0;
+
+        $runningBalance += ($debit - $credit);
+
+        $ledger[] = [
+            'date' => $invoice->grn_date,
+            'invoice_no' => $invoice->bill_no,    // bill_no is primary key
+            'description' => 'Sale - Invoice ' . $invoice->bill_no,
+            'debit' => $debit,
+            'credit' => $credit,
+            'balance' => $runningBalance,
+        ];
+    }
+
+    return view('ledger.customer_ledger', compact('ledger', 'customerName', 'startDate', 'endDate', 'openingBalance'));
+}
+
+    // Ajax search for customers
+    public function customerSearch(Request $request)
+    {
+        $query = $request->get('query', '');
+        if (!$query) return response()->json([]);
+
+        $customers = Customer::where('customer_id', 'like', "%{$query}%")
+            ->orWhere('customer_name', 'like', "%{$query}%")
+            ->limit(10)
+            ->get(['id', 'customer_id', 'customer_name']);
+
+        return response()->json($customers);
     }
 }
