@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-// CustomerDue.php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
 class CustomerDue extends Model
 {
-    protected $fillable = ['customer_name', 'bill_no', 'grn_date', 'tobe_price', 'customer_pay', 'balance'];
-
-    public function payments()
-    {
-        return $this->hasMany(DuePayment::class, 'customer_due_id');
-    }
+    protected $fillable = [
+        'customer_name', 'bill_no', 'grn_date', 'tobe_price', 'customer_pay', 'balance',
+    ];
 }
 
 // DuePayment.php
