@@ -12,7 +12,7 @@
       @method('PUT')
 
       <div class="form-floating mb-4">
-        <input type="number" class="form-control form-control-lg" id="customer_id" name="customer_id" placeholder="Customer ID" value="{{ $customer->customer_id }}" autocomplete="off" required>
+        <input type="number" class="form-control form-control-lg" id="customer_id" name="customer_id" placeholder="Customer ID" value="{{ $customer->customer_id }}" autocomplete="off" required readonly>
         <label for="customer_id" class="text-muted">Customer ID</label>
       </div>
 
