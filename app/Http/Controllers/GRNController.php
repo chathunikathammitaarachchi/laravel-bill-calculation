@@ -70,6 +70,9 @@ if (empty($customerName)) {
         ]);
     }
    }
+if ($customerName === 'Cash' && $request->customer_pay < $request->tobe_price) {
+    return redirect()->back()->with('cash_due_error', 'Cash customer cannot have due. Please ensure full payment is made.');
+}
 
 
     $grn = DB::transaction(function () use ($request, $customerName) {

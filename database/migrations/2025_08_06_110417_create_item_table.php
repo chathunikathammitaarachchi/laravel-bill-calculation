@@ -19,14 +19,13 @@ return new class extends Migration
             $table->integer('cost_price');
             $table->string('unit');
             $table->string('category');
-            
             $table->integer('stock');
- $table->integer('discount_1')->nullable();
-        $table->integer('discount_2')->nullable();
-        $table->integer('discount_3')->nullable();
-        $table->integer('discount_1_qty')->nullable();
-    $table->integer('discount_2_qty')->nullable();
-    $table->integer('discount_3_qty')->nullable();
+            $table->integer('discount_1')->nullable();
+            $table->integer('discount_2')->nullable();
+            $table->integer('discount_3')->nullable();
+            $table->integer('discount_1_qty')->nullable();
+            $table->integer('discount_2_qty')->nullable();
+            $table->integer('discount_3_qty')->nullable();
             $table->timestamps();
         });
     }

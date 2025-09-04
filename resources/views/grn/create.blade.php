@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- ✅ SweetAlert2 Include -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <div class="container" style="max-width: 1500px; margin: auto; padding: 20px;  background: linear-gradient(135deg, #e0e0f8ff 0%, #dbe8f5 100%); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
@@ -21,6 +24,22 @@
     @if(session('success'))
         <div class="alert alert-success shadow-sm">{{ session('success') }}</div>
     @endif
+
+    <!-- ✅ Error alert for Cash Due -->
+    @if (session('cash_due_error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Payment',
+                    text: '{{ session('cash_due_error') }}',
+                    confirmButtonText: 'OK'
+                });
+            });
+        </script>
+    @endif
+
+    {{-- Rest of your form and content goes here --}}
 
     <form action="{{ route('grn.store') }}" method="POST">
         @csrf
@@ -125,21 +144,45 @@
                    min="1" value="1" required style="text-align: right;">
         </div>
 
-        {{-- Price --}}
-    <div class="form-group" style="flex: 0 0 200px;">
-            <label class="form-label" >Price</label>
-            <input type="number" name="items[0][price]" class="form-control price" readonly 
-                   style="text-align: right;">  
-        </div>
+    <!-- Price -->
+    <div class="form-group" style="flex: 0 0 250px;">
+    <label class="form-label"> Our Price</label>
+            
+    <div class="price-display-container row">
+                
+    <!-- Final Price Column -->
+    <div class="col-6 d-flex flex-column justify-content-center">
+        <input type="number"
+                name="items[0][price]"
+                class="form-control price"
+                readonly
+                style="text-align: right;" />
+    </div>
 
+    <!-- Original Price + Discount Info Column -->
+    <div class="col-6 d-flex flex-column align-items-end">
+            <label class="form-label"> Discount Price</label>
 
+        <input type="text"
+                class="form-control original-price"
+                readonly
+                style="display: none; font-size: 12px; color: #6c757d; text-decoration: line-through; height: 25px; padding-right: 8px;" />
+
+        <small class="discount-info"
+                style="display: none; color: #28a745; font-weight: 500;">
+        </small>
+    </div>
+
+    </div>
+    </div>
+        {{-- Remove Button --}}
     <div class="form-group" style="flex: 0 0 10px;">
         <button type="button" class="btn btn-danger btn-sm remove-item" style="margin-top: 30px;">
             <i class="bi bi-trash"></i>
         </button>
     </div>
          {{-- Rate --}}
-      <!-- Rate Selection Modal -->
+      
 <div class="modal fade" id="rateSelectModal" tabindex="-1" aria-labelledby="rateSelectModalLabel">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
         <div class="modal-content shadow">
@@ -171,11 +214,11 @@
                        style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: right;">
             </div>
          
-          <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
-    <label for="total_discount" style="width: 40%; font-weight: 600; margin-right: 10px;">Total Discount</label>
-    <input type="number" name="total_discount" id="total_discount" readonly
-           style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: right;">
-</div>
+            <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
+            <label for="total_discount" style="width: 40%; font-weight: 600; margin-right: 10px;">Total Discount</label>
+            <input type="number" name="total_discount" id="total_discount" readonly
+                style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: right;">
+            </div>
 
             <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-end;">
                 <label for="tobe_price" style="width: 40%; font-weight: 600; margin-right: 10px;">To Be Paid</label>
@@ -261,8 +304,6 @@
 
 
 
-
-
 .custom-scroll {
     max-height: 200px;
     overflow-y: auto;
@@ -274,9 +315,8 @@
     display: none;                  
 }
 
-</style>                
-<script>
-
+</style>      
+<script>          
 function refreshPage() {
     window.location.reload();
 }
@@ -309,7 +349,6 @@ const itemDiscounts = {!! json_encode($items->mapWithKeys(function($item) {
         'discount_3' => $item->discount_3 ?? 0,
     ]];
 })->toArray()) !!};
-
 
 // This object should be generated server-side and injected properly
 const itemRates = @json($items->mapWithKeys(function($item) {
@@ -352,8 +391,19 @@ function addItem(code = '', name = '', rate = '') {
             }
         } else if (el.classList.contains('quantity')) el.value = 1;
         else if (el.classList.contains('price')) el.value = '';
+        else if (el.classList.contains('original-price')) {
+            el.value = '';
+            el.style.display = 'none';
+        }
         else el.value = '';
     });
+
+    // Reset discount info display for new row
+    const discountInfo = newItem.querySelector('.discount-info');
+    if (discountInfo) {
+        discountInfo.textContent = '';
+        discountInfo.style.display = 'none';
+    }
 
     function focusAndSelect(el) {
         if (!el) return;
@@ -378,10 +428,186 @@ function addItem(code = '', name = '', rate = '') {
 
     itemIndex++;
     console.log("New item added. Current itemIndex:", itemIndex);
+    
+    return newItem;
 }
 
+// Search input configurations
+const searchConfigs = [
+    { inputId: 'search_code', resultId: 'results_code', endpoint: '/items/search/code' },
+    { inputId: 'search_name', resultId: 'results_name', endpoint: '/items/search/name' },
+    { inputId: 'search_rate', resultId: 'results_rate', endpoint: '/items/search/price' }
+];
 
+searchConfigs.forEach(config => {
+    const inputEl = document.getElementById(config.inputId);
+    const resultEl = document.getElementById(config.resultId);
 
+    inputEl.addEventListener('input', function () {
+        const query = this.value.trim();
+        if (query.length < 1) {
+            resultEl.innerHTML = '';
+            return;
+        }
+
+        fetch(`${config.endpoint}?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                let results = '';
+                data.forEach(item => {
+                    results += `
+                        <button type="button" class="list-group-item list-group-item-action"
+                            data-code="${item.item_code}" data-name="${item.item_name}" data-rate="${item.rate}">
+                            ${item.item_code} - ${item.item_name} - Rs.${item.rate}
+                        </button>`;
+                });
+                resultEl.innerHTML = results;
+            });
+    });
+
+    resultEl.addEventListener('click', function (e) {
+        if (e.target.tagName !== 'BUTTON') return;
+
+        const code = e.target.getAttribute('data-code');
+        const name = e.target.getAttribute('data-name');
+        const rate = e.target.getAttribute('data-rate');
+
+        // Check if the item is already in the list
+        const existingItem = Array.from(document.querySelectorAll('.item-code')).find(select => select.value === code);
+
+        if (existingItem) {
+            // Item already exists → focus quantity
+            const row = existingItem.closest('.item');
+            const qtyInput = row.querySelector('.quantity');
+            if (qtyInput) {
+                qtyInput.focus();
+                qtyInput.select();
+            }
+        } else {
+            // Look for an empty row
+            const emptyRow = Array.from(document.querySelectorAll('.item')).find(row => {
+                const codeVal = row.querySelector('.item-code')?.value.trim();
+                const nameVal = row.querySelector('.item-name')?.value.trim();
+                const rateVal = row.querySelector('.rate-input, .rate-dropdown')?.value.trim();
+                const qtyVal = row.querySelector('.quantity')?.value.trim();
+                return !codeVal && !nameVal && (!rateVal || rateVal === '') && (!qtyVal || qtyVal === '1' || qtyVal === '');
+            });
+
+            let targetRow;
+
+            if (emptyRow) {
+                // Use the empty row
+                targetRow = emptyRow;
+            } else {
+                // Add new row and use it
+                targetRow = addItem(); 
+            }
+
+            const codeInput = targetRow.querySelector('.item-code');
+            const nameInput = targetRow.querySelector('.item-name');
+            const rateInput = targetRow.querySelector('.rate-input');
+            const rateDropdown = targetRow.querySelector('.rate-dropdown');
+            const quantityInput = targetRow.querySelector('.quantity');
+
+            if (codeInput) codeInput.value = code;
+            if (nameInput) nameInput.value = name;
+
+            if (rateDropdown) {
+                rateDropdown.innerHTML = '<option value="" disabled>Select Item Rate</option>';
+                if (itemRates[code]) {
+                    itemRates[code].forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r;
+                        opt.textContent = r;
+                        if (r == rate) opt.selected = true;
+                        rateDropdown.appendChild(opt);
+                    });
+                }
+            }
+
+            if (quantityInput) quantityInput.value = 1;
+
+            // Check if item has multiple rates - show modal for selection
+            const availableRates = itemRates[code] || [];
+            if (availableRates.length > 1) {
+                // Multiple rates available - show selection modal
+                showRateModalForSearch(code, targetRow, () => {
+                    // Callback after rate selection
+                    updateRowPrice(targetRow);
+                    calculateTotals();
+                    
+                    if (quantityInput) {
+                        quantityInput.focus();
+                        quantityInput.select();
+                    }
+                });
+            } else {
+                // Single rate or no rates - set directly
+                if (rateInput) rateInput.value = rate;
+                
+                updateRowPrice(targetRow);
+                calculateTotals();
+
+                if (quantityInput) {
+                    quantityInput.focus();
+                    quantityInput.select();
+                }
+            }
+        }
+
+        inputEl.value = '';
+        resultEl.innerHTML = '';
+    });
+});
+
+// New function specifically for search rate selection
+function showRateModalForSearch(itemCode, targetRow, callback) {
+    const rates = itemRates[itemCode] || [];
+
+    if (rates.length === 0) return;
+    
+    if (rates.length === 1) {
+        // Single rate - set directly and call callback
+        const rateInput = targetRow.querySelector('.rate-input');
+        if (rateInput) rateInput.value = rates[0];
+        
+        const qtyInput = targetRow.querySelector('.quantity');
+        if (qtyInput && (!qtyInput.value || qtyInput.value == 0)) {
+            qtyInput.value = 1;
+        }
+        
+        if (callback) callback();
+        return;
+    }
+
+    const rateOptionsContainer = document.getElementById('rate-options');
+    rateOptionsContainer.innerHTML = '';
+    currentFocusedIndex = 0;
+
+    rates.forEach(rate => {
+        const btn = document.createElement('button');
+        btn.classList.add('list-group-item', 'list-group-item-action');
+        btn.textContent = `Rs. ${rate}`;
+        btn.dataset.rate = rate;
+        btn.setAttribute('tabindex', '0');
+        rateOptionsContainer.appendChild(btn);
+    });
+
+    // Store reference for search-specific handling
+    currentRateInputForSearch = targetRow.querySelector('.rate-input');
+    currentSearchCallback = callback;
+    currentTargetRow = targetRow;
+
+    const modal = new bootstrap.Modal(document.getElementById('rateSelectModal'));
+    modal.show();
+
+    setTimeout(() => {
+        const firstButton = document.querySelector('#rate-options button');
+        if (firstButton) {
+            firstButton.focus();
+        }
+    }, 200);
+}
 
 function addItemIfLastFilled(row) {
     const itemCode = row.querySelector('.item-code')?.value.trim();
@@ -399,8 +625,6 @@ function addItemIfLastFilled(row) {
         addItem();
     }
 }
-
-
 
 function calculateTotals() {
     let total = 0;
@@ -462,8 +686,6 @@ document.addEventListener('input', function (e) {
     }
 });
 
-
-
 document.addEventListener('input', function (e) {
     if (e.target.classList.contains('item-code') || e.target.classList.contains('item-name')) {
         const row = e.target.closest('.item');
@@ -488,30 +710,28 @@ document.addEventListener('input', function (e) {
         }, 200); 
     }
 });
+
 function showRateModal(itemCode, targetRateInput) {
     const rates = itemRates[itemCode] || [];
 
     if (rates.length === 0) return;
     if (rates.length === 1) {
-    targetRateInput.value = rates[0];
-    const row = targetRateInput.closest('.item');
+        targetRateInput.value = rates[0];
+        const row = targetRateInput.closest('.item');
 
-    const qtyInput = row.querySelector('.quantity');
-    if (qtyInput && (!qtyInput.value || qtyInput.value == 0)) {
-        qtyInput.value = 1;
+        const qtyInput = row.querySelector('.quantity');
+        if (qtyInput && (!qtyInput.value || qtyInput.value == 0)) {
+            qtyInput.value = 1;
+        }
+
+        updateRowPrice(row);
+        calculateTotals();
+
+        const event = new Event('input', { bubbles: true });
+        targetRateInput.dispatchEvent(event);
+
+        return;
     }
-
-    updateRowPrice(row);
-    calculateTotals();
-
-    const event = new Event('input', { bubbles: true });
-    targetRateInput.dispatchEvent(event);
-
-    return;
-}
-
-
-
 
     const rateOptionsContainer = document.getElementById('rate-options');
     rateOptionsContainer.innerHTML = '';
@@ -539,7 +759,6 @@ function showRateModal(itemCode, targetRateInput) {
     }, 200);
 }
 
-
 function updateRowPrice(row) {
     if (!row) return 0;
 
@@ -548,8 +767,22 @@ function updateRowPrice(row) {
     const quantity = parseFloat(row.querySelector('.quantity')?.value) || 0;
     const itemCode = row.querySelector('.item-code')?.value;
     const priceInput = row.querySelector('.price');
+    const originalPriceInput = row.querySelector('.original-price');
+    const discountInfo = row.querySelector('.discount-info');
     
-    if (!priceInput || !itemCode || rate === 0 || quantity === 0) return 0;
+    if (!priceInput || !itemCode || rate === 0 || quantity === 0) {
+        // Clear all price displays when invalid
+        if (priceInput) priceInput.value = '';
+        if (originalPriceInput) {
+            originalPriceInput.style.display = 'none';
+            originalPriceInput.value = '';
+        }
+        if (discountInfo) {
+            discountInfo.style.display = 'none';
+            discountInfo.textContent = '';
+        }
+        return 0;
+    }
 
     let basePrice = rate * quantity;
     let discountPerUnit = 0;
@@ -567,27 +800,83 @@ function updateRowPrice(row) {
     }
 
     let discount = discountPerUnit * quantity;
-
     const finalPrice = Math.max(basePrice - discount, 0); 
 
+    // Set the final discounted price
     priceInput.value = finalPrice.toFixed(2);
     
-    row.setAttribute('data-item-discount', discount);
-
+    // Handle original price and discount info display
     if (discount > 0) {
-        console.log(`Item: ${itemCode}, Qty: ${quantity}, Rate: ${rate}, Base: ${basePrice}, Unit Discount: Rs.${discountPerUnit}, Total Discount: Rs.${discount}, Final: ${finalPrice}`);
+        // Show original price (crossed out)
+        if (originalPriceInput) {
+            originalPriceInput.value = `Rs. ${basePrice.toFixed(2)}`;
+            originalPriceInput.style.display = 'block';
+        }
+        
+        // Show discount information
+        if (discountInfo) {
+            discountInfo.textContent = `Discount: Rs. ${discount.toFixed(2)} (Rs. ${discountPerUnit.toFixed(2)} per unit)`;
+            discountInfo.style.display = 'block';
+        }
+        
+        console.log(`Item: ${itemCode}, Qty: ${quantity}, Rate: ${rate}, Base: Rs.${basePrice}, Unit Discount: Rs.${discountPerUnit}, Total Discount: Rs.${discount}, Final: Rs.${finalPrice}`);
+    } else {
+        // Hide original price and discount info when no discount
+        if (originalPriceInput) {
+            originalPriceInput.style.display = 'none';
+            originalPriceInput.value = '';
+        }
+        if (discountInfo) {
+            discountInfo.style.display = 'none';
+            discountInfo.textContent = '';
+        }
     }
-
+    
+    row.setAttribute('data-item-discount', discount);
     return discount;
 }
 
+// Global variables for search rate selection
+let currentRateInputForSearch = null;
+let currentSearchCallback = null;
+let currentTargetRow = null;
 
-
-
+// Modified rate selection handler to support both regular input and search
 document.getElementById('rate-options').addEventListener('click', function (e) {
     if (e.target.tagName === 'BUTTON') {
         const selectedRate = e.target.dataset.rate;
 
+        // Handle search-based rate selection
+        if (currentRateInputForSearch && currentTargetRow) {
+            const row = currentTargetRow;
+            const qtyInput = row.querySelector('.quantity');
+            
+            if (qtyInput && (!qtyInput.value || parseFloat(qtyInput.value) === 0)) {
+                qtyInput.value = 1;
+            }
+
+            currentRateInputForSearch.value = selectedRate;
+
+            const event = new Event('input', { bubbles: true });
+            currentRateInputForSearch.dispatchEvent(event);
+
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('rateSelectModal'));
+            modalInstance.hide();
+
+            // Execute search callback
+            if (currentSearchCallback) {
+                currentSearchCallback();
+            }
+
+            // Clear search-specific variables
+            currentRateInputForSearch = null;
+            currentSearchCallback = null;
+            currentTargetRow = null;
+            
+            return;
+        }
+
+        // Handle regular input-based rate selection (existing functionality)
         if (currentRateInput) {
             const row = currentRateInput.closest('.item');
 
@@ -625,9 +914,6 @@ document.getElementById('rate-options').addEventListener('click', function (e) {
     }
 });
 
-
-
-
 function updateRateDropdown(row, itemCode) {
     const rateDropdown = row.querySelector('.rate-dropdown');
     if (!rateDropdown) return;
@@ -643,8 +929,6 @@ function updateRateDropdown(row, itemCode) {
         });
     }
 }
-
-
 
 let currentFocusedIndex = 0;
 let currentRateInput = null;
@@ -674,6 +958,11 @@ document.getElementById('rateSelectModal').addEventListener('keydown', function 
     if (e.key === 'Escape') {
         const modalInstance = bootstrap.Modal.getInstance(document.getElementById('rateSelectModal'));
         modalInstance.hide();
+        
+        // Clear search-specific variables on escape
+        currentRateInputForSearch = null;
+        currentSearchCallback = null;
+        currentTargetRow = null;
     }
 });
 
@@ -681,97 +970,8 @@ document.getElementById('rateSelectModal').addEventListener('keydown', function 
 
 
 
-// Search input configurations
-const searchConfigs = [
-    { inputId: 'search_code', resultId: 'results_code', endpoint: '/items/search/code' },
-    { inputId: 'search_name', resultId: 'results_name', endpoint: '/items/search/name' },
-    { inputId: 'search_rate', resultId: 'results_rate', endpoint: '/items/search/price' }
-];
 
-searchConfigs.forEach(config => {
-    const inputEl = document.getElementById(config.inputId);
-    const resultEl = document.getElementById(config.resultId);
 
-    inputEl.addEventListener('input', function () {
-        const query = this.value.trim();
-        if (query.length < 1) {
-            resultEl.innerHTML = '';
-            return;
-        }
-
-        fetch(`${config.endpoint}?query=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(data => {
-                let results = '';
-                data.forEach(item => {
-                    results += `
-                        <button type="button" class="list-group-item list-group-item-action"
-                            data-code="${item.item_code}" data-name="${item.item_name}" data-rate="${item.rate}">
-                            ${item.item_code} - ${item.item_name} - Rs.${item.rate}
-                        </button>`;
-                });
-                resultEl.innerHTML = results;
-            });
-    });
-
-    resultEl.addEventListener('click', function (e) {
-        if (e.target.tagName === 'BUTTON') {
-            const code = e.target.getAttribute('data-code');
-            const name = e.target.getAttribute('data-name');
-            const rate = e.target.getAttribute('data-rate');
-
-            const existingItem = Array.from(document.querySelectorAll('.item-code')).find(select => select.value === code);
-
-            if (existingItem) {
-                const row = existingItem.closest('.item');
-                const qtyInput = row.querySelector('.quantity');
-                if (qtyInput) {
-                    qtyInput.focus();
-                    qtyInput.select();
-                }
-            } else {
-                const firstRow = document.querySelectorAll('.item').length === 1 && !document.querySelector('.item-code').value;
-
-                if (firstRow) {
-                    const row = document.querySelector('.item');
-
-                    row.querySelector('.item-code').value = code;
-                    row.querySelector('.item-name').value = name;
-                    row.querySelector('.rate-input').value = rate; 
-
-                    const rateDropdown = row.querySelector('.rate-dropdown');
-                    if (rateDropdown) {
-                        rateDropdown.innerHTML = '<option value="" disabled>Select Item Rate</option>';
-                        if (itemRates[code]) {
-                            itemRates[code].forEach(r => {
-                                const opt = document.createElement('option');
-                                opt.value = r;
-                                opt.textContent = r;
-                                if (r == rate) opt.selected = true;
-                                rateDropdown.appendChild(opt);
-                            });
-                        }
-                    }
-
-                    row.querySelector('.quantity').value = 1;
-                    updateRowPrice(row);
-                    calculateTotals();
-
-                    const qtyInput = row.querySelector('.quantity');
-                    if (qtyInput) {
-                        qtyInput.focus();
-                        qtyInput.select();
-                    }
-                } else {
-                    addItem(code, name, rate);
-                }
-            }
-
-            inputEl.value = '';
-            resultEl.innerHTML = '';
-        }
-    });
-});
 
 function limitInput(el, maxLength) {
     if (el.value.length > maxLength) {

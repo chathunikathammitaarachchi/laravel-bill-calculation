@@ -18,21 +18,21 @@ class CustomerController extends Controller
     {
         return view('customer.create');
     }
-
-  public function store(Request $request)
+public function store(Request $request)
 {
-    $request->validate([
+    $validated = $request->validate([
         'customer_id'   => 'required|integer|unique:customer,customer_id',
-        'customer_name' => 'required|string', // No unique validation here
+        'customer_name' => 'required|string', 
         'phone'         => 'required|string|max:15',
     ]);
 
-    $customer = Customer::create([
-        'customer_id'   => $request->customer_id,
-        'customer_name' => $request->customer_name,
-        'phone'         => $request->phone,
-    ]);
+    $customer = Customer::create($validated);
 
+    if ($request->expectsJson()) {
+        return response()->json($customer, 201);
+    }
+
+    // If it's a normal web form submission
     return redirect()->route('customer.index')
                      ->with('success', 'Customer added successfully.');
 }
