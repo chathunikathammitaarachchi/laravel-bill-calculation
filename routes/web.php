@@ -15,6 +15,7 @@ use App\Http\Controllers\StockHistoryController;
 use App\Http\Controllers\DailyItemSummaryController;
 use App\Http\Controllers\SupplierDuePaymentController;
 use App\Models\Supplier;
+use App\Http\Controllers\CustomerDuePaymentController;
 
 Route::get('/customer-ledger', [CustomerController::class, 'customerLedger'])->name('customer.ledger');
 Route::get('/customer-search', [CustomerController::class, 'customerSearch'])->name('customer.search');
@@ -52,22 +53,12 @@ Route::get('/bill/dues', [SupplierGRNController::class, 'showDues'])->name('bill
 
 
 
-Route::post('/due/pay/print', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay.print');
 
-Route::get('/grn/dues', [GRNController::class, 'showDues'])->name('grn.dues');
+Route::get('customer-dues', [CustomerDuePaymentController::class, 'showDues'])->name('customer_dues.list');
+Route::get('customer-dues/{customerName}', [CustomerDuePaymentController::class, 'showByCustomer'])->name('customer_due.show');
+Route::post('customer-dues/pay', [CustomerDuePaymentController::class, 'payDueByCustomer'])->name('customer_due.pay');
 
-Route::post('/due-payments/pay', [DuePaymentController::class, 'payDue'])->name('due_payments.pay');
-Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
-Route::get('/grn/dues/export-pdf', [GRNController::class, 'customerexportDuesPDF'])->name('grn.dues.export');
-Route::get('/due-payments/customer/{customer_name}', [DuePaymentController::class, 'showByCustomer'])
-    ->name('due_payments.form.by.customer');
-Route::post('/due-payments/pay', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
-Route::post('/due/pay', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
-
-// web.php
-Route::post('/customer/pay-due', [DuePaymentController::class, 'payDueByCustomer'])->name('due.pay');
-Route::get('/grn/dues/customer/{customer_name}', [DuePaymentController::class, 'showByCustomer'])->name('grn.dues.by.customer');
-Route::get('/receipt/{customer_name}', [DuePaymentController::class, 'showReceipt'])->name('receipt.show');
+Route::get('customer-dues/export-pdf', [CustomerDuePaymentController::class, 'customerExportDuesPDF'])->name('customer_dues.export_pdf');
 
 
 
