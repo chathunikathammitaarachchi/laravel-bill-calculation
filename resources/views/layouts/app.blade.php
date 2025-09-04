@@ -171,7 +171,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('grn.dues') ? 'active' : '' }}" href="{{ route('grn.dues') }}">
+        <a class="nav-link {{ request()->routeIs('customer_dues.list') ? 'active' : '' }}" href="{{ route('customer_dues.list') }}">
             <i class="bi bi-cash-coin"></i> Customer Dues
         </a>
     </li>
