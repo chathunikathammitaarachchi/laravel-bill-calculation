@@ -16,11 +16,16 @@ use App\Http\Controllers\DailyItemSummaryController;
 use App\Http\Controllers\SupplierDuePaymentController;
 use App\Models\Supplier;
 
-Route::get('/customer-ledger', [GRNController::class, 'customerLedger'])->name('customer.ledger');
-Route::get('/customer/search', [GRNController::class, 'search'])->name('customer.search');
+Route::get('/customer-ledger', [CustomerController::class, 'customerLedger'])->name('customer.ledger');
+Route::get('/customer-search', [CustomerController::class, 'customerSearch'])->name('customer.search');
 
-Route::get('/customer-ledger/pdf', [GRNController::class, 'exportCustomerLedgerPDF'])->name('ledger.customer.pdf');
-Route::get('/search-customers', [GRNController::class, 'customersearch'])->name('customer.search');
+// Supplier Ledger Routes
+Route::get('/supplier-ledger', [SupplierController::class, 'supplierLedger'])->name('supplier.ledger');
+Route::get('/supplier-search', [SupplierController::class, 'supplierSearch'])->name('supplier.search');
+Route::get('/supplier-ledger-pdf', [SupplierController::class, 'exportSupplierLedgerPDF'])->name('ledger.supplier.pdf');
+
+
+
 
 Route::get('/stock-in-hand', [StockTransactionController::class, 'stockInHandIndex'])
      ->name('stock_in_hand.index');
