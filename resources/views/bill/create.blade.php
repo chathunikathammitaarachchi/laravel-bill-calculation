@@ -168,17 +168,15 @@
 </div>
 
 <script>
-
-
 document.addEventListener('click', function(e) {
     if (e.target.closest('.remove-item')) {
-        const row = e.target.closest('.item');  // <- changed here
+        const row = e.target.closest('.item');
         if (row) {
             row.remove();
+            calculateTotals();
         }
     }
 });
-
 
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('g_date').value = new Date().toISOString().split('T')[0];
@@ -200,17 +198,20 @@ function addItem(code = '', name = '', rate = '', costPrice = '') {
         else if (el.classList.contains('item-name')) el.value = name;
         else if (el.classList.contains('rate')) el.value = rate;
         else if (el.classList.contains('cost_price')) el.value = costPrice;
-        else if (el.classList.contains('quantity')) el.value = 1;
+        else if (el.classList.contains('quantity')) el.value = code ? 1 : '';
         else if (el.classList.contains('price')) el.value = '';
         else el.value = '';
     });
 
     document.getElementById('items').appendChild(clone);
-    updateRowPrice(clone);
-    calculateTotals();
-    itemIndex++;
-
     
+    if (code) {
+        updateRowPrice(clone);
+        calculateTotals();
+    }
+    
+    itemIndex++;
+    return clone;
 }
 
 function updateRowPrice(row) {
@@ -245,13 +246,43 @@ function calculateTotals() {
     document.getElementById('balance').value = (supplierPay - toBePaid).toFixed(2);
 }
 
+// Helper functions
+function setRowData(row, code, name, rate, costPrice) {
+    row.querySelector('.item-code').value = code;
+    row.querySelector('.item-name').value = name;
+    row.querySelector('.rate').value = rate;
+    
+    const costPriceInput = row.querySelector('.cost_price');
+    if (costPriceInput) {
+        costPriceInput.value = costPrice;
+    }
+    
+    row.querySelector('.quantity').value = 1;
+    updateRowPrice(row);
+    calculateTotals();
+}
+
+function focusQuantity(row) {
+    setTimeout(() => {
+        const qtyInput = row.querySelector('.quantity');
+        if (qtyInput) {
+            qtyInput.focus();
+            qtyInput.select();
+        }
+    }, 100);
+}
+
+function hasEmptyRow() {
+    const items = document.querySelectorAll('.item');
+    const lastItem = items[items.length - 1];
+    return lastItem && !lastItem.querySelector('.item-code').value;
+}
+
 document.addEventListener('input', function (e) {
     if (['quantity', 'cost_price'].some(cls => e.target.classList.contains(cls))) {
         updateRowPrice(e.target.closest('.item'));
         calculateTotals();
     }
-
-
     
     if (['total_discount', 'supplier_pay'].includes(e.target.id)) {
         calculateTotals();
@@ -270,31 +301,37 @@ document.addEventListener('change', function (e) {
 
         if (e.target.classList.contains('item-code')) {
             const option = codeSelect.selectedOptions[0];
-            const name = option.getAttribute('data-name');
-            const rate = option.getAttribute('data-rate');
-            const costPrice = option.getAttribute('data-cost-price') || rate;
+            if (option) {
+                const name = option.getAttribute('data-name');
+                const rate = option.getAttribute('data-rate');
+                const costPrice = option.getAttribute('data-cost-price') || rate;
 
-            nameSelect.value = name;
-            rateInput.value = rate;
-            costPriceInput.value = costPrice;
+                nameSelect.value = name;
+                rateInput.value = rate;
+                costPriceInput.value = costPrice;
+            }
         } else {
             const option = nameSelect.selectedOptions[0];
-            const code = option.getAttribute('data-code');
-            const rate = option.getAttribute('data-rate');
-            const costPrice = option.getAttribute('data-cost-price') || rate;
+            if (option) {
+                const code = option.getAttribute('data-code');
+                const rate = option.getAttribute('data-rate');
+                const costPrice = option.getAttribute('data-cost-price') || rate;
 
-            codeSelect.value = code;
-            rateInput.value = rate;
-            costPriceInput.value = costPrice;
+                codeSelect.value = code;
+                rateInput.value = rate;
+                costPriceInput.value = costPrice;
+            }
         }
 
         updateRowPrice(row);
         calculateTotals();
+        
+        // Auto add new empty row if this row now has data and no empty row exists
+        if (codeSelect.value && !hasEmptyRow()) {
+            addItem();
+        }
     }
 });
-
-
-
 
 const searchConfigs = [
     { inputId: 'search_code', resultId: 'results_code', endpoint: '/items/search/code' },
@@ -325,7 +362,8 @@ searchConfigs.forEach(config => {
     </button>`;
                 });
                 resultEl.innerHTML = results;
-            });
+            })
+            .catch(error => console.error('Search error:', error));
     });
 
     resultEl.addEventListener('click', function (e) {
@@ -338,39 +376,31 @@ searchConfigs.forEach(config => {
             const existingItem = Array.from(document.querySelectorAll('.item-code')).find(select => select.value === code);
 
             if (existingItem) {
+                // දැනටමත් ඇති item එකක් නම්, quantity focus කරන්න
                 const row = existingItem.closest('.item');
-                const qtyInput = row.querySelector('.quantity');
-                if (qtyInput) {
-                    qtyInput.focus();
-                    qtyInput.select();
-                }
+                focusQuantity(row);
             } else {
-                const firstRow = document.querySelectorAll('.item').length === 1 && !document.querySelector('.item-code').value;
+                // අලුත් item එකක්
+                const emptyRow = Array.from(document.querySelectorAll('.item')).find(item => 
+                    !item.querySelector('.item-code').value
+                );
 
-                if (firstRow) {
-                    const row = document.querySelector('.item');
-
-                    row.querySelector('.item-code').value = code;
-                    row.querySelector('.item-name').value = name;
-                    row.querySelector('.rate').value = rate;
-
-                    // Fix here: use correct class name selector
-                    const costPriceInput = row.querySelector('.cost_price');  // underscore here
-                    if (costPriceInput) {
-                        costPriceInput.value = costPrice;
-                    }
-
-                    row.querySelector('.quantity').value = 1;
-                    updateRowPrice(row);
-                    calculateTotals();
-
-                    const qtyInput = row.querySelector('.quantity');
-                    if (qtyInput) {
-                        qtyInput.focus();
-                        qtyInput.select();
-                    }
+                if (emptyRow) {
+                    // Empty row එකක් තිබේ නම්, එයට data set කරන්න
+                    setRowData(emptyRow, code, name, rate, costPrice);
+                    
+                    // අලුත් empty row එකක් add කරන්න
+                    addItem();
+                    
+                    focusQuantity(emptyRow);
                 } else {
-                    addItem(code, name, rate, costPrice); // make sure addItem handles costPrice with correct selector
+                    // Empty row නැත්නම්, අලුත් row එකක් add කරන්න
+                    const newRow = addItem(code, name, rate, costPrice);
+                    
+                    // තවත් empty row එකක් add කරන්න
+                    addItem();
+                    
+                    focusQuantity(newRow);
                 }
             }
 
@@ -379,7 +409,6 @@ searchConfigs.forEach(config => {
         }
     });
 });
-
 </script>
 
 @endsection

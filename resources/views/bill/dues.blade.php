@@ -41,59 +41,75 @@
     </div>
 @endif
 
-
-    {{-- Table --}}
-    @if($dues->isEmpty())
-        <p style="font-style: italic; color: #888;">No dues available for selected date range.</p>
-    @else
+{{-- Table Section --}}
+@if($dues->isEmpty())
+    <p style="font-style: italic; color: #888;">No dues available for selected date range.</p>
+@else
     <div class="table-responsive" style="box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
-        <table class="table table-bordered table-striped" style="margin-bottom: 0;">
+        <table class="table table-bordered table-striped mb-0">
             <thead class="table-dark" style="background-color: #2c3e50; color: #fff;">
                 <tr>
                     <th>Supplier Name</th>
                     <th>Due Amount</th>
                     <th>Paid</th>
-                    <th>ToBe Paid</th>
+                    <th>To Be Paid</th>
                     <th>Date</th>
                     <th>Status</th>
+                    <th>Cheque Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-    @forelse ($dues as $due)
-        <tr>
-            <td style="vertical-align: middle;"><strong>{{ $due->supplier_name }}</strong></td>
-            <td style="vertical-align: middle; text-align: right;">{{ number_format($due->total_due, 2) }}</td>
-            <td style="vertical-align: middle; text-align: right;">{{ number_format($due->total_paid, 2) }}</td>
-            <td style="vertical-align: middle; text-align: right;">{{ number_format($due->total_balance, 2) }}</td>
-            <td style="vertical-align: middle;">{{ $due->last_date }}</td>
-            <td style="vertical-align: middle;">
-                @if ($due->total_balance > 0)
-                    <span class="badge bg-warning text-dark" style="font-weight: 600;">Pending</span>
-                @else
-                    <span class="badge bg-success" style="font-weight: 600;">Settled</span>
-                @endif
-            </td>
-            <td style="vertical-align: middle;">
-                @if ($due->total_balance > 0)
-<a href="{{ route('due_payments.form.by.supplier', ['supplier_name' => $due->supplier_name]) }}">Pay</a>
-                @else
-                    <button class="btn btn-sm btn-secondary" disabled>Paid</button>
-                @endif
-            </td>
-        </tr>
-    @empty
-        <tr>
-            <td colspan="8" class="text-center">No dues available.</td>
-        </tr>
-    @endforelse
-</tbody>
+                @foreach ($dues as $due)
+                    <tr>
+                        <td><strong>{{ $due->supplier_name }}</strong></td>
+                        <td class="text-end">{{ number_format($due->total_due, 2) }}</td>
+                        <td class="text-end">{{ number_format($due->total_paid, 2) }}</td>
+                        <td class="text-end">{{ number_format($due->total_balance, 2) }}</td>
+                        <td>{{ $due->last_date }}</td>
+                        <td>
+                            @if ($due->total_balance > 0)
+                                <span class="badge bg-warning text-dark fw-bold">Pending</span>
+                            @else
+                                <span class="badge bg-success fw-bold">Settled</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if ($due->has_cheque_returned)
+                                <span class="badge bg-danger fw-bold">Cheque Returned</span>
+                            @elseif ($due->total_balance > 0)
+                                <span class="badge bg-warning text-dark fw-bold">Pending</span>
+                            @else
+                                <span class="badge bg-success fw-bold">Settled</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if ($due->total_balance > 0)
+                                <a href="{{ route('due_payments.form.by.supplier', ['supplier_name' => $due->supplier_name]) }}" class="btn btn-sm btn-primary">
+                                    Pay
+                                </a>
+                            @else
+                                <button class="btn btn-sm btn-secondary" disabled>Paid</button>
+                            @endif
+                        </td>
+                    </tr>
 
+                    {{-- Inline Returned Cheques --}}
+                    @if(isset($returnedCheques[$due->supplier_name]))
+                        @foreach($returnedCheques[$due->supplier_name] as $cheque)
+                            <tr style="background-color: #f8d7da;">
+                                <td colspan="2"><strong>Returned Cheque</strong></td>
+                                <td colspan="2">Cheque No: {{ $cheque->cheque_number }}</td>
+                                <td>{{ $cheque->bank_name }} / {{ $cheque->branch_name }}</td>
+                                <td colspan="3" class="text-end">Rs. {{ number_format($cheque->amount, 2) }}</td>
+                            </tr>
+                        @endforeach
+                    @endif
+                @endforeach
+            </tbody>
         </table>
     </div>
-    @endif
-</div>
-
+@endif
 
 <script>
 $(document).ready(function() {
