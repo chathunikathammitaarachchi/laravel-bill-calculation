@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('bank_name')->nullable();
             $table->string('branch_name')->nullable();
             $table->date('cheque_date')->nullable();
+            $table->boolean('is_returned')->default(false)->after('amount');
+
             $table->timestamps();
 
             $table->foreign('supplier_due_id')
