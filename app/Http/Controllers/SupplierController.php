@@ -65,7 +65,7 @@ class SupplierController extends Controller
         return redirect()->route('supplier.index')->with('success', 'Supplier deleted successfully.');
     }
 
-
+//supplier leager card//
 public function supplierLedger(Request $request)
 {
     $supplierId = $request->input('supplier_id');
@@ -87,21 +87,19 @@ public function supplierLedger(Request $request)
 
     $supplierName = $supplier->supplier_name;
 
-    // Calculate opening balance (sum of previous transactions before start date)
     $openingBalanceQuery = SupplierGRNMaster::where('supplier_name', $supplierName);
     if ($startDate) {
         $openingBalanceQuery->where('g_date', '<', $startDate);
     }
-    $openingTransactions = $openingBalanceQuery->get();
 
+    $openingTransactions = $openingBalanceQuery->get();
     $openingBalance = 0;
     foreach ($openingTransactions as $transaction) {
         $debit = $transaction->supplier_pay ?? 0;
         $credit = $transaction->tobe_price ?? 0;
-        $openingBalance += ($credit - $debit);
+        $openingBalance += ($credit - $debit); // For supplier, tobe_price = Credit, pay = Debit
     }
 
-    // Fetch ledger transactions within date range
     $billsQuery = SupplierGRNMaster::where('supplier_name', $supplierName);
     if ($startDate) $billsQuery->where('g_date', '>=', $startDate);
     if ($endDate) $billsQuery->where('g_date', '<=', $endDate);
@@ -110,6 +108,15 @@ public function supplierLedger(Request $request)
 
     $ledger = [];
     $runningBalance = $openingBalance;
+
+    $ledger[] = [
+'date' => $startDate ? Carbon::parse($startDate)->subDay()->format('Y-m-d') : null,
+        'bill_no' => '',
+        'description' => 'Opening Balance',
+        'debit' => '',
+        'credit' => '',
+        'balance' => $openingBalance,
+    ];
 
     foreach ($bills as $bill) {
         $debit = $bill->supplier_pay ?? 0;
@@ -130,7 +137,7 @@ public function supplierLedger(Request $request)
     return view('ledger.supplier_ledger', compact('ledger', 'supplierName', 'startDate', 'endDate', 'openingBalance'));
 }
 
-
+//supplier serach//
 public function supplierSearch(Request $request)
 {
     $query = $request->get('query', '');
@@ -146,7 +153,7 @@ public function supplierSearch(Request $request)
 
 
 
-
+//supplier ledger pdf export//
 public function exportSupplierLedgerPDF(Request $request)
 {
     // Reuse logic from supplierLedger
