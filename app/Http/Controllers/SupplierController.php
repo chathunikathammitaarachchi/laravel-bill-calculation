@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 use App\Models\Supplier;
 use App\Models\SupplierGRNMaster;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -23,41 +25,54 @@ class SupplierController extends Controller
         return view('supplier.create');
     }
 
-    public function store(Request $request)
-    {
-     $request->validate([
-    'supplier_id' => 'required|integer|unique:supplier,supplier_id',
-    'supplier_name' => 'required|string',
-    'phone' => 'required|string',
-    'address' => 'required|string',
+public function store(Request $request)
+{
+    $request->validate([
+        'supplier_id' => 'required|string|unique:supplier,supplier_id',
+        'supplier_name' => 'required|string|unique:supplier,supplier_name',
+        'phone' => 'required|digits:10',
+        'address' => 'required|string',
+    ], [
+        'supplier_id.required' => 'Supplier ID is required.',
+        'supplier_id.unique' => 'This Supplier ID already exists.',
+        'supplier_name.required' => 'Supplier name is required.',
+        'supplier_name.unique' => 'This Supplier name is already taken.',
+        'phone.required' => 'Phone number is required.',
+        'phone.digits' => 'Phone number must be exactly 10 digits.',
+        'address.required' => 'Address is required.',
+    ]);
 
+    Supplier::create($request->all());
 
-]);
+    return redirect()->route('supplier.index')->with('success', 'Supplier added successfully.');
+}
 
-        Supplier::create($request->all());
+public function update(Request $request, Supplier $supplier)
+{
+    $request->validate([
+        'supplier_id' => 'required|string|unique:supplier,supplier_id,' . $supplier->id,
+        'supplier_name' => 'required|string|unique:supplier,supplier_name,' . $supplier->id,
+        'phone' => 'required|digits:10',
+        'address' => 'required|string',
+    ], [
+        'supplier_id.required' => 'Supplier ID is required.',
+        'supplier_id.unique' => 'This Supplier ID already exists.',
+        'supplier_name.required' => 'Supplier name is required.',
+        'supplier_name.unique' => 'This Supplier name is already taken.',
+        'phone.required' => 'Phone number is required.',
+        'phone.digits' => 'Phone number must be exactly 10 digits.',
+        'address.required' => 'Address is required.',
+    ]);
 
-        return redirect()->route('supplier.index')->with('success', 'Supplier added successfully.');
-    }
+    $supplier->update($request->all());
+
+    return redirect()->route('supplier.index')->with('success', 'Supplier updated successfully.');
+}
 
     public function edit(Supplier $supplier)
     {
         return view('supplier.edit', compact('supplier'));
     }
-
-    public function update(Request $request, Supplier $supplier)
-    {
-        $request->validate([
-            'supplier_id' => 'required|integer|unique:supplier,supplier_id,' . $supplier->id,
-            'supplier_name' => 'required|string',
-            'phone' => 'required|string',
-            'address' => 'required|string',
-        ]);
-
-        $supplier->update($request->all());
-
-        return redirect()->route('supplier.index')->with('success', 'Supplier updated successfully.');
-    }
-
     public function destroy(Supplier $supplier)
     {
         $supplier->delete();
@@ -65,7 +80,6 @@ class SupplierController extends Controller
         return redirect()->route('supplier.index')->with('success', 'Supplier deleted successfully.');
     }
 
-//supplier leager card//
 public function supplierLedger(Request $request)
 {
     $supplierId = $request->input('supplier_id');
@@ -87,54 +101,146 @@ public function supplierLedger(Request $request)
 
     $supplierName = $supplier->supplier_name;
 
+    // ===== Opening Balance =====
     $openingBalanceQuery = SupplierGRNMaster::where('supplier_name', $supplierName);
     if ($startDate) {
         $openingBalanceQuery->where('g_date', '<', $startDate);
     }
 
-    $openingTransactions = $openingBalanceQuery->get();
     $openingBalance = 0;
-    foreach ($openingTransactions as $transaction) {
+    foreach ($openingBalanceQuery->get() as $transaction) {
         $debit = $transaction->supplier_pay ?? 0;
         $credit = $transaction->tobe_price ?? 0;
-        $openingBalance += ($credit - $debit); // For supplier, tobe_price = Credit, pay = Debit
+        $openingBalance += ($credit - $debit);
     }
 
-    $billsQuery = SupplierGRNMaster::where('supplier_name', $supplierName);
+    // ===== GRN Entries (excluding cheque return descriptions) =====
+    $billsQuery = SupplierGRNMaster::where('supplier_name', $supplierName)
+        ->where(function ($query) {
+            $query->whereNull('description')
+                  ->orWhere('description', 'not like', '%Cheque Return%');
+        });
+
     if ($startDate) $billsQuery->where('g_date', '>=', $startDate);
     if ($endDate) $billsQuery->where('g_date', '<=', $endDate);
 
     $bills = $billsQuery->orderBy('g_date')->get();
 
+    // ===== Cheque Return Entries (Individual entries with cheque numbers) =====
+    $returnedPaymentsQuery = DB::table('cheque_returns')
+        ->join('supplier_due_payments', 'cheque_returns.supplier_due_payment_id', '=', 'supplier_due_payments.id')
+        ->join('supplier_dues', 'supplier_due_payments.supplier_due_id', '=', 'supplier_dues.id')
+        ->where('supplier_dues.supplier_name', $supplierName)
+        ->where('supplier_due_payments.payment_method', 'Cheque')
+        ->select(
+            'cheque_returns.*',
+            'supplier_due_payments.amount',
+            'supplier_due_payments.cheque_number',
+            'supplier_due_payments.created_at as payment_date'
+        );
+
+    if ($startDate) $returnedPaymentsQuery->whereDate('cheque_returns.return_date', '>=', $startDate);
+    if ($endDate) $returnedPaymentsQuery->whereDate('cheque_returns.return_date', '<=', $endDate);
+
+    $returnedPayments = $returnedPaymentsQuery->orderBy('cheque_returns.return_date')->get();
+
+    // ===== Build Ledger =====
     $ledger = [];
     $runningBalance = $openingBalance;
 
-    $ledger[] = [
-'date' => $startDate ? Carbon::parse($startDate)->subDay()->format('Y-m-d') : null,
-        'bill_no' => '',
-        'description' => 'Opening Balance',
-        'debit' => '',
-        'credit' => '',
-        'balance' => $openingBalance,
-    ];
+    // Opening balance entry
+    if ($startDate) {
+        $ledger[] = [
+            'date' => \Carbon\Carbon::parse($startDate)->subDay()->format('Y-m-d'),
+            'bill_no' => '',
+            'description' => 'Opening Balance',
+            'debit' => '',
+            'credit' => '',
+            'balance' => $runningBalance,
+        ];
+    }
 
+    // Process each GRN bill
     foreach ($bills as $bill) {
-    $debit = $bill->supplier_pay ?? 0;
-    $credit = $bill->tobe_price ?? 0;
-    $runningBalance += ($credit - $debit);
+        $debit = $bill->supplier_pay ?? 0;
+        $credit = $bill->tobe_price ?? 0;
 
-    $ledger[] = [
-        'date'        => $bill->g_date,
-        'bill_no'     => $bill->grn_no,
-        'description' => 'Purchase - GRN ' . $bill->grn_no,
-        'debit'       => $debit,
-        'credit'      => $credit,
-        'balance'     => $runningBalance,
-    ];
-}
+        $runningBalance += ($credit - $debit);
+
+        $ledger[] = [
+            'date' => $bill->g_date,
+            'bill_no' => $bill->grn_no,
+            'description' => 'Purchase - GRN ' . $bill->grn_no,
+            'debit' => $debit,
+            'credit' => $credit,
+            'balance' => $runningBalance,
+        ];
+    }
+
+    // Add individual cheque return entries
+    foreach ($returnedPayments as $returnedPayment) {
+        $retAmt = $returnedPayment->amount;
+        $chequeNumber = $returnedPayment->cheque_number ?? 'N/A';
+        $returnDate = $returnedPayment->return_date;
+
+        $runningBalance += $retAmt; // Add back the returned amount
+
+        $ledger[] = [
+            'date' => $returnDate,
+            'bill_no' => $chequeNumber,
+            'description' => 'Cheque Return - Cheque #' . $chequeNumber,
+            'debit' => -1 * $retAmt, // Negative to show reversal of payment
+            'credit' => 0,
+            'balance' => $runningBalance,
+        ];
+    }
+
+    // ===== Cash Payments =====
+    $cashPaymentsQuery = DB::table('supplier_due_payments')
+        ->join('supplier_dues', 'supplier_due_payments.supplier_due_id', '=', 'supplier_dues.id')
+        ->where('supplier_dues.supplier_name', $supplierName)
+        ->where('supplier_due_payments.payment_method', 'Cash');
+
+    if ($startDate) $cashPaymentsQuery->whereDate('supplier_due_payments.created_at', '>=', $startDate);
+    if ($endDate) $cashPaymentsQuery->whereDate('supplier_due_payments.created_at', '<=', $endDate);
+
+    $cashPayments = $cashPaymentsQuery->orderBy('supplier_due_payments.created_at')->get();
+
+    foreach ($cashPayments as $cashPayment) {
+        $paymentDate = \Carbon\Carbon::parse($cashPayment->created_at)->format('Y-m-d');
+        $amount = $cashPayment->amount;
+
+        $runningBalance -= $amount;
+
+        $ledger[] = [
+            'date' => $paymentDate,
+            'bill_no' => '',
+            'description' => 'Payment by Cash',
+            'debit' => $amount,
+            'credit' => 0,
+            'balance' => $runningBalance,
+        ];
+    }
+
+    // Final sort by date and time
+    usort($ledger, function ($a, $b) {
+        $dateA = strtotime($a['date']);
+        $dateB = strtotime($b['date']);
+        
+        if ($dateA == $dateB) {
+            // If same date, put purchases before returns
+            if (strpos($a['description'], 'Purchase') !== false) return -1;
+            if (strpos($b['description'], 'Purchase') !== false) return 1;
+            return 0;
+        }
+        
+        return $dateA <=> $dateB;
+    });
 
     return view('ledger.supplier_ledger', compact('ledger', 'supplierName', 'startDate', 'endDate', 'openingBalance'));
 }
+
+
 
 //supplier serach//
 public function supplierSearch(Request $request)
@@ -142,8 +248,8 @@ public function supplierSearch(Request $request)
     $query = $request->get('query', '');
     if (!$query) return response()->json([]);
 
-    $suppliers = Supplier::where('id', 'like', "%{$query}%")
-        ->orWhere('supplier_name', 'like', "%{$query}%")
+    $suppliers = Supplier::where('id', 'ILIKE', "%{$query}%")
+        ->orWhere('supplier_name', 'ILIKE', "%{$query}%")
         ->limit(10)
         ->get(['id', 'supplier_name']);
 

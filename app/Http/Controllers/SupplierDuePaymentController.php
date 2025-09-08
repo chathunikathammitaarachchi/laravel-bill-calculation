@@ -91,25 +91,37 @@ class SupplierDuePaymentController extends Controller
         return $pdf->download($filename);
     }
 
-    public function showBySupplier($supplierName)
-    {
-        $dues = SupplierDue::where('supplier_name', $supplierName)
-                    ->where('balance', '>', 0)
-                    ->orderBy('g_date')
-                    ->get();
+  public function showBySupplier($supplierName)
+{
+    $dues = SupplierDue::with('payments')
+                ->where('supplier_name', $supplierName)
+                ->orderBy('g_date')
+                ->get();
 
-        $totalDue = $dues->sum('tobe_price');
-        $totalPaid = $dues->sum('supplier_pay');
-        $totalBalance = $dues->sum('balance');
+    // Calculate sums if needed here
+    $totalDue = $dues->sum('tobe_price');
+    $totalPaid = $dues->sum('supplier_pay');
+    $totalBalance = $dues->sum('balance');
 
-        return view('bill.pay_due_by_supplier', [
-            'dues' => $dues,
-            'supplier_name' => $supplierName,
-            'totalDue' => $totalDue,
-            'totalPaid' => $totalPaid,
-            'totalBalance' => $totalBalance,
-        ]);
-    }
+    // Fetch returned cheque payments separately
+    $returnedCheques = SupplierDuePayment::whereHas('supplierDue', function($q) use ($supplierName) {
+        $q->where('supplier_name', $supplierName);
+    })
+    ->where('payment_method', 'Cheque')
+    ->where('is_returned', true)
+    ->with('supplierDue')
+    ->get();
+
+    return view('bill.pay_due_by_supplier', [
+        'dues' => $dues,
+        'supplier_name' => $supplierName,
+        'totalDue' => $totalDue,
+        'totalPaid' => $totalPaid,
+        'totalBalance' => $totalBalance,
+        'returnedCheques' => $returnedCheques,  // <-- pass this to the view
+    ]);
+}
+
 
 
 public function listPayments()
@@ -128,47 +140,62 @@ public function searchCheque(Request $request)
     if ($request->filled('cheque_number')) {
         $query->where('cheque_number', $request->cheque_number);
     }
+
     if ($request->filled('bank_name')) {
         $query->where('bank_name', 'LIKE', '%' . $request->bank_name . '%');
     }
+
     if ($request->filled('branch_name')) {
         $query->where('branch_name', 'LIKE', '%' . $request->branch_name . '%');
     }
 
     $results = $query->get();
 
-    return view('cheque.search', compact('results'));
+    // Group by cheque number + bank + branch + date (to uniquely group a cheque)
+    $groupedPayments = $results->groupBy(function ($item) {
+        return $item->cheque_number . '|' . $item->bank_name . '|' . $item->branch_name . '|' . $item->cheque_date;
+    });
+
+    return view('cheque.search', compact('results', 'groupedPayments'));
 }
 
-    public function returnCheque($paymentId)
+
+public function returnCheque($paymentId)
 {
     DB::transaction(function () use ($paymentId) {
         $payment = SupplierDuePayment::findOrFail($paymentId);
 
-        // Check if it's a cheque payment
         if ($payment->payment_method !== 'Cheque') {
             throw new \Exception("Only cheque payments can be returned.");
         }
 
-        // Reverse the payment amount from SupplierDue
-        $due = SupplierDue::findOrFail($payment->supplier_due_id);
-        $due->supplier_pay -= $payment->amount;
-        $due->balance = $due->tobe_price - $due->supplier_pay;
-        $due->save();
+        if ($payment->is_returned) {
+            throw new \Exception("Cheque payment already returned.");
+        }
 
-        // Reverse the payment from GRN
-        $grn = SupplierGRNMaster::where('grn_no', $due->grn_no)->first();
+        $amount = $payment->amount;
+        $supplierDue = SupplierDue::findOrFail($payment->supplier_due_id);
+        $grn = SupplierGRNMaster::where('grn_no', $supplierDue->grn_no)->first();
+
+        // Reverse original payment in SupplierDue and GRN
+        $supplierDue->supplier_pay -= $amount;
+        $supplierDue->balance = $supplierDue->tobe_price - $supplierDue->supplier_pay;
+        
+        // Mark cheque returned flag true
+        $supplierDue->has_cheque_returned = true;
+
+        $supplierDue->save();
+
         if ($grn) {
-            $grn->supplier_pay -= $payment->amount;
+            $grn->supplier_pay -= $amount;
             $grn->balance = $grn->tobe_price - $grn->supplier_pay;
             $grn->save();
         }
 
-        // Mark payment as returned (optional: add a new column `is_returned`)
         $payment->is_returned = true;
         $payment->save();
 
-        // Optional: Log return
+        // Insert return record in cheque_returns table with reason and date
         DB::table('cheque_returns')->insert([
             'supplier_due_payment_id' => $payment->id,
             'reason' => 'Cheque Returned',
@@ -178,7 +205,7 @@ public function searchCheque(Request $request)
         ]);
     });
 
-    return response()->json(['message' => 'Cheque return handled successfully.']);
+    return response()->json(['message' => 'Cheque return processed successfully.']);
 }
 
 }
