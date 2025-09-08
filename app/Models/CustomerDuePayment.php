@@ -24,5 +24,8 @@ class CustomerDuePayment extends Model
     {
         return $this->belongsTo(CustomerDue::class);
     }
+
+
+    
 }
 
