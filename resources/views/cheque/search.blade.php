@@ -35,51 +35,62 @@
                 <h5 class="mb-0">Search Results</h5>
             </div>
             <div class="card-body">
-                @if($results->count())
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Supplier</th>
-                                <th>Amount</th>
-                                <th>Cheque No</th>
-                                <th>Bank</th>
-                                <th>Branch</th>
-                                <th>Status</th>
-                                <th>Return</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($results as $payment)
-                            <tr>
-                                <td>{{ $payment->due->supplier_name ?? '-' }}</td>
-                                <td>Rs {{ number_format($payment->amount, 2) }}</td>
-                                <td>{{ $payment->cheque_number }}</td>
-                                <td>{{ $payment->bank_name }}</td>
-                                <td>{{ $payment->branch_name }}</td>
-                                <td>
-                                    @if($payment->is_returned)
-                                        <span class="badge bg-danger">Returned</span>
-                                    @else
-                                        <span class="badge bg-success">Paid</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if(!$payment->is_returned)
-                                    <form method="POST" action="{{ route('cheque.return', $payment->id) }}">
-                                        @csrf
-                                        <button class="btn btn-sm btn-warning" onclick="return confirm('Are you sure to return this cheque?')">Return</button>
-                                    </form>
-                                    @else
-                                        <em>N/A</em>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <div class="alert alert-warning mb-0">No matching cheque records found.</div>
-                @endif
+                @if($groupedPayments->count())
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Cheque No</th>
+                <th>Bank</th>
+                <th>Branch</th>
+                <th>Cheque Date</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Return</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($groupedPayments as $key => $chequeGroup)
+                @php
+                    $first = $chequeGroup->first();
+                    [$chequeNumber, $bankName, $branchName, $chequeDate] = explode('|', $key);
+                    $totalAmount = $chequeGroup->sum('amount');
+                    $isReturned = $chequeGroup->contains('is_returned', true);
+                @endphp
+
+                <tr class="table-primary">
+                    <td>{{ $chequeNumber }}</td>
+                    <td>{{ $bankName }}</td>
+                    <td>{{ $branchName }}</td>
+                    <td>{{ $chequeDate }}</td>
+                    <td>Rs {{ number_format($totalAmount, 2) }}</td>
+                    <td>
+                        @if($isReturned)
+                            <span class="badge bg-danger">Returned</span>
+                        @else
+                            <span class="badge bg-success">Paid</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if(!$isReturned)
+                            {{-- Take first payment ID to return --}}
+                            <form method="POST" action="{{ route('cheque.return', $first->id) }}">
+                                @csrf
+                                <button class="btn btn-sm btn-warning" onclick="return confirm('Are you sure to return this cheque?')">Return</button>
+                            </form>
+                        @else
+                            <em>N/A</em>
+                        @endif
+                    </td>
+                </tr>
+
+               
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <div class="alert alert-warning">No matching cheque records found.</div>
+@endif
+
             </div>
         </div>
     @endif
