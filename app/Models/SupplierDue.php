@@ -14,14 +14,6 @@ class SupplierDue extends Model
     }
 }
 
-// DuePayment.php
-class SupplierDuePayment extends Model
-{
-    protected $fillable = ['supplier_due_id', 'payment_method', 'amount'];
 
-    public function supplierDue()
-    {
-        return $this->belongsTo(SupplierDue::class, 'supplier_due_id');
-    }
-}
+
 
