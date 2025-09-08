@@ -147,6 +147,11 @@
 <li class="nav-item">
                     <a class="nav-link" href="{{ route('supplier.ledger') }}">Supplier Ledger</a>
                 </li>
+
+
+                 <li class="nav-item">
+                    <a class="nav-link" href="{{ route('cheque.search') }}">Cheque Payments</a>
+                </li>
     {{-- Item --}}
     <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">
