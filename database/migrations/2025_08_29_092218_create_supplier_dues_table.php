@@ -19,6 +19,8 @@ return new class extends Migration
         $table->decimal('tobe_price', 10, 2);
         $table->decimal('supplier_pay', 10, 2);
         $table->decimal('balance', 10, 2);
+                $table->boolean('has_cheque_returned')->default(false);
+
             $table->timestamps();
         });
     }
