@@ -19,15 +19,7 @@
             </tr>
         </thead>
         <tbody>
-            {{-- Opening Balance row --}}
-            <tr>
-                <td>{{ $startDate ? \Carbon\Carbon::parse($startDate)->subDay()->toDateString() : '-' }}</td>
-                <td>-</td>
-                <td>Opening Balance</td>
-                <td class="text-end">-</td>
-                <td class="text-end">-</td>
-                <td class="text-end">{{ number_format($openingBalance, 2) }}</td>
-            </tr>
+           
 
             @php
                 $totalDebit = 0;
@@ -35,20 +27,21 @@
             @endphp
 
             {{-- Ledger entries --}}
-            @foreach($ledger as $entry)
-                @php
-                    $totalDebit += (float)$entry['debit'];
-                    $totalCredit += (float)$entry['credit'];
-                @endphp
-                <tr>
-                    <td>{{ $entry['date'] }}</td>
-                    <td>{{ $entry['bill_no'] }}</td>
-                    <td>{{ $entry['description'] }}</td>
-                    <td class="text-end">{{ number_format($entry['debit'], 2) }}</td>
-                    <td class="text-end">{{ number_format($entry['credit'], 2) }}</td>
-                    <td class="text-end">{{ number_format($entry['balance'], 2) }}</td>
-                </tr>
-            @endforeach
+           @foreach($ledger as $entry)
+    @php
+        $totalDebit += (float)$entry['debit'];
+        $totalCredit += (float)$entry['credit'];
+    @endphp
+    <tr>
+        <td>{{ $entry['date'] }}</td>
+        <td>{{ $entry['bill_no'] }}</td>
+        <td>{{ $entry['description'] }}</td>
+        <td class="text-end">{{ number_format((float) $entry['debit'], 2) }}</td>
+        <td class="text-end">{{ number_format((float) $entry['credit'], 2) }}</td>
+        <td class="text-end">{{ number_format((float) $entry['balance'], 2) }}</td>
+    </tr>
+@endforeach
+
         </tbody>
         <tfoot>
             <tr class="fw-bold">
