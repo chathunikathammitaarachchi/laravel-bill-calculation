@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Item;
 use App\Models\SupplierDue;
+use App\Models\SupplierDuePayment;
 
 use App\Models\StockTransaction;
 use App\Models\ItemPrice;
@@ -140,23 +141,31 @@ public function store(Request $request)
 
 public function showDues(Request $request)
 {
+    $supplierName = $request->supplier_name;
+
     $dues = SupplierDue::select(
         'supplier_name',
-
         DB::raw('SUM(tobe_price) as total_due'),
         DB::raw('SUM(supplier_pay) as total_paid'),
         DB::raw('SUM(balance) as total_balance'),
-        DB::raw('MAX(g_date) as last_date') 
+        DB::raw('MAX(g_date) as last_date')
     )
     ->when($request->from_date, fn($q) => $q->whereDate('g_date', '>=', $request->from_date))
     ->when($request->to_date, fn($q) => $q->whereDate('g_date', '<=', $request->to_date))
-    ->when($request->supplier_name, fn($q) => $q->where('supplier_name', $request->supplier_name))
+    ->when($supplierName, fn($q) => $q->where('supplier_name', $supplierName))
     ->groupBy('supplier_name')
     ->orderBy('supplier_name')
-   
     ->get();
 
-    return view('bill.dues', compact('dues'));
+    // Group returned cheques by supplier name
+    $returnedCheques = SupplierDuePayment::where('payment_method', 'Cheque')
+        ->where('is_returned', true)
+        ->when($supplierName, fn($q) => $q->whereHas('supplierDue', fn($q2) => $q2->where('supplier_name', $supplierName)))
+        ->with('supplierDue')
+        ->get()
+        ->groupBy(fn($payment) => $payment->supplierDue->supplier_name);
+
+    return view('bill.dues', compact('dues', 'returnedCheques'));
 }
 
 
