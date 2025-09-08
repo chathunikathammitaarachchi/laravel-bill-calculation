@@ -35,7 +35,7 @@ class SupplierGRNController extends Controller
 public function store(Request $request)
 {
     $request->validate([
-        'grn_no' => 'required|unique:grnmaster,grn_no', 
+        'grn_no' => 'required|unique:grnmaster,grn_no',
         'g_date' => 'required|date',
         'supplier_name' => 'required|string',
         'total_price' => 'required|numeric',
@@ -53,23 +53,23 @@ public function store(Request $request)
     ]);
 
     DB::transaction(function () use ($request) {
-        //  Create GRN Master
+        // Create GRN Master
         $master = SupplierGRNMaster::create($request->only([
             'grn_no', 'g_date', 'supplier_name', 'total_price',
             'tobe_price', 'total_discount', 'supplier_pay', 'balance',
         ]));
 
-        //  Process each GRN item
+        // Process each GRN item
         foreach ($request->items as $grnItem) {
             // Create GRN detail
             SupplierGRNDetails::create([
-                'grn_no'     => $master->grn_no,
-                'item_code'  => $grnItem['item_code'],
-                'item_name'  => $grnItem['item_name'],
-                'rate'       => $grnItem['rate'],
+                'grn_no' => $master->grn_no,
+                'item_code' => $grnItem['item_code'],
+                'item_name' => $grnItem['item_name'],
+                'rate' => $grnItem['rate'],
                 'cost_price' => $grnItem['cost_price'],
-                'quantity'   => $grnItem['quantity'],
-                'price'      => $grnItem['price'],
+                'quantity' => $grnItem['quantity'],
+                'price' => $grnItem['price'],
             ]);
 
             // Find the item
@@ -88,49 +88,51 @@ public function store(Request $request)
                 ) {
                     // Insert new price
                     ItemPrice::create([
-                        'item_id'    => $item->id,
-                        'rate'       => $grnItem['rate'],
+                        'item_id' => $item->id,
+                        'rate' => $grnItem['rate'],
                         'cost_price' => $grnItem['cost_price'],
                     ]);
 
                     // Update item table
                     $item->update([
-                        'rate'       => $grnItem['rate'],
+                        'rate' => $grnItem['rate'],
                         'cost_price' => $grnItem['cost_price'],
                     ]);
                 }
-
-
-                if ($request->supplier_pay < $request->tobe_price) {
-    SupplierDue::create([
-'supplier_name' => $request->supplier_name,
-        'grn_no' => $request->grn_no,
-        'g_date' => $request->g_date,
-        'tobe_price' => $request->tobe_price,
-        'supplier_pay' => $request->supplier_pay,
-        'balance' => $request->tobe_price - $request->supplier_pay, 
-    ]);
-}
-                // Create stock transaction
-                StockTransaction::create([
-                    'item_code'        => $grnItem['item_code'],
-                    'item_name'        => $grnItem['item_name'],
-                    'transaction_type' => 'IN',
-                    'quantity'         => $grnItem['quantity'],
-                    'rate'             => $grnItem['rate'],
-                    'cost_price'       => $grnItem['cost_price'],
-                    'price'            => $grnItem['price'],
-                    'reference_no'     => $master->grn_no,
-                    'source'           => 'Supplier GRN',
-                    'transaction_date' => $master->g_date,
-                ]);
             }
+
+            // Create stock transaction (inside the foreach)
+            StockTransaction::create([
+                'item_code' => $grnItem['item_code'],
+                'item_name' => $grnItem['item_name'],
+                'transaction_type' => 'IN',
+                'quantity' => $grnItem['quantity'],
+                'rate' => $grnItem['rate'],
+                'cost_price' => $grnItem['cost_price'],
+                'price' => $grnItem['price'],
+                'reference_no' => $master->grn_no,
+                'source' => 'Supplier GRN',
+                'transaction_date' => $master->g_date,
+            ]);
+        }
+
+        // Create SupplierDue only once per GRN after processing all items
+        if ($request->supplier_pay < $request->tobe_price) {
+            SupplierDue::create([
+                'supplier_name' => $request->supplier_name,
+                'grn_no' => $request->grn_no,
+                'g_date' => $request->g_date,
+                'tobe_price' => $request->tobe_price,
+                'supplier_pay' => $request->supplier_pay,
+'balance' => $request->tobe_price - $request->supplier_pay,
+            ]);
         }
     });
 
     return redirect()->route('bill.show', $request->grn_no)
                      ->with('success', 'GRN Created Successfully.');
 }
+
 
 
 
@@ -252,17 +254,18 @@ public function update(Request $request, $grn_no)
                 'transaction_date' => $validated['g_date'],
             ]);
         }
+SupplierDue::updateOrCreate(
+    ['grn_no' => $grn_no],
+    [
+        'supplier_name' => $validated['supplier_name'],
+        'g_date'        => $validated['g_date'],
+        'tobe_price'    => $validated['tobe_price'],
+        'supplier_pay'  => $validated['supplier_pay'],
+        'balance'       => $validated['tobe_price'] - $validated['supplier_pay'],
+    ]
+);
 
-        SupplierDue::updateOrCreate(
-            ['grn_no' => $grn_no],
-            [
-                'supplier_name' => $validated['supplier_name'],
-                'g_date' => $validated['g_date'],
-                'tobe_price' => $validated['tobe_price'],
-                'supplier_pay' => $validated['supplier_pay'],
-                'balance' => $validated['tobe_price'] - $validated['supplier_pay'],
-            ]
-        );
+
     });
 
     return redirect()->route('bill.show', $grn_no)->with('success', 'GRN Updated and Stock Adjusted Successfully.');
@@ -441,6 +444,7 @@ public function grnDetailsByDate(Request $request, $date = null)
         'totals' => $totals,
     ]);
 }
+
 
 
 
