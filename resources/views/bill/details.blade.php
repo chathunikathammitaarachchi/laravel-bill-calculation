@@ -81,7 +81,7 @@
                 <th>Total Discount</th>
                 <th>Total Issued</th>
                 <th>Paid</th>
-                <th>Balance</th>
+                <th>To be paid</th>
             </tr>
         </thead>
         <tbody>
@@ -104,7 +104,7 @@
                 <td>Rs {{ number_format($grns->sum('total_discount'), 2) }}</td>
                 <td>Rs {{ number_format($grns->sum('tobe_price'), 2) }}</td>
                 <td>Rs {{ number_format($grns->sum('supplier_pay'), 2) }}</td>
-                <td>Rs {{ number_format($grns->sum('balance'), 2) }}</td>
+<td>Rs {{ number_format($grns->sum('balance'), 2) }}</td>
             </tr>
         </tbody>
     </table>
