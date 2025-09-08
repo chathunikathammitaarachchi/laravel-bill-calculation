@@ -119,20 +119,19 @@ public function supplierLedger(Request $request)
     ];
 
     foreach ($bills as $bill) {
-        $debit = $bill->supplier_pay ?? 0;
-        $credit = $bill->tobe_price ?? 0;
+    $debit = $bill->supplier_pay ?? 0;
+    $credit = $bill->tobe_price ?? 0;
+    $runningBalance += ($credit - $debit);
 
-        $runningBalance += ($credit - $debit);
-
-        $ledger[] = [
-            'date' => $bill->g_date,
-            'bill_no' => $bill->grn_no,
-            'description' => 'Purchase - GRN ' . $bill->grn_no,
-            'debit' => $debit,
-            'credit' => $credit,
-            'balance' => $runningBalance,
-        ];
-    }
+    $ledger[] = [
+        'date'        => $bill->g_date,
+        'bill_no'     => $bill->grn_no,
+        'description' => 'Purchase - GRN ' . $bill->grn_no,
+        'debit'       => $debit,
+        'credit'      => $credit,
+        'balance'     => $runningBalance,
+    ];
+}
 
     return view('ledger.supplier_ledger', compact('ledger', 'supplierName', 'startDate', 'endDate', 'openingBalance'));
 }
