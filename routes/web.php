@@ -137,6 +137,11 @@ Route::get('/autocomplete-suppliers', [SupplierDuePaymentController::class, 'aut
 // Success page view after payment (optional)
 Route::view('/due-payment/success', 'grn.due_success')->name('due.success');
 
+Route::post('/cheque-return/{id}', [SupplierDuePaymentController::class, 'returnCheque'])->name('cheque.return');
+Route::get('/cheque-payments', [SupplierDuePaymentController::class, 'listPayments'])->name('cheque.payments');
+// In web.php
+Route::get('/cheque/search', [SupplierDuePaymentController::class, 'searchCheque'])->name('cheque.search');
+Route::post('/cheque/return/{paymentId}', [SupplierDuePaymentController::class, 'returnCheque'])->name('cheque.return');
 
 
 
