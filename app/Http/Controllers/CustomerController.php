@@ -152,8 +152,8 @@ public function customerLedger(Request $request)
         $query = $request->get('query', '');
         if (!$query) return response()->json([]);
 
-        $customers = Customer::where('customer_id', 'like', "%{$query}%")
-            ->orWhere('customer_name', 'like', "%{$query}%")
+        $customers = Customer::where('customer_id', 'ILIKE', "%{$query}%")
+            ->orWhere('customer_name', 'ILIKE', "%{$query}%")
             ->limit(10)
             ->get(['id', 'customer_id', 'customer_name']);
 
