@@ -21,7 +21,8 @@ return new class extends Migration
                 $table->decimal('total_discount', 10, 2);
                 $table->decimal('supplier_pay' , 10, 2);
                 $table->decimal('balance', 10, 2);
-              
+              $table->text('description')->nullable();
+
             $table->timestamps();
         });
     }
