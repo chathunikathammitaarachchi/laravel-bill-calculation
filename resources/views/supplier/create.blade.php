@@ -7,6 +7,15 @@
       <h2 class="fw-bold text-success">Add New Supplier</h2>
       <p class="text-muted">Enter supplier details to register</p>
     </div>
+@if ($errors->any())
+  <div class="alert alert-danger">
+    <ul class="mb-0">
+      @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+      @endforeach
+    </ul>
+  </div>
+@endif
 
     <form action="{{ route('supplier.store') }}" method="POST" novalidate>
       @csrf
