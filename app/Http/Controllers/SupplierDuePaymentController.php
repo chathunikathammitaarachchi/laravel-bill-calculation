@@ -110,4 +110,75 @@ class SupplierDuePaymentController extends Controller
             'totalBalance' => $totalBalance,
         ]);
     }
+
+
+public function listPayments()
+{
+    // Example: get all supplier payments
+    $payments = SupplierDuePayment::with('supplierDue')->orderBy('created_at', 'desc')->get();
+
+    return view('cheque.payments', compact('payments'));
+}
+
+public function searchCheque(Request $request)
+{
+    $query = SupplierDuePayment::with('due')
+        ->where('payment_method', 'Cheque');
+
+    if ($request->filled('cheque_number')) {
+        $query->where('cheque_number', $request->cheque_number);
+    }
+    if ($request->filled('bank_name')) {
+        $query->where('bank_name', 'LIKE', '%' . $request->bank_name . '%');
+    }
+    if ($request->filled('branch_name')) {
+        $query->where('branch_name', 'LIKE', '%' . $request->branch_name . '%');
+    }
+
+    $results = $query->get();
+
+    return view('cheque.search', compact('results'));
+}
+
+    public function returnCheque($paymentId)
+{
+    DB::transaction(function () use ($paymentId) {
+        $payment = SupplierDuePayment::findOrFail($paymentId);
+
+        // Check if it's a cheque payment
+        if ($payment->payment_method !== 'Cheque') {
+            throw new \Exception("Only cheque payments can be returned.");
+        }
+
+        // Reverse the payment amount from SupplierDue
+        $due = SupplierDue::findOrFail($payment->supplier_due_id);
+        $due->supplier_pay -= $payment->amount;
+        $due->balance = $due->tobe_price - $due->supplier_pay;
+        $due->save();
+
+        // Reverse the payment from GRN
+        $grn = SupplierGRNMaster::where('grn_no', $due->grn_no)->first();
+        if ($grn) {
+            $grn->supplier_pay -= $payment->amount;
+            $grn->balance = $grn->tobe_price - $grn->supplier_pay;
+            $grn->save();
+        }
+
+        // Mark payment as returned (optional: add a new column `is_returned`)
+        $payment->is_returned = true;
+        $payment->save();
+
+        // Optional: Log return
+        DB::table('cheque_returns')->insert([
+            'supplier_due_payment_id' => $payment->id,
+            'reason' => 'Cheque Returned',
+            'return_date' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    });
+
+    return response()->json(['message' => 'Cheque return handled successfully.']);
+}
+
 }
