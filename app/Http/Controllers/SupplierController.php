@@ -101,7 +101,7 @@ public function supplierLedger(Request $request)
 
     $supplierName = $supplier->supplier_name;
 
-    // ===== Opening Balance =====
+    // Calculate Opening Balance (all unpaid balance before startDate)
     $openingBalanceQuery = SupplierGRNMaster::where('supplier_name', $supplierName);
     if ($startDate) {
         $openingBalanceQuery->where('g_date', '<', $startDate);
@@ -109,137 +109,243 @@ public function supplierLedger(Request $request)
 
     $openingBalance = 0;
     foreach ($openingBalanceQuery->get() as $transaction) {
-        $debit = $transaction->supplier_pay ?? 0;
-        $credit = $transaction->tobe_price ?? 0;
-        $openingBalance += ($credit - $debit);
+        $totalBill = $transaction->tobe_price ?? 0;
+        $paidAmount = $transaction->supplier_pay ?? 0;
+        $remainingFromBill = $totalBill - $paidAmount;
+        $openingBalance += $remainingFromBill;
     }
 
-    // ===== GRN Entries (excluding cheque return descriptions) =====
-    $billsQuery = SupplierGRNMaster::where('supplier_name', $supplierName)
-        ->where(function ($query) {
-            $query->whereNull('description')
-                  ->orWhere('description', 'not like', '%Cheque Return%');
-        });
+    $rawLedger = [];
 
+    // Get Purchases excluding Cheque Returns - NO DEBIT FROM supplier_pay
+    $billsQuery = SupplierGRNMaster::where('supplier_name', $supplierName)
+        ->where(function ($q) {
+            $q->whereNull('description')
+              ->orWhere('description', 'not like', '%Cheque Return%');
+        });
     if ($startDate) $billsQuery->where('g_date', '>=', $startDate);
     if ($endDate) $billsQuery->where('g_date', '<=', $endDate);
-
     $bills = $billsQuery->orderBy('g_date')->get();
 
-    // ===== Cheque Return Entries (Individual entries with cheque numbers) =====
+   foreach ($bills as $bill) {
+    $credit = $bill->tobe_price ?? 0;
+    $debit = $bill->supplier_pay ?? 0;
+
+    $description = 'Purchase - GRN ' . $bill->grn_no;
+    if ($debit > 0) {
+        $description .= ' (Paid: ' . number_format($debit, 2) . ')';
+    }
+
+    $rawLedger[] = [
+        'date' => $bill->g_date,
+        'type' => 'purchase',
+        'bill_no' => $bill->grn_no,
+        'description' => $description,
+        'debit' => $debit,
+        'credit' => $credit,
+        'is_return' => false,
+    ];
+
+    // **Skip adding individual payment rows for this GRN to avoid double counting**
+
+
+        // ADD matching payment(s) row for this GRN from due payments table
+        $matchedPayments = DB::table('supplier_due_payments')
+            ->join('supplier_dues', 'supplier_due_payments.supplier_due_id', '=', 'supplier_dues.id')
+            ->where('supplier_dues.supplier_name', $supplierName)
+            ->where('supplier_dues.grn_no', $bill->grn_no) // match GRN
+            ->get();
+
+        foreach ($matchedPayments as $payment) {
+            if ($payment->payment_method === 'Cheque') {
+                $rawLedger[] = [
+                    'date' => \Carbon\Carbon::parse($payment->created_at)->format('Y-m-d'),
+                    'type' => 'payment_cheque',
+                    'bill_no' => $payment->cheque_number ?? '',
+                    'description' => 'Cheque issued - Cheque #' . $payment->cheque_number,
+                    'debit' => $payment->amount,
+                    'credit' => 0,
+                    'is_return' => false,
+                ];
+            } else {
+                $rawLedger[] = [
+                    'date' => \Carbon\Carbon::parse($payment->created_at)->format('Y-m-d'),
+                    'type' => 'payment',
+                    'bill_no' => '',
+                    'description' => 'Payment by Cash',
+                    'debit' => $payment->amount,
+                    'credit' => 0,
+                    'is_return' => false,
+                ];
+            }
+        }
+    }
+
+    $purchaseRows = collect($rawLedger)->where('type', 'purchase');
+    $paymentRows = collect($rawLedger)->whereIn('type', ['payment', 'payment_cheque','cheque_return','payment']);
+
+    // Get Payments excluding cheque returns
+    $paymentsQuery = DB::table('supplier_due_payments')
+        ->join('supplier_dues', 'supplier_due_payments.supplier_due_id', '=', 'supplier_dues.id')
+        ->leftJoin('cheque_returns', 'supplier_due_payments.id', '=', 'cheque_returns.supplier_due_payment_id')
+        ->where('supplier_dues.supplier_name', $supplierName)
+        ->whereRaw("DATE(supplier_due_payments.created_at) > DATE(supplier_dues.created_at)");
+
+    if ($startDate) $paymentsQuery->whereDate('supplier_due_payments.created_at', '>=', $startDate);
+    if ($endDate) $paymentsQuery->whereDate('supplier_due_payments.created_at', '<=', $endDate);
+
+    $payments = $paymentsQuery->orderBy('supplier_due_payments.created_at')->get();
+
+    // Get returned cheques
     $returnedPaymentsQuery = DB::table('cheque_returns')
         ->join('supplier_due_payments', 'cheque_returns.supplier_due_payment_id', '=', 'supplier_due_payments.id')
         ->join('supplier_dues', 'supplier_due_payments.supplier_due_id', '=', 'supplier_dues.id')
-        ->where('supplier_dues.supplier_name', $supplierName)
-        ->where('supplier_due_payments.payment_method', 'Cheque')
-        ->select(
-            'cheque_returns.*',
-            'supplier_due_payments.amount',
-            'supplier_due_payments.cheque_number',
-            'supplier_due_payments.created_at as payment_date'
-        );
+        ->where('supplier_dues.supplier_name', $supplierName);
+
+    if ($startDate) $returnedPaymentsQuery->whereDate('cheque_returns.return_date', '>=', $startDate);
+    if ($endDate) $returnedPaymentsQuery->whereDate('cheque_returns.return_date', '<=', $endDate);
+
+    $returnedPayments = $returnedPaymentsQuery->orderBy('cheque_returns.return_date')->get();
+    $returnedPaymentIds = $returnedPayments->pluck('supplier_due_payment_id')->toArray();
+
+    // Process all payments that are NOT already processed as GRN payments
+    foreach ($payments as $payment) {
+        if ($payment->payment_method === 'Cheque') {
+            $rawLedger[] = [
+                'date' => \Carbon\Carbon::parse($payment->created_at)->format('Y-m-d'),
+                'type' => 'payment_cheque',
+                'bill_no' => $payment->cheque_number ?? '',
+                'description' => 'Cheque issued - Cheque #' . $payment->cheque_number,
+                'debit' => $payment->amount,
+                'credit' => 0,
+                'is_return' => false,
+            ];
+
+            // Add return row if cheque is returned
+            if (in_array($payment->id, $returnedPaymentIds)) {
+                $matchedReturn = $returnedPayments->firstWhere('supplier_due_payment_id', $payment->id);
+                if ($matchedReturn) {
+                    $rawLedger[] = [
+                        'date' => $matchedReturn->return_date,
+                        'type' => 'cheque_return',
+                        'bill_no' => $matchedReturn->cheque_number,
+                        'description' => 'Cheque Return - Cheque #' . $matchedReturn->cheque_number,
+                        'debit' => 0,
+                        'credit' => $matchedReturn->amount,
+                        'is_return' => true,
+                    ];
+                }
+            }
+        } else {
+            // Cash or other payments
+            $rawLedger[] = [
+                'date' => \Carbon\Carbon::parse($payment->created_at)->format('Y-m-d'),
+                'type' => 'payment',
+                'bill_no' => '',
+                'description' => 'Payment by Cash',
+                'debit' => $payment->amount,
+                'credit' => 0,
+                'is_return' => false,
+            ];
+        }
+    }
+
+    // Cheque Returns - add as credit to reverse payment effect
+    $returnedPaymentsQuery = DB::table('cheque_returns')
+        ->join('supplier_due_payments', 'cheque_returns.supplier_due_payment_id', '=', 'supplier_due_payments.id')
+        ->join('supplier_dues', 'supplier_due_payments.supplier_due_id', '=', 'supplier_dues.id')
+        ->where('supplier_dues.supplier_name', $supplierName);
 
     if ($startDate) $returnedPaymentsQuery->whereDate('cheque_returns.return_date', '>=', $startDate);
     if ($endDate) $returnedPaymentsQuery->whereDate('cheque_returns.return_date', '<=', $endDate);
 
     $returnedPayments = $returnedPaymentsQuery->orderBy('cheque_returns.return_date')->get();
 
-    // ===== Build Ledger =====
-    $ledger = [];
-    $runningBalance = $openingBalance;
-
-    // Opening balance entry
-    if ($startDate) {
-        $ledger[] = [
-            'date' => \Carbon\Carbon::parse($startDate)->subDay()->format('Y-m-d'),
-            'bill_no' => '',
-            'description' => 'Opening Balance',
-            'debit' => '',
-            'credit' => '',
-            'balance' => $runningBalance,
+    foreach ($returnedPayments as $ret) {
+        $rawLedger[] = [
+            'date' => $ret->return_date,
+            'type' => 'cheque_return',
+            'bill_no' => $ret->cheque_number,
+            'description' => 'Cheque Return - Cheque #' . $ret->cheque_number,
+            'debit' => 0,
+            'credit' => $ret->amount,
+            'is_return' => true,
         ];
     }
 
-    // Process each GRN bill
-    foreach ($bills as $bill) {
-        $debit = $bill->supplier_pay ?? 0;
-        $credit = $bill->tobe_price ?? 0;
-
-        $runningBalance += ($credit - $debit);
-
-        $ledger[] = [
-            'date' => $bill->g_date,
-            'bill_no' => $bill->grn_no,
-            'description' => 'Purchase - GRN ' . $bill->grn_no,
-            'debit' => $debit,
-            'credit' => $credit,
-            'balance' => $runningBalance,
-        ];
-    }
-
-    // Add individual cheque return entries
-    foreach ($returnedPayments as $returnedPayment) {
-        $retAmt = $returnedPayment->amount;
-        $chequeNumber = $returnedPayment->cheque_number ?? 'N/A';
-        $returnDate = $returnedPayment->return_date;
-
-        $runningBalance += $retAmt; // Add back the returned amount
-
-        $ledger[] = [
-            'date' => $returnDate,
-            'bill_no' => $chequeNumber,
-            'description' => 'Cheque Return - Cheque #' . $chequeNumber,
-            'debit' => -1 * $retAmt, // Negative to show reversal of payment
-            'credit' => 0,
-            'balance' => $runningBalance,
-        ];
-    }
-
-    // ===== Cash Payments =====
-    $cashPaymentsQuery = DB::table('supplier_due_payments')
-        ->join('supplier_dues', 'supplier_due_payments.supplier_due_id', '=', 'supplier_dues.id')
-        ->where('supplier_dues.supplier_name', $supplierName)
-        ->where('supplier_due_payments.payment_method', 'Cash');
-
-    if ($startDate) $cashPaymentsQuery->whereDate('supplier_due_payments.created_at', '>=', $startDate);
-    if ($endDate) $cashPaymentsQuery->whereDate('supplier_due_payments.created_at', '<=', $endDate);
-
-    $cashPayments = $cashPaymentsQuery->orderBy('supplier_due_payments.created_at')->get();
-
-    foreach ($cashPayments as $cashPayment) {
-        $paymentDate = \Carbon\Carbon::parse($cashPayment->created_at)->format('Y-m-d');
-        $amount = $cashPayment->amount;
-
-        $runningBalance -= $amount;
-
-        $ledger[] = [
-            'date' => $paymentDate,
-            'bill_no' => '',
-            'description' => 'Payment by Cash',
-            'debit' => $amount,
-            'credit' => 0,
-            'balance' => $runningBalance,
-        ];
-    }
-
-    // Final sort by date and time
-    usort($ledger, function ($a, $b) {
+    // Sort ledger by date and type (purchases first if same date)
+    usort($rawLedger, function ($a, $b) {
         $dateA = strtotime($a['date']);
         $dateB = strtotime($b['date']);
-        
-        if ($dateA == $dateB) {
-            // If same date, put purchases before returns
-            if (strpos($a['description'], 'Purchase') !== false) return -1;
-            if (strpos($b['description'], 'Purchase') !== false) return 1;
+        if ($dateA === $dateB) {
+            if ($a['type'] === 'purchase') return -1;
+            if ($b['type'] === 'purchase') return 1;
             return 0;
         }
-        
         return $dateA <=> $dateB;
     });
 
-    return view('ledger.supplier_ledger', compact('ledger', 'supplierName', 'startDate', 'endDate', 'openingBalance'));
+    // Calculate running balance
+    $ledger = [];
+    $runningBalance = $openingBalance;
+  $totalPaid = 0;
+$totalToBePaid = 0;
+$totalReturned = 0;
+$runningBalance = $openingBalance;
+
+foreach ($rawLedger as $entry) {
+    $debit = is_numeric($entry['debit']) ? $entry['debit'] : 0;
+    $credit = is_numeric($entry['credit']) ? $entry['credit'] : 0;
+
+    if (!empty($entry['is_return'])) {
+        // cheque return entry, don't change balance here
+        $runningBalance = $runningBalance; 
+    } else if ($entry['type'] === 'purchase') {
+        // Only update balance for purchase rows
+        $runningBalance = $runningBalance + $credit - $debit;
+
+        // Track totals only for purchase rows
+        if ($debit > 0) {
+            $totalPaid += $debit;
+        }
+        if ($credit > 0) {
+            $totalToBePaid += $credit;
+        }
+    }
+
+    // Track total returned for all cheque return entries
+    if (!empty($entry['is_return'])) {
+        $totalReturned += $credit;
+    }
+
+    $ledger[] = [
+        'date' => $entry['date'],
+        'bill_no' => $entry['bill_no'],
+        'description' => $entry['description'],
+        'debit' => $debit,
+        'credit' => $credit,
+        'balance' => $runningBalance,
+        'is_return' => $entry['is_return'] ?? false,
+    ];
 }
 
+$finalBalance = $runningBalance;
+
+
+    return view('ledger.supplier_ledger', compact(
+        'ledger',
+        'supplierName',
+        'startDate',
+        'endDate',
+        'openingBalance',
+        'totalPaid',
+        'totalToBePaid',
+        'totalReturned',
+        'finalBalance',
+        'purchaseRows',
+        'paymentRows'
+    ));
+}
 
 
 //supplier serach//
