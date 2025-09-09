@@ -146,14 +146,13 @@ public function supplierLedger(Request $request)
         'is_return' => false,
     ];
 
-    // **Skip adding individual payment rows for this GRN to avoid double counting**
 
 
         // ADD matching payment(s) row for this GRN from due payments table
         $matchedPayments = DB::table('supplier_due_payments')
             ->join('supplier_dues', 'supplier_due_payments.supplier_due_id', '=', 'supplier_dues.id')
             ->where('supplier_dues.supplier_name', $supplierName)
-            ->where('supplier_dues.grn_no', $bill->grn_no) // match GRN
+            ->where('supplier_dues.grn_no', $bill->grn_no) 
             ->get();
 
         foreach ($matchedPayments as $payment) {
