@@ -20,7 +20,7 @@
         <div class="alert alert-success shadow-sm">{{ session('success') }}</div>
     @endif
 
-    <form action="{{ route('bill.store') }}" method="POST">
+<form id="grn-form" action="{{ route('bill.store') }}" method="POST">
         @csrf
 
         <h4>GRN Master</h4>
@@ -71,7 +71,7 @@
   <div class="item d-flex align-items-end mb-3 gap-2">
     <div class="form-group" style="flex: 0 0 150px;">
       <label class="form-label">Item Code</label>
-      <select name="items[0][item_code]" class="form-select item-code" required>
+      <select name="items[0][item_code]" class="form-select item-code" >
         <option value="" disabled selected>Select</option>
         @foreach($items as $item)
           <option value="{{ $item->item_code }}" data-name="{{ $item->item_name }}" data-rate="{{ $item->rate }}" data-cost-price="{{ $item->cost_price }}">
@@ -83,7 +83,7 @@
     
     <div class="form-group" style="flex: 0 0 150px;">
       <label class="form-label">Item Name</label>
-      <select name="items[0][item_name]" class="form-select item-name" required>
+      <select name="items[0][item_name]" class="form-select item-name" >
         <option value="" disabled selected>Select</option>
         @foreach($items as $item)
           <option value="{{ $item->item_name }}" data-code="{{ $item->item_code }}" data-rate="{{ $item->rate }}">
@@ -105,7 +105,7 @@
     
     <div class="form-group" style="flex: 0 0 180px;">
       <label class="form-label">Quantity</label>
-      <input type="number" name="items[0][quantity]" class="form-control quantity" min="1" value="1" required style="text-align: right;">
+      <input type="number" name="items[0][quantity]" class="form-control quantity" min="1" value="1"  style="text-align: right;">
     </div>
     
     <div class="form-group" style="flex: 0 0 180px;">
@@ -168,6 +168,36 @@
 </div>
 
 <script>
+
+
+document.getElementById('grn-form').addEventListener('submit', function(e) {
+    const items = document.querySelectorAll('.item');
+    let hasValidItem = false;
+
+    items.forEach((row, index) => {
+        const code = row.querySelector('.item-code')?.value?.trim();
+        const name = row.querySelector('.item-name')?.value?.trim();
+        const qty = row.querySelector('.quantity')?.value?.trim();
+
+        const isValid = code && name && qty && parseFloat(qty) > 0;
+
+        if (isValid) {
+            hasValidItem = true;
+        } else {
+            // Remove empty rows (but keep first if it's the only one)
+            if (items.length > 1) {
+                row.remove();
+            }
+        }
+    });
+
+    if (!hasValidItem) {
+        e.preventDefault();
+        alert('Please add at least one valid item before submitting the form.');
+    }
+});
+
+
 document.addEventListener('click', function(e) {
     if (e.target.closest('.remove-item')) {
         const row = e.target.closest('.item');
@@ -326,7 +356,6 @@ document.addEventListener('change', function (e) {
         updateRowPrice(row);
         calculateTotals();
         
-        // Auto add new empty row if this row now has data and no empty row exists
         if (codeSelect.value && !hasEmptyRow()) {
             addItem();
         }
@@ -376,28 +405,22 @@ searchConfigs.forEach(config => {
             const existingItem = Array.from(document.querySelectorAll('.item-code')).find(select => select.value === code);
 
             if (existingItem) {
-                // දැනටමත් ඇති item එකක් නම්, quantity focus කරන්න
                 const row = existingItem.closest('.item');
                 focusQuantity(row);
             } else {
-                // අලුත් item එකක්
                 const emptyRow = Array.from(document.querySelectorAll('.item')).find(item => 
                     !item.querySelector('.item-code').value
                 );
 
                 if (emptyRow) {
-                    // Empty row එකක් තිබේ නම්, එයට data set කරන්න
                     setRowData(emptyRow, code, name, rate, costPrice);
                     
-                    // අලුත් empty row එකක් add කරන්න
                     addItem();
                     
                     focusQuantity(emptyRow);
                 } else {
-                    // Empty row නැත්නම්, අලුත් row එකක් add කරන්න
                     const newRow = addItem(code, name, rate, costPrice);
                     
-                    // තවත් empty row එකක් add කරන්න
                     addItem();
                     
                     focusQuantity(newRow);
