@@ -1,116 +1,67 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container" style="max-width: 1000px; margin: 50px auto; background: #fff; padding: 20px; border-radius: 10px;">
-    <h4 class="text-center mb-3">Ledger for Supplier: {{ $supplierName }}</h4>
-    
-    @if($startDate && $endDate)
-        <p class="text-center">From <strong>{{ $startDate }}</strong> to <strong>{{ $endDate }}</strong></p>
-    @endif
+<div class="container">
+<h2 style="color: #ffffff; font-family: Arial, sans-serif;">
+    Supplier Ledger for: <strong style="color: #ffcc00;">{{ $supplierName }}</strong>
+</h2>
 
-    <table class="table table-bordered mt-4">
-        <thead class="table-primary">
-            <tr>
-                <th>Date</th>
-                <th>Bill No / Cheque No</th>
-                <th>Description</th>
-                <th class="text-end">Paid (Dr)</th>
-                <th class="text-end">To be Paid (Cr)</th>
-                <th class="text-end">Balance</th>
-            </tr>
-        </thead>
-        <tbody>
-        @php
-            $totalPaid = 0;
-            $totalToBePaid = 0;
-            $balance = $openingBalance ?? 0;
-        @endphp
+@if($startDate && $endDate)
+    <p style="color: #dddddd; font-family: Arial, sans-serif;">Period: {{ $startDate }} to {{ $endDate }}</p>
+@elseif($startDate)
+    <p style="color: #dddddd; font-family: Arial, sans-serif;">From: {{ $startDate }}</p>
+@elseif($endDate)
+    <p style="color: #dddddd; font-family: Arial, sans-serif;">Until: {{ $endDate }}</p>
+@endif
 
+<table class="table table-bordered table-striped" style="font-family: Arial, sans-serif; background-color: #222; color: #eee;">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Bill No</th>
+            <th>Description</th>
+            <th style="text-align: right;">Debit</th>
+            <th style="text-align: right;">Credit</th>
+        </tr>
+    </thead>
+    <tbody>
         @foreach($ledger as $entry)
-            @php
-                $paid = is_numeric($entry['debit']) ? $entry['debit'] : 0;
-                $credit = is_numeric($entry['credit']) ? $entry['credit'] : 0;
-
-                // Only add positive payments to totalPaid
-                if ($paid > 0) {
-                    $totalPaid += $paid;
-                }
-
-                $totalToBePaid += $credit;
-                $balance = $entry['balance'];
-                
-                // Determine row class based on entry type
-                $rowClass = '';
-                if (strpos($entry['description'], 'Cheque Return') !== false) {
-                    $rowClass = 'table-warning'; // Yellow for cheque returns
-                } elseif (strpos($entry['description'], 'Opening Balance') !== false) {
-                    $rowClass = 'table-info'; // Blue for opening balance
-                } elseif (strpos($entry['description'], 'Payment') !== false) {
-                    $rowClass = 'table-success'; // Green for payments
-                }
-            @endphp
-            <tr class="{{ $rowClass }}">
-                <td>{{ $entry['date'] ? \Carbon\Carbon::parse($entry['date'])->format('Y-m-d') : '' }}</td>
+            <tr @if(isset($entry['is_opening']) && $entry['is_opening']) style="font-weight:bold;" @endif>
+                <td>{{ $entry['date'] }}</td>
                 <td>{{ $entry['bill_no'] }}</td>
                 <td>
                     {{ $entry['description'] }}
-                    @if (strpos($entry['description'], 'Cheque Return') !== false)
-                        <small class="text-danger d-block">⚠️ Returned Cheque</small>
+                    @if(!empty($entry['is_return']) && $entry['is_return'])
+                        <span class="badge bg-danger">Cheque Return</span>
                     @endif
                 </td>
-                <td class="text-end">
-                    @if($paid != 0)
-                        @if($paid < 0)
-                            <span class="text-danger">({{ number_format(abs($paid), 2, '.', ',') }})</span>
-                        @else
-                            {{ number_format($paid, 2, '.', ',') }}
-                        @endif
-                    @endif
+                <td style="text-align: right;">
+                    {{ $entry['debit'] !== '' ? number_format($entry['debit'], 2) : '' }}
                 </td>
-                <td class="text-end">{{ $credit != 0 ? number_format($credit, 2, '.', ',') : '' }}</td>
-                <td class="text-end">
-                    @if($balance < 0)
-                        <span class="text-danger">{{ number_format($balance, 2, '.', ',') }}</span>
-                    @else
-                        <span class="text-success">{{ number_format($balance, 2, '.', ',') }}</span>
-                    @endif
+                <td style="text-align: right;">
+                    {{ $entry['credit'] !== '' ? number_format($entry['credit'], 2) : '' }}
                 </td>
             </tr>
         @endforeach
-        </tbody>
+    </tbody>
 
-        <tfoot>
-            <tr class="fw-bold table-dark">
-                <td colspan="3" class="text-end">Total</td>
-                <td class="text-end">{{ number_format($totalPaid, 2, '.', ',') }}</td>
-                <td class="text-end">{{ number_format($totalToBePaid, 2, '.', ',') }}</td>
-                <td class="text-end">
-                    @php $finalBalance = $totalToBePaid - $totalPaid; @endphp
-                    @if($finalBalance < 0)
-                        <span class="text-danger">{{ number_format($finalBalance, 2, '.', ',') }}</span>
-                    @else
-                        <span class="text-success">{{ number_format($finalBalance, 2, '.', ',') }}</span>
-                    @endif
-                </td>
-            </tr>
-            <tr class="fw-bold bg-light">
-                <td colspan="5" class="text-end">Final Outstanding Balance</td>
-                <td class="text-end">
-                    @if($finalBalance < 0)
-                        <span class="text-danger">{{ number_format(abs($finalBalance), 2, '.', ',') }}</span>
-                        <small class="d-block text-muted">Amount to be paid</small>
-                    @elseif($finalBalance > 0)
-                        <span class="text-success">{{ number_format($finalBalance, 2, '.', ',') }}</span>
-                        <small class="d-block text-muted">Advance payment</small>
-                    @else
-                        <span class="text-info">0.00</span>
-                        <small class="d-block text-muted">Account settled</small>
-                    @endif
-                </td>
-            </tr>
-        </tfoot>
-    </table>
+    <tfoot>
+        <tr style="background-color: #333; font-weight: bold;">
+            <td colspan="3" style="text-align: right;">Totals:</td>
+            <td style="text-align: right; background-color: #ffffffff;">{{ number_format($totalPaid, 2) }}</td>
+            <td style="text-align: right; background-color: #ffffffff;">{{ number_format($totalToBePaid, 2) }}</td>
+        </tr>
+        <tr style="background-color: #333;">
+            <td colspan="4" style="text-align: right; font-weight: bold;">Balance (Credit - Debit):</td>
+            <td style="text-align: right; background-color: #ffffffff;">{{ number_format($totalToBePaid - $totalPaid, 2) }}</td>
+        </tr>
+        <tr style="background-color: #333;">
+            <td colspan="4" style="text-align: right; font-weight: bold;">Total Returned (Cheque Returns):</td>
+            <td style="text-align: right; background-color: #ffffffff;">{{ number_format($totalReturned, 2) }}</td>
+        </tr>
+    </tfoot>
+</table>
 
-    
+<a href="{{ url()->previous() }}" class="btn btn-secondary">Back</a>
 </div>
 @endsection
