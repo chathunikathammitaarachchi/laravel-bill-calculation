@@ -8,9 +8,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('customer', function (Blueprint $table) {
-            $table->id(); // Laravel-generated auto-increment PK
+            $table->id();
 
-            $table->unsignedBigInteger('customer_id'); // big int for manual ID
+            $table->unsignedBigInteger('customer_id');
 $table->string('customer_name');
             $table->string('phone');
             $table->timestamps();
