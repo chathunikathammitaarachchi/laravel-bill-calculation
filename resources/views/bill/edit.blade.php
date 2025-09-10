@@ -137,8 +137,17 @@
                 @foreach($bill->details as $index => $detail)
                     <tr class="item-row">
                         <td>
-                            <input type="text" name="details[{{ $index }}][item_code]" value="{{ $detail->item_code }}" class="form-control" readonly>
-                        </td>
+    <select name="details[{{ $index }}][item_code]" class="form-control item-select" required>
+        <option value="">-- Select Item --</option>
+        {{-- You can optionally populate server-side for the initial rows --}}
+        @foreach($items as $item)
+            <option value="{{ $item->item_code }}" {{ $item->item_code == $detail->item_code ? 'selected' : '' }}>
+                {{ $item->item_code }} - {{ $item->item_name }}
+            </option>
+        @endforeach
+    </select>
+</td>
+
                         <td><input type="text" name="details[{{ $index }}][item_name]" value="{{ $detail->item_name }}" class="form-control" readonly></td>
                         <td><input type="number" name="details[{{ $index }}][rate]" value="{{ $detail->rate }}" class="form-control rate" readonly style="text-align: right;"></td>
                         <td><input type="number" name="details[{{ $index }}][cost_price]" value="{{ $detail->cost_price }}" class="form-control cost_price" readonly style="text-align: right;"></td>
@@ -190,8 +199,16 @@
         <button type="submit" class="btn btn-primary mt-3 float-end">Save Bill</button>
     </form>
 </div>
-
 <script>
+    let allItems = [];
+
+    // Fetch all items once on page load
+    fetch('{{ route("items.ajax") }}')
+        .then(res => res.json())
+        .then(data => {
+            allItems = data;
+        });
+
     function removeRow(btn) {
         const row = btn.closest('tr');
         row.remove();
@@ -199,55 +216,80 @@
     }
 
     function addItem() {
-        const table = document.getElementById('itemsTable').querySelector('tbody');
-        const lastRow = table.querySelector('tr:last-child');
-        const newRow = lastRow.cloneNode(true);
+        const tbody = document.querySelector('#itemsTable tbody');
+        const rows = tbody.querySelectorAll('tr.item-row');
+        const newIndex = rows.length;
 
-        const newIndex = table.querySelectorAll('tr').length;
+        const templateRow = rows[0].cloneNode(true);
 
-        newRow.querySelectorAll('input').forEach(input => {
-            let name = input.getAttribute('name');
-            if (name) {
-                name = name.replace(/\[\d+\]/, `[${newIndex}]`);
-                input.setAttribute('name', name);
-            }
+        templateRow.querySelectorAll('input, select').forEach(input => {
+            const name = input.name;
+            if (!name) return;
 
-            if (input.classList.contains('quantity')) {
-                input.value = 1;
-            } else if (!input.readOnly) {
-                input.value = '';
+            const newName = name.replace(/\[\d+\]/, `[${newIndex}]`);
+            input.name = newName;
+            input.value = '';
+
+            // Make fields editable except price
+            if (!input.classList.contains('price') && !input.classList.contains('rate') && !input.classList.contains('cost_price')) {
+                input.removeAttribute('readonly');
             }
 
             if (input.classList.contains('price')) {
-                input.value = '0.00';
+                input.readOnly = true;
             }
         });
 
-        table.appendChild(newRow);
+        // Populate item select dropdown
+        const select = templateRow.querySelector('.item-select');
+        select.innerHTML = `<option value="">-- Select Item --</option>`;
+        allItems.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.item_code;
+            option.text = `${item.item_code} - ${item.item_name}`;
+            select.appendChild(option);
+        });
+
+        tbody.appendChild(templateRow);
+        calculateTotals();
     }
 
-   function calculateTotals() {
-    let total = 0;
+    function calculateTotals() {
+        let total = 0;
 
-    document.querySelectorAll('.item-row').forEach(row => {
-        const cost_price = parseFloat(row.querySelector('.cost_price').value) || 0;
-        const qty = parseFloat(row.querySelector('.quantity').value) || 0;
-        const price = cost_price * qty;
-        row.querySelector('.price').value = price.toFixed(2);
-        total += price;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const cost_price = parseFloat(row.querySelector('.cost_price').value) || 0;
+            const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+            const price = cost_price * qty;
+            row.querySelector('.price').value = price.toFixed(2);
+            total += price;
+        });
+
+        document.getElementById('total_price').value = total.toFixed(2);
+
+        const discount = parseFloat(document.getElementById('total_discount').value) || 0;
+        const tobe = total - discount;
+        document.getElementById('tobe_price').value = tobe.toFixed(2);
+
+        const supplierPay = parseFloat(document.getElementById('supplier_pay').value) || 0;
+        const balance = supplierPay - tobe;
+        document.getElementById('balance').value = balance.toFixed(2);
+    }
+
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('item-select')) {
+            const selectedCode = e.target.value;
+            const row = e.target.closest('tr');
+            const item = allItems.find(i => i.item_code === selectedCode);
+
+            if (item) {
+                row.querySelector('input[name$="[item_name]"]').value = item.item_name;
+                row.querySelector('input[name$="[rate]"]').value = item.rate;
+                row.querySelector('input[name$="[cost_price]"]').value = item.cost_price;
+                calculateTotals();
+            }
+        }
     });
-
-    document.getElementById('total_price').value = total.toFixed(2);
-
-    const discount = parseFloat(document.getElementById('total_discount').value) || 0;
-    const tobe = total - discount;
-    document.getElementById('tobe_price').value = tobe.toFixed(2);
-
-    const supplierPay = parseFloat(document.getElementById('supplier_pay').value) || 0;
-    const balance = supplierPay - tobe;
-    document.getElementById('balance').value = balance.toFixed(2);
-}
-
 
     document.addEventListener('input', function (e) {
         if (e.target.classList.contains('quantity') || e.target.id === 'total_discount' || e.target.id === 'supplier_pay') {
@@ -257,7 +299,4 @@
 
     window.addEventListener('load', calculateTotals);
 </script>
-
-
-
 @endsection
