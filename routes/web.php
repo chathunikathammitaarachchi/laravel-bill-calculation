@@ -28,6 +28,7 @@ Route::get('/supplier-ledger-pdf', [SupplierController::class, 'exportSupplierLe
 
 Route::get('/cheque/search', [SupplierDuePaymentController::class, 'searchCheque'])->name('cheque.search');
 Route::post('/cheque/return/{paymentId}', [SupplierDuePaymentController::class, 'returnCheque'])->name('cheque.return');
+Route::get('/cheque/list', [SupplierDuePaymentController::class, 'listCheques'])->name('cheque.list');
 
 
 
