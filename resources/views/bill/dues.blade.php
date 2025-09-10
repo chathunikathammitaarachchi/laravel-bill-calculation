@@ -108,6 +108,9 @@
                 @endforeach
             </tbody>
         </table>
+        <br/>
+        <a href="{{ url()->previous() }}" class="btn btn-secondary mb-3">Back</a>
+
     </div>
 @endif
 
