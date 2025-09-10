@@ -40,6 +40,11 @@
       <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold shadow-sm">
         Add Customer
       </button>
+
+      <a href="{{ route('customer.index') }}" class="btn btn-outline-secondary mt-3 w-100 fw-semibold shadow-sm">
+  ← Back to Customer List
+</a>
+
     </form>
   </div>
 </div>
