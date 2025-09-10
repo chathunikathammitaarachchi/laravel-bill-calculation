@@ -105,6 +105,11 @@
       <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold shadow-sm">
         Add Item
       </button>
+
+      <a href="{{ route('items.index') }}" class="btn btn-outline-secondary mt-3 w-100 fw-semibold shadow-sm">
+  ← Back to Item List
+</a>
+
     </form>
   </div>
 </div>
