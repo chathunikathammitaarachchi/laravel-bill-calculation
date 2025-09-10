@@ -53,6 +53,7 @@ Route::get('/home', function () {
 Route::get('/api/items/autocomplete', [StockHistoryController::class, 'autocomplete'])->name('items.autocomplete');
 
 Route::get('/bill/dues', [SupplierGRNController::class, 'showDues'])->name('bill.dues');
+Route::get('/bill/{grn_no}/edit', [SupplierGRNController::class, 'edit'])->name('bill.edit');
 
 
 
@@ -102,6 +103,10 @@ Route::get('/stock', [ItemController::class, 'stock'])->name('stock.index');
 Route::post('/stock/transaction', [ItemController::class, 'addStockTransaction'])->name('stock.transaction');
 Route::get('/items/check-code', [ItemController::class, 'checkCode']);
 Route::get('/items/check-name', [ItemController::class, 'checkName']);
+// web.php or api.php
+Route::get('/items/ajax', function () {
+    return \App\Models\Item::all();
+})->name('items.ajax');
 
 
 
