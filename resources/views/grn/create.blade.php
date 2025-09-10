@@ -25,7 +25,7 @@
         <div class="alert alert-success shadow-sm">{{ session('success') }}</div>
     @endif
 
-    <!-- ✅ Error alert for Cash Due -->
+    <!--  Error alert for Cash Due -->
     @if (session('cash_due_error'))
         <script>
             document.addEventListener('DOMContentLoaded', function () {
