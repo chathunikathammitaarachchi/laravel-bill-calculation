@@ -90,7 +90,9 @@ public function customerLedger(Request $request)
         return view('ledger.customer_ledger_form');
     }
 
-    $customer = Customer::find($customerId);
+    // Change this line - use 'id' instead of 'customer_id'
+    $customer = Customer::find($customerId);  // or Customer::where('id', $customerId)->first();
+    
     if (!$customer) {
         return back()->withErrors(['customer_id' => 'Invalid customer ID'])->withInput();
     }
@@ -135,7 +137,7 @@ public function customerLedger(Request $request)
 
         $ledger[] = [
             'date' => $invoice->grn_date,
-            'invoice_no' => $invoice->bill_no,    // bill_no is primary key
+            'invoice_no' => $invoice->bill_no,    
             'description' => 'Sale - Invoice ' . $invoice->bill_no,
             'debit' => $debit,
             'credit' => $credit,
@@ -146,7 +148,7 @@ public function customerLedger(Request $request)
     return view('ledger.customer_ledger', compact('ledger', 'customerName', 'startDate', 'endDate', 'openingBalance'));
 }
 
-    // Ajax search for customers
+    // search for customers
     public function customerSearch(Request $request)
     {
         $query = $request->get('query', '');
