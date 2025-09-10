@@ -189,11 +189,7 @@
             <i class="bi bi-receipt"></i> Customer Bill
         </a>
     </li>
-    <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('customer_dues.list') ? 'active' : '' }}" href="{{ route('customer_dues.list') }}">
-            <i class="bi bi-cash-coin"></i> Customer Dues
-        </a>
-    </li>
+  
 
          <li class="nav-item">
 <a class="nav-link" href="{{ route('customer.ledger') }}">            
