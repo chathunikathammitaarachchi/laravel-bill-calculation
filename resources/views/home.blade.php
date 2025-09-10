@@ -100,7 +100,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Customer Dues</h5>
                     <p class="card-text">Check and manage customer dues.</p>
-                    <a href="{{ route('grn.dues') }}" class="btn btn-primary">Customer Dues</a>
+                    <a href="{{ route('customer_dues.list') }}" class="btn btn-primary">Customer Dues</a>
                 </div>
             </div>
         </div>
