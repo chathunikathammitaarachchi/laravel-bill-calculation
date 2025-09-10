@@ -17,7 +17,11 @@ return new class extends Migration
             $table->string('bank_name')->nullable();
             $table->string('branch_name')->nullable();
             $table->date('cheque_date')->nullable();
-            $table->boolean('is_returned')->default(false)->after('amount');
+            
+            // From cheque_returns
+            $table->boolean('is_returned')->default(false);
+            $table->string('return_reason')->nullable();
+            $table->date('return_date')->nullable();
 
             $table->timestamps();
 
@@ -33,3 +37,4 @@ return new class extends Migration
         Schema::dropIfExists('supplier_due_payments');
     }
 };
+
