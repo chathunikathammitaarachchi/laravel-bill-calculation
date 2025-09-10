@@ -17,33 +17,37 @@
   </div>
 @endif
 
-    <form action="{{ route('supplier.store') }}" method="POST" novalidate>
-      @csrf
+   <form action="{{ route('supplier.store') }}" method="POST" novalidate>
+  @csrf
 
-      <div class="form-floating mb-4">
-        <input type="number" name="supplier_id" id="supplier_id" class="form-control form-control-lg" placeholder="Supplier ID" required>
-        <label for="supplier_id" class="text-muted">Supplier ID</label>
-      </div>
+  <div class="form-floating mb-4">
+    <input type="number" name="supplier_id" id="supplier_id" class="form-control form-control-lg" placeholder="Supplier ID" value="{{ old('supplier_id') }}" required>
+    <label for="supplier_id" class="text-muted">Supplier ID</label>
+  </div>
 
-      <div class="form-floating mb-4">
-        <input type="text" name="supplier_name" id="supplier_name" class="form-control form-control-lg" placeholder="Supplier Name" required>
-        <label for="supplier_name" class="text-muted">Supplier Name</label>
-      </div>
+  <div class="form-floating mb-4">
+    <input type="text" name="supplier_name" id="supplier_name" class="form-control form-control-lg" placeholder="Supplier Name" value="{{ old('supplier_name') }}" required>
+    <label for="supplier_name" class="text-muted">Supplier Name</label>
+  </div>
 
-      <div class="form-floating mb-4">
-        <input type="number" name="phone" id="phone" class="form-control form-control-lg" placeholder="Phone Number" required oninput="limitInput(this, 10)">
-        <label for="phone" class="text-muted">Phone Number</label>
-      </div>
+  <div class="form-floating mb-4">
+    <input type="number" name="phone" id="phone" class="form-control form-control-lg" placeholder="Phone Number" value="{{ old('phone') }}" required oninput="limitInput(this, 10)">
+    <label for="phone" class="text-muted">Phone Number</label>
+  </div>
 
-      <div class="form-floating mb-4">
-        <input type="text" name="address" id="address" class="form-control form-control-lg" placeholder="Supplier Address" required>
-        <label for="address" class="text-muted">Supplier Address</label>
-      </div>
+  <div class="form-floating mb-4">
+    <input type="text" name="address" id="address" class="form-control form-control-lg" placeholder="Supplier Address" value="{{ old('address') }}" required>
+    <label for="address" class="text-muted">Supplier Address</label>
+  </div>
 
-      <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold shadow-sm">
-        Add Supplier
-      </button>
-    </form>
+  <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold shadow-sm">
+    Add Supplier
+  </button>
+</form>
+<a href="{{ route('supplier.index') }}" class="btn btn-outline-secondary mt-3 w-100 fw-semibold shadow-sm">
+  ← Back to Supplier List
+</a>
+
   </div>
 </div>
 
