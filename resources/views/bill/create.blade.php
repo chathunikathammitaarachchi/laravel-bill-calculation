@@ -127,6 +127,9 @@
 <button type="button" class="btn btn-info mb-4 ms-2" data-bs-toggle="modal" data-bs-target="#itemListModal">
     📦 View Items
 </button>
+<br/>
+<a href="{{ url()->previous() }}" class="btn btn-secondary mb-3">Back</a>
+
 <hr/>
 <!-- Item List Modal -->
 <div class="modal fade" id="itemListModal" tabindex="-1" aria-labelledby="itemListModalLabel" aria-hidden="true">
