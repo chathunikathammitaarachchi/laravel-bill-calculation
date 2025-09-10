@@ -145,13 +145,27 @@
         </a>
     </li>
 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('supplier.ledger') }}">Supplier Ledger</a>
-                </li>
+    <a class="nav-link" href="{{ route('supplier.ledger') }}">
+        <i class="bi bi-journal-bookmark"></i> Supplier Ledger
+    </a>
+</li>
 
 
-                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('cheque.search') }}">Cheque Payments</a>
-                </li>
+
+                <!-- resources/views/layouts/app.blade.php -->
+
+<li class="nav-item">
+    <a class="nav-link" href="{{ route('cheque.list') }}">
+        <i class="bi bi-journal-text"></i> View Cheque Payments
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{{ route('cheque.search') }}">
+        <i class="bi bi-arrow-repeat"></i> Return Cheque
+    </a>
+</li>
+
+
     {{-- Item --}}
     <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('items.index') ? 'active' : '' }}" href="{{ route('items.index') }}">
