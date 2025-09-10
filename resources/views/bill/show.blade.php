@@ -12,39 +12,40 @@
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 ">
 
+    <!-- Header Section -->
     <div style="text-align: center; border-bottom: 4px solid #5686bd; margin-bottom: 30px; padding-bottom: 15px;">
         <h2 style="margin: 0; font-size: 30px; font-weight: 700; color: #2c3e50;">Bill No: {{ $bill->grn_no }}</h2>
         <p style="margin: 5px 0; font-size: 16px; color: #7f8c8d;"><strong>Date:</strong> {{ $bill->g_date }}</p>
         <p style="margin: 5px 0; font-size: 16px; color: #7f8c8d;"><strong>Customer Name:</strong> {{ $bill->supplier_name }}</p>
     </div>
 
+    <!-- Items Table -->
     <table style="width: 100%; border-collapse: collapse; font-size: 15px;" border="1">
         <thead style="background-color: #6a90bb; color: white;">
             <tr>
-                <th style="padding: 14px; text-align: center;">Item Code</th>
-                <th style="padding: 14px; text-align: center;">Name</th>
-                <th style="padding: 14px; text-align: center;">Rate</th>
-                                <th style="padding: 14px; text-align: center;">Cost Price</th>
-
-                <th style="padding: 14px; text-align: center;">Quantity</th>
-                <th style="padding: 14px; text-align: center;">Price</th>
+                <th style="padding: 14px; text-align: left;">Item Code</th>
+                <th style="padding: 14px; text-align: left;">Name</th>
+                <th style="padding: 14px; text-align: right;">Rate</th>
+                <th style="padding: 14px; text-align: right;">Cost Price</th>
+                <th style="padding: 14px; text-align: right;">Quantity</th>
+                <th style="padding: 14px; text-align: right;">Price</th>
             </tr>
         </thead>
         <tbody>
             @foreach($bill->details as $detail)
             <tr style="background-color: {{ $loop->even ? '#f9f9f9' : '#ffffff' }};">
-                <td style="padding: 12px; text-align: center; color: #2d3436;">{{ $detail->item_code }}</td>
-                <td style="padding: 12px; text-align: center; color: #2d3436;">{{ $detail->item_name }}</td>
-                <td style="padding: 12px; text-align: center; color: #2d3436;">{{ number_format($detail->rate, 2) }}</td>
-                                <td style="padding: 12px; text-align: center; color: #2d3436;">{{ number_format($detail->cost_price, 2) }}</td>
-
-                <td style="padding: 12px; text-align: center; color: #2d3436;">{{ $detail->quantity }}</td>
-                <td style="padding: 12px; text-align: center; color: #2d3436;">{{ number_format($detail->price, 2) }}</td>
+                <td style="padding: 12px; text-align: left; color: #2d3436;">{{ $detail->item_code }}</td>
+                <td style="padding: 12px; text-align: left; color: #2d3436;">{{ $detail->item_name }}</td>
+                <td style="padding: 12px; text-align: right; color: #2d3436;">{{ number_format($detail->rate, 2) }}</td>
+                <td style="padding: 12px; text-align: right; color: #2d3436;">{{ number_format($detail->cost_price, 2) }}</td>
+                <td style="padding: 12px; text-align: right; color: #2d3436;">{{ number_format($detail->quantity, 2) }}</td>
+                <td style="padding: 12px; text-align: right; color: #2d3436;">{{ number_format($detail->price, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
+    <!-- Summary Section -->
     <div style="
         margin-top: 35px; 
         border-top: 2px solid #7e9fc5; 
@@ -56,26 +57,27 @@
     ">
         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
             <strong>Total Price:</strong> 
-            <span>{{ number_format($bill->total_price, 2) }}</span>
+            <span style="text-align: right;">{{ number_format($bill->total_price, 2) }}</span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
             <strong>Discount:</strong> 
-            <span>{{ number_format($bill->total_discount, 2) }}</span>
+            <span style="text-align: right;">{{ number_format($bill->total_discount, 2) }}</span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
             <strong>To Be Paid:</strong> 
-            <span>{{ number_format($bill->tobe_price, 2) }}</span>
+            <span style="text-align: right;">{{ number_format($bill->tobe_price, 2) }}</span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
             <strong>Supplier Pay:</strong> 
-            <span>{{ number_format($bill->supplier_pay, 2) }}</span>
+            <span style="text-align: right;">{{ number_format($bill->supplier_pay, 2) }}</span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
             <strong>Balance:</strong> 
-            <span>{{ number_format($bill->balance, 2) }}</span>
+            <span style="text-align: right;">{{ number_format($bill->balance, 2) }}</span>
         </div>
     </div>
 
+    <!-- Back Button -->
     <a href="{{ route('bill.create') }}" style="
         display: inline-block; 
         margin-top: 30px; 
@@ -93,14 +95,5 @@
     onmouseout="this.style.backgroundColor='#3498db'">
         Back To Home
     </a>
-
 </div>
 @endsection
-
-
-
-
-
-
-
-
