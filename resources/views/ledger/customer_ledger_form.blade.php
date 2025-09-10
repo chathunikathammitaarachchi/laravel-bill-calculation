@@ -60,15 +60,14 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '#customerList a', function (e) {
-        e.preventDefault();
-        let selectedId = $(this).data('id');
-        let selectedName = $(this).data('name');
-        let selectedCustomerId = $(this).data('customerid');
-        $('#customer_display').val(`${selectedCustomerId} - ${selectedName}`);
-        $('#customer_id').val(selectedId);
-        $('#customerList').fadeOut();
-    });
+   $(document).on('click', '#customerList a', function (e) {
+    e.preventDefault();
+    let selectedCustomerId = $(this).data('customerid');  // Use customer_id instead of id
+    let selectedName = $(this).data('name');
+    $('#customer_display').val(`${selectedCustomerId} - ${selectedName}`);
+    $('#customer_id').val(selectedCustomerId);  // Send customer_id instead of primary key id
+    $('#customerList').fadeOut();
+});
 
     $(document).click(function (e) {
         if (!$(e.target).closest('#customer_display, #customerList').length) {
