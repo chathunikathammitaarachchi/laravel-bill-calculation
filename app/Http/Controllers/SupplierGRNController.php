@@ -213,11 +213,13 @@ public function autocomplete(Request $request)
         return view('bill.show', compact('bill'));
     }
 
-    public function edit($grn_no)
-    {
-        $bill = SupplierGRNMaster::with('details')->findOrFail($grn_no);
-        return view('bill.edit', compact('bill'));
-    }
+public function edit($grn_no)
+{
+    $bill = SupplierGRNMaster::with('details')->where('grn_no', $grn_no)->firstOrFail();
+    $items = Item::all();
+
+    return view('bill.edit', compact('bill', 'items')); // ← Important!
+}
 
 public function update(Request $request, $grn_no)
 {
@@ -279,8 +281,6 @@ SupplierDue::updateOrCreate(
 
     return redirect()->route('bill.show', $grn_no)->with('success', 'GRN Updated and Stock Adjusted Successfully.');
 }
-
-
 
 
 
