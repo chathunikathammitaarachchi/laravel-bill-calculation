@@ -133,36 +133,43 @@ public function listPayments()
 }
 
 public function searchCheque(Request $request)
+    {
+        $query = SupplierDuePayment::with('due')
+            ->where('payment_method', 'Cheque');
+
+        if ($request->filled('cheque_number')) {
+            $query->where('cheque_number', $request->cheque_number);
+        }
+
+        if ($request->filled('bank_name')) {
+            $query->where('bank_name', 'LIKE', '%' . $request->bank_name . '%');
+        }
+
+        if ($request->filled('branch_name')) {
+            $query->where('branch_name', 'LIKE', '%' . $request->branch_name . '%');
+        }
+
+        $results = $query->get();
+
+        // Group by cheque number + bank + branch + date (to uniquely group a cheque)
+        $groupedPayments = $results->groupBy(function ($item) {
+            return $item->cheque_number . '|' . $item->bank_name . '|' . $item->branch_name . '|' . $item->cheque_date;
+        });
+
+        return view('cheque.search', [
+            'payments' => $results,
+            'groupedPayments' => $groupedPayments,
+        ]);
+    }
+
+public function returnCheque(Request $request, $paymentId)
 {
-    $query = SupplierDuePayment::with('due')
-        ->where('payment_method', 'Cheque');
+    $request->validate([
+        'reason' => 'required|string|max:255',
+        'return_date' => 'required|date',
+    ]);
 
-    if ($request->filled('cheque_number')) {
-        $query->where('cheque_number', $request->cheque_number);
-    }
-
-    if ($request->filled('bank_name')) {
-        $query->where('bank_name', 'LIKE', '%' . $request->bank_name . '%');
-    }
-
-    if ($request->filled('branch_name')) {
-        $query->where('branch_name', 'LIKE', '%' . $request->branch_name . '%');
-    }
-
-    $results = $query->get();
-
-    // Group by cheque number + bank + branch + date (to uniquely group a cheque)
-    $groupedPayments = $results->groupBy(function ($item) {
-        return $item->cheque_number . '|' . $item->bank_name . '|' . $item->branch_name . '|' . $item->cheque_date;
-    });
-
-    return view('cheque.search', compact('results', 'groupedPayments'));
-}
-
-
-public function returnCheque($paymentId)
-{
-    DB::transaction(function () use ($paymentId) {
+    DB::transaction(function () use ($paymentId, $request) {
         $payment = SupplierDuePayment::findOrFail($paymentId);
 
         if ($payment->payment_method !== 'Cheque') {
@@ -177,13 +184,9 @@ public function returnCheque($paymentId)
         $supplierDue = SupplierDue::findOrFail($payment->supplier_due_id);
         $grn = SupplierGRNMaster::where('grn_no', $supplierDue->grn_no)->first();
 
-        // Reverse original payment in SupplierDue and GRN
         $supplierDue->supplier_pay -= $amount;
         $supplierDue->balance = $supplierDue->tobe_price - $supplierDue->supplier_pay;
-        
-        // Mark cheque returned flag true
         $supplierDue->has_cheque_returned = true;
-
         $supplierDue->save();
 
         if ($grn) {
@@ -192,20 +195,17 @@ public function returnCheque($paymentId)
             $grn->save();
         }
 
-        $payment->is_returned = true;
-        $payment->save();
-
-        // Insert return record in cheque_returns table with reason and date
-        DB::table('cheque_returns')->insert([
-            'supplier_due_payment_id' => $payment->id,
-            'reason' => 'Cheque Returned',
-            'return_date' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
+        // Update existing row instead of inserting
+        $payment->update([
+            'is_returned' => true,
+            'return_reason' => $request->reason,
+            'return_date' => $request->return_date,
         ]);
     });
 
-    return response()->json(['message' => 'Cheque return processed successfully.']);
+    return redirect()->back()->with('success', 'Cheque return processed successfully.');
 }
+
+
 
 }
