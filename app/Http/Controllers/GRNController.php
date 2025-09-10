@@ -188,26 +188,7 @@ if ($request->customer_pay < $request->tobe_price) {
 }
 
 
-public function showDues(Request $request)
-{
-    $dues = CustomerDue::select(
-        'customer_name',
 
-        DB::raw('SUM(tobe_price) as total_due'),
-        DB::raw('SUM(customer_pay) as total_paid'),
-        DB::raw('SUM(balance) as total_balance'),
-        DB::raw('MAX(grn_date) as last_date') 
-    )
-    ->when($request->from_date, fn($q) => $q->whereDate('grn_date', '>=', $request->from_date))
-    ->when($request->to_date, fn($q) => $q->whereDate('grn_date', '<=', $request->to_date))
-    ->when($request->customer_name, fn($q) => $q->where('customer_name', $request->customer_name))
-    ->groupBy('customer_name')
-    ->orderBy('customer_name')
-   
-    ->get();
-
-    return view('grn.dues', compact('dues'));
-}
 
 public function customerexportDuesPDF(Request $request)
 {
