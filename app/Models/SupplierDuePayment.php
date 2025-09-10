@@ -17,18 +17,18 @@ class SupplierDuePayment extends Model
         'bank_name',
         'branch_name',
         'cheque_date',
+        'is_returned',
+        'return_reason',
+        'return_date',
     ];
 
-
-
-      public function supplierDue()
+    public function supplierDue()
     {
-        // assuming supplier_due_payments table has supplier_due_id foreign key to supplier_dues.id
         return $this->belongsTo(SupplierDue::class, 'supplier_due_id');
     }
-public function due()
-{
-    return $this->belongsTo(SupplierDue::class, 'supplier_due_id');
-}
 
+    public function due()
+    {
+        return $this->belongsTo(SupplierDue::class, 'supplier_due_id');
+    }
 }
