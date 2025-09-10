@@ -94,6 +94,9 @@
                     <button type="submit" class="btn btn-success">Submit Payment</button>
                 </div>
             </form>
+            <br/>
+            <a href="{{ url()->previous() }}" class="btn btn-secondary mb-3">Back</a>
+
         </div>
     </div>
 
