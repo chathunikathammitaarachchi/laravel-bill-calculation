@@ -66,32 +66,41 @@ public function showByCustomer(Request $request, $customerName)
             $amountToPay = $request->amount;
             $totalPaid = 0;
 
-            foreach ($dues as $due) {
-                if ($amountToPay <= 0) break;
+       foreach ($dues as $due) {
+    if ($amountToPay <= 0) break;
 
-                $paying = min($amountToPay, $due->balance);
+    $paying = min($amountToPay, $due->balance);
 
-                $payment = new CustomerDuePayment();
-                $payment->customer_due_id = $due->id;
-                $payment->payment_method = $request->payment_method;
-                $payment->amount = $paying;
+    $payment = new CustomerDuePayment();
+    $payment->customer_due_id = $due->id;
+    $payment->payment_method = $request->payment_method;
+    $payment->amount = $paying;
 
-                if ($request->payment_method === 'Cheque') {
-                    $payment->cheque_number = $request->cheque_number;
-                    $payment->bank_name = $request->bank_name;
-                    $payment->branch_name = $request->branch_name;
-                    $payment->cheque_date = $request->cheque_date;
-                }
+    if ($request->payment_method === 'Cheque') {
+        $payment->cheque_number = $request->cheque_number;
+        $payment->bank_name = $request->bank_name;
+        $payment->branch_name = $request->branch_name;
+        $payment->cheque_date = $request->cheque_date;
+    }
 
-                $payment->save();
+    $payment->save();
 
-                $due->customer_pay += $paying;
-                $due->balance = $due->tobe_price - $due->customer_pay;
-                $due->save();
+    $due->customer_pay += $paying;
+    $due->balance = $due->tobe_price - $due->customer_pay;
+    $due->save();
 
-                $amountToPay -= $paying;
-                $totalPaid += $paying;
-            }
+  DB::table('bill_master')
+    ->where('bill_no', $due->bill_no)  // use correct column
+    ->update([
+        'customer_pay' => $due->customer_pay,
+        'balance' => $due->balance,
+    ]);
+
+
+    $amountToPay -= $paying;
+    $totalPaid += $paying;
+}
+
 
             $paymentDetails = [
                 'customer_name'  => $request->customer_name,
@@ -103,6 +112,9 @@ public function showByCustomer(Request $request, $customerName)
                 'cheque_date'    => $request->payment_method === 'Cheque' ? $request->cheque_date : null,
                 'payment_date'   => now()->format('Y-m-d'),
             ];
+
+
+            
         });
 
         $pdf = Pdf::loadView('receipt.customer_due_payment', $paymentDetails);
