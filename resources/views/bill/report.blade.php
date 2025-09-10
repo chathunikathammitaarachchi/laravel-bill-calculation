@@ -83,6 +83,8 @@
     <input type="hidden" name="to_date" value="{{ request('to_date') }}">
     <button type="submit" class="btn btn-danger">Download & Print PDF</button>
 </form>
+ <br/>
+<a href="{{ url()->previous() }}" class="btn btn-secondary mb-3">Back</a>
 
 <!-- Hidden iframe to hold PDF -->
 <iframe id="pdfFrame" name="pdfFrame" style="display:none;" onload="printIframe()"></iframe>
