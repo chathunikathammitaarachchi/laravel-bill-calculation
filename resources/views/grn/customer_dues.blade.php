@@ -43,9 +43,9 @@
         <thead>
             <tr>
                 <th>Customer Name</th>
-                <th>Total Due</th>
-                <th>Total Paid</th>
-                <th>Balance</th>
+                <th>Total </th>
+                <th>pay</th>
+                <th>To be paid </th>
                 <th>Last Due Date</th>
                 <th>Actions</th>
             </tr>
@@ -58,12 +58,20 @@
                     <td>Rs. {{ number_format($due->total_paid, 2) }}</td>
                     <td class="text-danger fw-bold">Rs. {{ number_format($due->total_balance, 2) }}</td>
                     <td>{{ \Carbon\Carbon::parse($due->last_date)->format('Y-m-d') }}</td>
-                    <td>
-                        <a href="{{ route('customer_due.show', $due->customer_name) }}" class="btn btn-primary btn-sm">Pay Due</a>
-                    </td>
+                   <td>
+    @if($due->total_balance > 0)
+        <a href="{{ route('customer_due.show', $due->customer_name) }}" class="btn btn-primary btn-sm">Pay Due</a>
+    @else
+        <span class="badge bg-success">Settled</span>
+    @endif
+</td>
+
                 </tr>
             @endforeach
         </tbody>
     </table>
+
+    <a href="{{ route('home') }}" class="btn btn-secondary mb-3">Back</a>
+
 </div>
 @endsection
