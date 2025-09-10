@@ -124,6 +124,53 @@
 <button type="button" class="btn btn-outline-primary mb-4" onclick="addItem()">+ Add Item</button>
 
         <hr/>
+<button type="button" class="btn btn-info mb-4 ms-2" data-bs-toggle="modal" data-bs-target="#itemListModal">
+    📦 View Items
+</button>
+<hr/>
+<!-- Item List Modal -->
+<div class="modal fade" id="itemListModal" tabindex="-1" aria-labelledby="itemListModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="itemListModalLabel">All Available Items</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-bordered table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Code</th>
+              <th>Name</th>
+              <th>Rate</th>
+              <th>Cost Price</th>
+              <th>Select</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($items as $item)
+            <tr>
+              <td>{{ $item->item_code }}</td>
+              <td>{{ $item->item_name }}</td>
+              <td>{{ $item->rate }}</td>
+              <td>{{ $item->cost_price }}</td>
+              <td>
+                <button type="button" class="btn btn-sm btn-success select-item"
+                  data-code="{{ $item->item_code }}"
+                  data-name="{{ $item->item_name }}"
+                  data-rate="{{ $item->rate }}"
+                  data-cost_price="{{ $item->cost_price }}">
+                  Select
+                </button>
+              </td>
+            </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
         {{-- Total Calculation Section --}}
         <div class="col-12 col-md-6 offset-md-6 px-3 py-4">
@@ -361,6 +408,40 @@ document.addEventListener('change', function (e) {
         }
     }
 });
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('select-item')) {
+        const code = e.target.getAttribute('data-code');
+        const name = e.target.getAttribute('data-name');
+        const rate = e.target.getAttribute('data-rate');
+        const costPrice = e.target.getAttribute('data-cost_price');
+
+        const existingItem = Array.from(document.querySelectorAll('.item-code')).find(select => select.value === code);
+
+        if (existingItem) {
+            const row = existingItem.closest('.item');
+            focusQuantity(row);
+        } else {
+            const emptyRow = Array.from(document.querySelectorAll('.item')).find(item =>
+                !item.querySelector('.item-code').value
+            );
+
+            if (emptyRow) {
+                setRowData(emptyRow, code, name, rate, costPrice);
+                addItem();
+                focusQuantity(emptyRow);
+            } else {
+                const newRow = addItem(code, name, rate, costPrice);
+                addItem();
+                focusQuantity(newRow);
+            }
+        }
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('itemListModal'));
+        if (modal) {
+            modal.hide();
+        }
+    }
+});
 
 const searchConfigs = [
     { inputId: 'search_code', resultId: 'results_code', endpoint: '/items/search/code' },
@@ -432,6 +513,9 @@ searchConfigs.forEach(config => {
         }
     });
 });
+
+
+
 </script>
 
 @endsection
