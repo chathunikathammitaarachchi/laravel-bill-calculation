@@ -122,15 +122,33 @@ class SupplierDuePaymentController extends Controller
     ]);
 }
 
-
-
-public function listPayments()
+public function listCheques(Request $request)
 {
-    // Example: get all supplier payments
-    $payments = SupplierDuePayment::with('supplierDue')->orderBy('created_at', 'desc')->get();
+    $payments = collect(); 
 
-    return view('cheque.payments', compact('payments'));
+    if ($request->hasAny(['cheque_number', 'bank_name', 'branch_name'])) {
+        $query = SupplierDuePayment::with('due')
+            ->where('payment_method', 'Cheque');
+
+        if ($request->filled('cheque_number')) {
+            $query->where('cheque_number', 'like', '%' . $request->cheque_number . '%');
+        }
+
+        if ($request->filled('bank_name')) {
+            $query->where('bank_name', 'like', '%' . $request->bank_name . '%');
+        }
+
+        if ($request->filled('branch_name')) {
+            $query->where('branch_name', 'like', '%' . $request->branch_name . '%');
+        }
+
+        $payments = $query->latest()->get();
+    }
+
+    return view('cheque.list', compact('payments'));
 }
+
+
 
 public function searchCheque(Request $request)
     {
