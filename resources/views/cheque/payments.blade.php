@@ -1,3 +1,4 @@
+<-- resources/views/cheque/payments.blade.php -->
 @extends('layouts.app')
 
 @section('content')
